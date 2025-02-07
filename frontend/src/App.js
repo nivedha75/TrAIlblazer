@@ -7,10 +7,10 @@ import React, { useEffect, useState } from 'react';
        const [message, setMessage] = useState('');
        useEffect(() => {
            fetch('/api/hello') 
-               .then(res => res.text())
-               .then(data => setMessage(data));
+           .then(response => response.json())
+           .then(data => console.log(data))
+           .catch(error => console.error("Error fetching data:", error));
        }, []);
-
        return (
            <div>
                <h1>{message}</h1>
