@@ -6,5 +6,9 @@ app = Flask(__name__)
 def hello():
     return 'Hello from Flask!'
 
+@app.route('/api/hello')
+def api_hello():
+    return 'Hello from Flask API!'
+
 if __name__ == '__main__':
     app.run(debug=True)
