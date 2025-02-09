@@ -1,3 +1,31 @@
+# Setup
+
+Deleted preexisting files with
+
+### `rm package-lock.json`
+### `rm package.json`
+### `rm -r node_modules`
+
+Installed everything with
+
+### `npm install react-scripts`
+### `npm install`
+### `npm install react-router-dom --save`
+### `npm install --save-dev web-vitals`
+
+Added these scripts to the package.json file
+
+    "scripts": {
+      "start": "react-scripts start",
+      "build": "react-scripts build",
+      "test": "react-scripts test",
+      "eject": "react-scripts eject"
+    }
+
+Then ran command to get webpage
+
+### `npm run start`
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
