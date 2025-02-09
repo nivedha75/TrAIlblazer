@@ -8,9 +8,9 @@ CORS(app)
 def hello():
     return "Hello from Flask"
 
-@app.route('/api/hello')
-def api_hello():
-    return jsonify({'message': 'Flask and React are connected!'})
+@app.route('/api/trailblazer')
+def api_trailblazer():
+    return jsonify({'message': 'TrAIlblazer'})
 
 if __name__ == '__main__':
     app.run(debug=True)
