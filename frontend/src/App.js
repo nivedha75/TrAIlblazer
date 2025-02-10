@@ -3,6 +3,7 @@ import './App.css';
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/Homepage";
+import CreateTrip from './pages/CreateTrip';
 
    function App() {
        const [message, setMessage] = useState('');
@@ -22,6 +23,7 @@ import HomePage from "./pages/Homepage";
         <Router>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/create" element={<CreateTrip />} />
           </Routes>
         </Router>
       );

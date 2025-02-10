@@ -1,8 +1,32 @@
 import React, {useState} from "react";
+import { useNavigate } from "react-router-dom";
 import Profile from "../assets/Profile.png"
 
 const HomePage = () => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+  const navigateToCreate = () => {
+    navigate("/create")
+  }
+
+  const Card = ({ title, description }) => {
+    return (
+      <div style={{
+        width: "250px",
+        padding: "20px",
+        borderRadius: "10px",
+        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+        backgroundColor: "white",
+        textAlign: "center",
+        margin: "10px",
+      }}>
+        <h2>{title}</h2>
+        <p>{description}</p>
+      </div>
+    );
+  };
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -52,13 +76,27 @@ const HomePage = () => {
       )}
   </div>
   <div>
-  <h1>My Trips:</h1>
+  <h1 style={{marginLeft: "20px"}}>My Trips:</h1>
+  <div style={{ display: "flex", gap: "10px" }}>
+          <Card title="Hawaii Getaway" description="Enjoy the beaches of Hawaii." />
+          <Card title="New York Adventure" description="Explore the city that never sleeps." />
+        </div>
   </div>
-  <div style={{ marginTop: "150px" }}>
-  <h1>Discover New Vacation Spots:</h1>
+  <button onClick={navigateToCreate} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Create Trip (+)</button>
+  <div style={{ marginTop: "40px" }}>
+  <h1 style={{marginLeft: "20px"}}>Discover New Vacation Spots:</h1>
+  <div style={{ display: "flex", gap: "10px" }}>
+          <Card title="Bali, Indonesia" description="Tropical paradise with beautiful landscapes." />
+          <Card title="Paris, France" description="The city of love and lights." />
   </div>
-  <div style={{ marginTop: "150px" }}>
-  <h1>Past Trips:</h1>
+  <button style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Take Our Travel Quiz</button>
+  </div>
+  <div style={{ marginTop: "40px" }}>
+  <h1 style={{marginLeft: "20px"}}>Past Trips:</h1>
+  <div style={{ display: "flex", gap: "10px" }}>
+          <Card title="Japan Tour" description="Experience the culture and technology of Japan." />
+          <Card title="Grand Canyon" description="Explore the natural wonders of Arizona." />
+  </div>
   </div>
   </div>);
 };
