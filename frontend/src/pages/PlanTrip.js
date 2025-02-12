@@ -42,26 +42,6 @@ const PlanTrip = () => {
           value={startDate}
         />
       </div>
-
-      {/* <h2>Calendar</h2>
-      <div
-        style={{
-          margin: "20px auto",
-          width: "600px",
-          height: "400px",
-          border: "1px solid #ccc",
-          borderRadius: "5px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "20px",
-          color: "#555",
-          backgroundColor: "#f9f9f9",
-        }}
-      >
-        [ Calendar Placeholder ]
-      </div> */}
-
       <h2>Daily Plans</h2>
       {Array.from({ length: days }).map((_, index) => (
         <div key={index} style={{ marginBottom: "20px" }}>
@@ -87,13 +67,6 @@ const PlanTrip = () => {
             style={{ width: "600px", margin: "auto", cursor: "pointer" }}
           />
           <p>Selected Time: {timeLabels[timeRanges[index][0]]} - {timeLabels[timeRanges[index][1]]}</p>
-          {/* <input
-            type="range"
-            min="0"
-            max="10"
-            defaultValue="5"
-            style={{ width: "600px" }}
-          /> */}
         </div>
       ))}
      <div>
