@@ -1,4 +1,5 @@
 import React, {useState} from "react";
+import { useNavigate } from "react-router-dom";
 
 const locations = [
     "New York", "Los Angeles", "Chicago", "Miami", "San Francisco",
@@ -12,9 +13,19 @@ const CreateTrip = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [days, setDays] = useState("");
 
+  const navigate = useNavigate();
+  
   const dayChange = (event) => {
     setDays(event.target.value);
   }
+
+  const goToPlanPage = () => {
+    if (!days || isNaN(days) || days <= 0) {
+      alert("Please enter a valid number of days!");
+      return;
+    }
+    navigate("/plan", { state: { days: parseInt(days, 10) } });
+  };
 
   const handleInputChange = (event) => {
     const value = event.target.value;
@@ -34,7 +45,6 @@ const CreateTrip = () => {
         <div style={{textAlign: "center"}}>
         <h1 style={{textAlign: "center"}}>Create a Trip</h1>
         <div>
-        {/* Input for Number of Days */}
         <input
           type="number"
           value={days}
@@ -115,7 +125,7 @@ const CreateTrip = () => {
           borderRadius: "5px",
           cursor: "pointer",
         }}
-        onClick={() => alert("Next button clicked")}
+        onClick={goToPlanPage}
       >
         Next
       </button>

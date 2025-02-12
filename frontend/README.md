@@ -12,6 +12,8 @@ Installed everything with
 ### `npm install`
 ### `npm install react-router-dom --save`
 ### `npm install --save-dev web-vitals`
+### `npm install react-calendar --legacy-peer-deps`
+### `npm install rc-slider --legacy-peer-deps`
 
 Added these scripts to the package.json file
 
