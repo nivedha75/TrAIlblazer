@@ -1,6 +1,8 @@
 import React, {useState} from "react";
 import { useNavigate } from "react-router-dom";
-import Profile from "../assets/Profile.png"
+import Profile from "../assets/Profile.png";
+import Hawaii from "../assets/hawaii.png";
+import ChatBot from "../assets/Chatbot.png";
 
 const HomePage = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +13,7 @@ const HomePage = () => {
     navigate("/create")
   }
 
-  const Card = ({ title, description }) => {
+  const Card = ({ image, title = "Place", buttonText = "Trip Details", button = () => alert("Trip Details") }) => {
     return (
       <div style={{
         width: "250px",
@@ -22,8 +24,22 @@ const HomePage = () => {
         textAlign: "center",
         margin: "10px",
       }}>
+        {image && <img src={image} alt={title} style={{ width: "100%", borderRadius: "10px" }} />}
         <h2>{title}</h2>
-        <p>{description}</p>
+        <button 
+        onClick={button} 
+        style={{
+          padding: "10px 15px",
+          border: "none",
+          backgroundColor: "#007bff",
+          color: "white",
+          borderRadius: "5px",
+          cursor: "pointer",
+          marginTop: "10px"
+        }}
+      >
+        {buttonText}
+      </button>
       </div>
     );
   };
@@ -78,7 +94,7 @@ const HomePage = () => {
   <div>
   <h1 style={{marginLeft: "20px"}}>My Trips:</h1>
   <div style={{ display: "flex", gap: "10px" }}>
-          <Card title="Hawaii Getaway" description="Enjoy the beaches of Hawaii." />
+          <Card image={Hawaii} title="Hawaii Getaway" description="Enjoy the beaches of Hawaii." />
           <Card title="New York Adventure" description="Explore the city that never sleeps." />
         </div>
   </div>
@@ -90,6 +106,16 @@ const HomePage = () => {
           <Card title="Paris, France" description="The city of love and lights." />
   </div>
   <button style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Take Our Travel Quiz</button>
+  <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", margin: "10px 20px 0 0", position: "fixed", bottom: "0px", right: "0px" }}>
+  <p style={{ fontSize: "16px", color: "#555", marginRight: "10px", maxWidth: "250px" }}>
+    Meet your personal AI travel assistant! Get personalized recommendations and plan your next trip with ease.
+  </p>
+  <img
+    src={ChatBot}
+    alt="ChatBot"
+    style={{ width: "80px", height: "80px" }}
+  />
+</div>
   </div>
   <div style={{ marginTop: "40px" }}>
   <h1 style={{marginLeft: "20px"}}>Past Trips:</h1>
