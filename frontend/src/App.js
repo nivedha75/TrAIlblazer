@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/Homepage";
 import CreateTrip from './pages/CreateTrip';
 import PlanTrip from './pages/PlanTrip';
+import PreferenceSurvey from "./pages/PreferenceSurvey";
 
    function App() {
        const [message, setMessage] = useState('');
@@ -26,6 +27,7 @@ import PlanTrip from './pages/PlanTrip';
             <Route path="/" element={<HomePage />} />
             <Route path="/create" element={<CreateTrip />} />
             <Route path="/plan" element={<PlanTrip />} />
+            <Route path="/survey" element={<PreferenceSurvey />} />
           </Routes>
         </Router>
       );
