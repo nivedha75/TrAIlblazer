@@ -8,9 +8,9 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 #CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
 
-client = MongoClient("mongodb://localhost:27017/")
-db = client["travel_preferences"]
-collection = db["survey_responses"]
+client = MongoClient("mongodb+srv://kumar502:gcstrail1@cluster0.h5zkw.mongodb.net/")
+db = client["TrAIlblazer"]
+collection = db["survey_preferences"]
 
 @app.route('/')
 def hello():
