@@ -21,6 +21,14 @@ const PlanTrip = () => {
     Array.from({ length: days }, () => [9, 17])
   );
 
+  const isHighlighted = (date) => {
+    if (!startDate) return false;
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + days - 1);
+    return date >= start && date <= end;
+  };
+
   const updateTimeRange = (index, newRange) => {
     const updatedRanges = [...timeRanges];
     updatedRanges[index] = newRange;
@@ -40,7 +48,15 @@ const PlanTrip = () => {
         <Calendar
           onClickDay={setStartDate}
           value={startDate}
+          tileClassName={({ date }) => (isHighlighted(date) ? "highlighted" : "")}
         />
+        <style>{`
+        .highlighted {
+        background-color: #007bff !important;
+        color: white !important;
+        border-radius: 50%;
+        }
+`       }</style>
       </div>
       <h2>Daily Plans</h2>
       {Array.from({ length: days }).map((_, index) => (
