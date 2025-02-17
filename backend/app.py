@@ -29,11 +29,11 @@ def submit_preferences():
         if not data:
             return jsonify({"error": "No data provided"}), 400
         print("Received Data:", data)
-        # collection.insert_one(data)  # Insert into MongoDB
+        collection.insert_one(data)  # Insert into MongoDB
         return jsonify({"message": "Survey data saved successfully"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port=55000, debug=True)

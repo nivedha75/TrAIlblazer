@@ -61,7 +61,7 @@ const surveyJson = {
 
 const PreferenceSurvey = () => {
   const onComplete = (survey) => {
-    fetch("http://localhost:5000/submit_preferences", {
+    fetch("http://localhost:55000/submit_preferences", {
       // mode: 'no-cors',
       method: "POST",
       headers: {

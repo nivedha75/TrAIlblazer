@@ -14,6 +14,8 @@ Installed everything with
 ### `npm install --save-dev web-vitals`
 ### `npm install react-calendar --legacy-peer-deps`
 ### `npm install rc-slider --legacy-peer-deps`
+### `npm install survey-react`
+### `npm install survey-react-ui`
 
 Added these scripts to the package.json file
 
