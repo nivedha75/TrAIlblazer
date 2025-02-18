@@ -12,6 +12,7 @@ const CreateTrip = () => {
   const [filteredLocations, setFilteredLocations] = useState([]);
   const [showOptions, setShowOptions] = useState(false);
   const [days, setDays] = useState("");
+  const [selectLocation, setSelectLocation] = useState("");
 
   const navigate = useNavigate();
   
@@ -24,7 +25,7 @@ const CreateTrip = () => {
       alert("Please enter a valid number of days!");
       return;
     }
-    navigate("/plan", { state: { days: parseInt(days, 10) } });
+    navigate("/plan", { state: { days: parseInt(days, 10), locate: selectLocation } });
   };
 
   const handleInputChange = (event) => {
@@ -38,6 +39,7 @@ const CreateTrip = () => {
 
   const handleSelect = (loc) => {
     setQuery(loc);
+    setSelectLocation(loc);
     setShowOptions(false);
   };
 

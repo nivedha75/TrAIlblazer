@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Slider from "rc-slider";
@@ -17,6 +17,18 @@ const PlanTrip = () => {
   const [startDate, setStartDate] = useState(null);
   const [people, setPeople] = useState("");
 
+  const navigate = useNavigate();
+
+  const saveTrip = () => {
+    const trip = {
+      location: location.state?.locate || "Unknown Destination",
+    };
+    const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
+    savedTrips.push(trip);
+    localStorage.setItem("trips", JSON.stringify(savedTrips));
+    navigate("/");
+  };
+  
   const [timeRanges, setTimeRanges] = useState(
     Array.from({ length: days }, () => [9, 17])
   );
@@ -112,7 +124,7 @@ const PlanTrip = () => {
           cursor: "pointer",
           marginTop: "20px",
         }}
-        onClick={() => alert("Trip saved!")}
+        onClick={saveTrip}
       >
         Save and Continue
       </button>

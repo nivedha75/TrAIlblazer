@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import Profile from "../assets/Profile.png";
 import Hawaii from "../assets/hawaii.png";
@@ -6,7 +6,12 @@ import ChatBot from "../assets/Chatbot.png";
 
 const HomePage = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [trips, setTrips] = useState([]);
 
+useEffect(() => {
+  const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
+  setTrips(savedTrips);
+}, []);
   const navigate = useNavigate();
 
   const navigateToCreate = () => {
@@ -96,6 +101,9 @@ const HomePage = () => {
   <div style={{ display: "flex", gap: "10px" }}>
           <Card image={Hawaii} title="Hawaii Getaway" description="Enjoy the beaches of Hawaii." />
           <Card title="New York Adventure" description="Explore the city that never sleeps." />
+          {trips.map((trip, index) => (
+    <Card key={index} title={trip.location} description="Upcoming trip" />
+  ))}
         </div>
   </div>
   <button onClick={navigateToCreate} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Create Trip (+)</button>
