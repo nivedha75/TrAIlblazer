@@ -10,7 +10,7 @@ import PreferenceSurvey from "./pages/PreferenceSurvey";
    function App() {
        const [message, setMessage] = useState('');
        useEffect(() => {
-        fetch("http://127.0.0.1:5000/api/trailblazer")
+        fetch("http://127.0.0.1:55000/api/trailblazer")
         .then((response) => response.json())
         .then((data) => {
           if (data && data.message) {
