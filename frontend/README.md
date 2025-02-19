@@ -16,6 +16,7 @@ Installed everything with
 ### `npm install rc-slider --legacy-peer-deps`
 ### `npm install survey-react`
 ### `npm install survey-react-ui`
+### `npm install @mui/material @emotion/react @emotion/styled`
 
 Added these scripts to the package.json file
 
