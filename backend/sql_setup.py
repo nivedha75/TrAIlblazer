@@ -1,27 +1,26 @@
 import sqlite3
-import os
 
-def setup_database():
-    db_name = "main.db"
-    
-    if not os.path.exists(db_name):
-        open(db_name, 'w').close()
-    
-    conn = sqlite3.connect(db_name)
+def setup_database(restart=False):
+    conn = sqlite3.connect("main.db")
     cursor = conn.cursor()
+    
+    if restart:
+        cursor.execute("DROP TABLE IF EXISTS UserTable")
     
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS UserTable (
             user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
+            username TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
-            hashed_pw TEXT NOT NULL
+            hashed_pw TEXT NOT NULL,
+            is_verified INTEGER DEFAULT 0
         )
     ''')
     
     conn.commit()
     conn.close()
-    print("db setup complete")
 
 if __name__ == "__main__":
-    setup_database()
+    import sys
+    restart_flag = '--restart' in sys.argv
+    setup_database(restart=restart_flag)
