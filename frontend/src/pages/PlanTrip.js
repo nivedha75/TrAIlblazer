@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Slider from "rc-slider";
@@ -17,9 +17,29 @@ const PlanTrip = () => {
   const [startDate, setStartDate] = useState(null);
   const [people, setPeople] = useState("");
 
+  const navigate = useNavigate();
+
+  const saveTrip = () => {
+    const trip = {
+      location: location.state?.locate || "Unknown Destination",
+    };
+    const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
+    savedTrips.push(trip);
+    localStorage.setItem("trips", JSON.stringify(savedTrips));
+    navigate("/");
+  };
+  
   const [timeRanges, setTimeRanges] = useState(
     Array.from({ length: days }, () => [9, 17])
   );
+
+  const isHighlighted = (date) => {
+    if (!startDate) return false;
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + days - 1);
+    return date >= start && date <= end;
+  };
 
   const updateTimeRange = (index, newRange) => {
     const updatedRanges = [...timeRanges];
@@ -40,7 +60,15 @@ const PlanTrip = () => {
         <Calendar
           onClickDay={setStartDate}
           value={startDate}
+          tileClassName={({ date }) => (isHighlighted(date) ? "highlighted" : "")}
         />
+        <style>{`
+        .highlighted {
+        background-color: #007bff !important;
+        color: white !important;
+        border-radius: 50%;
+        }
+`       }</style>
       </div>
       <h2>Daily Plans</h2>
       {Array.from({ length: days }).map((_, index) => (
@@ -96,7 +124,7 @@ const PlanTrip = () => {
           cursor: "pointer",
           marginTop: "20px",
         }}
-        onClick={() => alert("Trip saved!")}
+        onClick={saveTrip}
       >
         Save and Continue
       </button>

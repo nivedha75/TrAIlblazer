@@ -1,9 +1,14 @@
 import React from "react";
 import { Survey } from "survey-react";
-import "survey-react/survey.css";
+//import "survey-react/survey.css";
 import { useNavigate } from "react-router-dom";
+import 'survey-core/defaultV2.min.css';
+//import { ContrastDark } from "survey-core/themes";
+import { StylesManager } from "survey-core";
 
 const surveyJson = {
+  completeText: "Submit",
+  showProgressBar: "top",
   title: "Travel Preferences Survey",
   pages: [
     {
@@ -60,9 +65,9 @@ const surveyJson = {
 };
 
 const PreferenceSurvey = () => {
+  //StylesManager.applyTheme("contrast");
   const onComplete = (survey) => {
-    fetch("http://localhost:50000/submit_preferences", {
-      // mode: 'no-cors',
+    fetch("http://localhost:55000/submit_preferences", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
