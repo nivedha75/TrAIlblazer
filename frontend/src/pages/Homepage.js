@@ -15,7 +15,11 @@ useEffect(() => {
   const navigate = useNavigate();
 
   const navigateToCreate = () => {
-    navigate("/create")
+    navigate("/create");
+  }
+
+  const navigateToSurvey = () => {
+    navigate("/survey");
   }
 
   const Card = ({ image, title = "Place", buttonText = "Trip Details", button = () => alert("Trip Details") }) => {
@@ -113,7 +117,7 @@ useEffect(() => {
           <Card title="Bali, Indonesia" description="Tropical paradise with beautiful landscapes." />
           <Card title="Paris, France" description="The city of love and lights." />
   </div>
-  <button style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Take Our Travel Quiz</button>
+  <button onClick={navigateToSurvey} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Take Our Travel Quiz</button>
   <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", margin: "10px 20px 0 0", position: "fixed", bottom: "0px", right: "0px" }}>
   <p style={{ fontSize: "16px", color: "#555", marginRight: "10px", maxWidth: "250px" }}>
     Meet your personal AI travel assistant! Get personalized recommendations and plan your next trip with ease.
