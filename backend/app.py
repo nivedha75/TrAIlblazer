@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
+from datetime import datetime
+from bson import ObjectId  # Import ObjectId for MongoDB ID conversion for user_id
 
 app = Flask(__name__)
 #CORS(app)
@@ -29,7 +31,20 @@ def submit_preferences():
         data = request.json  # Get JSON data from request
         if not data:
             return jsonify({"error": "No data provided"}), 400
-        print("Received Data:", data)
+        print("Received data:", data)
+        print("Received submissionDateTime:", data["submissionDateTime"])
+        print("Received user_id:", data["user_id"])
+        if "submissionDateTime" in data:
+            data["submissionDateTime"] = datetime.fromisoformat(data["submissionDateTime"])
+            print("Converted submissionDateTime:", data["submissionDateTime"])
+        # Convert user_id to ObjectId (foreign key reference)
+        if "user_id" in data:
+            try:
+                data["user_id"] = ObjectId(data["user_id"])  # Convert string ID to ObjectId
+                print("Converted user_id:", data["user_id"])
+            except:
+                return jsonify({"error": "Invalid user_id format"}), 400  # Return error if ID is invalid
+            print("Received and Modified Data:", data)
         collection.insert_one(data)  # Insert into MongoDB
         return jsonify({"message": "Survey data saved successfully"}), 201
 
