@@ -23,9 +23,9 @@ const PlanTrip = () => {
     const trip = {
       location: location.state?.locate || "Unknown Destination",
     };
-    const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
+    const savedTrips = JSON.parse(localStorage.getItem("trips2")) || [];
     savedTrips.push(trip);
-    localStorage.setItem("trips", JSON.stringify(savedTrips));
+    localStorage.setItem("trips2", JSON.stringify(savedTrips));
     navigate("/");
   };
   
