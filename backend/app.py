@@ -5,8 +5,6 @@ from datetime import datetime
 from bson import ObjectId  # Import ObjectId for MongoDB ID conversion for user_id
 
 app = Flask(__name__)
-#CORS(app)
-#CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 #CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
 
