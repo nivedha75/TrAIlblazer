@@ -11,6 +11,7 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_cred
 client = MongoClient("mongodb+srv://kumar502:gcstrail1@cluster0.h5zkw.mongodb.net/")
 db = client["TrAIlblazer"]
 collection = db["survey_preferences"]
+trip_collection = db["trips"]
 
 @app.route('/')
 def hello():
@@ -34,6 +35,27 @@ def submit_preferences():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/trips", methods=['POST'])
+def trips():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        print("Received timeRanges:", data.get("timeRanges")) 
+        trip_collection.insert_one({
+            "location": data["location"],
+            "days": data["days"],
+            "startDate": data["startDate"],
+            "endDate": data["endDate"],
+            "timeRanges": data["timeRanges"],
+            "people": data["people"]
+        })
+        return jsonify({"message": "Trip data saved successfully"}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500 
+
     
 if __name__ == '__main__':
     app.run(port=55000, debug=True)

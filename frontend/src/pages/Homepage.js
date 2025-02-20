@@ -14,7 +14,7 @@ const HomePage = () => {
   const [trips, setTrips] = useState([]);
 
 useEffect(() => {
-  const savedTrips = JSON.parse(localStorage.getItem("trips2")) || [];
+  const savedTrips = JSON.parse(localStorage.getItem("trips5")) || [];
   setTrips(savedTrips);
 }, []);
   const navigate = useNavigate();
