@@ -19,12 +19,6 @@ const surveyJson = {
           name: "cuisineRanking",
           title: "Rank the following cuisines:",
           choices: ["Thai", "Indian", "Chinese", "Mexican", "Italian"]
-        },
-        {
-          type: "ranking",
-          name: "cuisineRanking2",
-          title: "Rank the following cuisines:",
-          choices: ["Thai", "Indian", "Chinese", "Mexican", "Italian"]
         }
       ],
     },
