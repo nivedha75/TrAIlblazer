@@ -359,9 +359,10 @@ const surveyJson = {
         }
       ]
     },
-    /////////  Travel Style
+    // --------------------TRAVEL STYLE PAGE --------------------
     {
       name: "Travel Style",
+      title: "Travel Style Preferences",
       elements: [
         {
           type: "ranking",
@@ -416,75 +417,137 @@ const surveyJson = {
             "A Mix of Both"
           ],
           isRequired: true
+        },
+        {
+          type: "comment",
+          name: "additionalTravel",
+          title: "Please share the style of vacations you usually enjoy and your goals of going on vacation.",
+          isRequired: false
         }
       ]
     },
-    /////////
-///////// Accommodation Preference
+    // -------------------- ACCOMMODATION PAGE --------------------
     {
-  name: "Accommodation Preference",
-  elements: [
-    {
-      type: "checkbox",
-      name: "accommodationType",
-      title: "Select the types of accommodation you would consider using:",
-      choices: [
-        "Bed and Breakfast",
-        "Hostel",
-        "Motel",
-        "Mid-Range Hotels",
-        "Luxury Resorts",
-        "Vacation Rental",
-        "Budget Stays",
-        "Boutique/Unique Stays",
-        "Other"
-      ],
-      hasOther: true,
-      otherText: "Other (please specify)",
-      isRequired: true
+      name: "Accommodation Preferences",
+      title: "Accommodation Preferences",
+      elements: [
+        {
+          type: "checkbox",
+          name: "accommodationType",
+          title: "Select the types of accommodation you would consider using:",
+          choices: [
+            "Bed and Breakfast",
+            "Hostel",
+            "Motel",
+            "Mid-Range Hotels",
+            "Luxury Resorts",
+            "Vacation Rental",
+            "Budget Stays",
+            "Boutique/Unique Stays"
+          ],
+          hasOther: true,
+          otherText: "Other (please specify)",
+          isRequired: true
+        },
+        {
+          type: "matrix",
+          name: "amenities",
+          title: "Indicate which amenities you Must Have, Would Like, or Do Not Care About:",
+          columns: [ "Must Have", "Would Like", "Do Not Care About" ],
+          rows: [
+            { value: "breakfast", text: "Complimentary Breakfast" },
+            { value: "fitness", text: "Fitness Center" },
+            { value: "market", text: "Market" },
+            { value: "pool", text: "Pool" },
+            { value: "restaurant", text: "Restaurant & Bar" },
+            { value: "room_service", text: "Room Service" },
+            { value: "wifi", text: "WiFi" }
+          ],
+          isAllRowRequired: true
+        },
+        {
+          type: "radioGroup",
+          name: "access",
+          title: "Indicate whether or not you have any accessibility needs or preferences to stay at an accommodation:",
+          choices: [
+            "No"
+          ],
+          hasOther: true,
+          otherText: "Yes (please specify)",
+          isRequired: true
+        },
+        {
+          type: "comment",
+          name: "additionalAcc",
+          title: "Please share the types of accommodation you usually stay at on vacations.",
+          isRequired: false
+        }
+      ]
     },
+    // --------------------SOCIAL AND ENTERTAINMENT PAGE --------------------
     {
-      type: "matrix",
-      name: "amenities",
-      title: "Indicate which amenities you Must Have, Would Like, or Do Not Care About:",
-      columns: [ "Must Have", "Would Like", "Do Not Care About" ],
-      rows: [
-        { value: "breakfast", text: "Complimentary Breakfast" },
-        { value: "fitness", text: "Fitness Center" },
-        { value: "market", text: "Market" },
-        { value: "pool", text: "Pool" },
-        { value: "restaurant", text: "Restaurant & Bar" },
-        { value: "room_service", text: "Room Service" },
-        { value: "wc_access", text: "Wheelchair Access" },
-        { value: "wifi", text: "WiFi" }
-      ],
-      isAllRowRequired: true
-    },
-    /*{
-      type: "radiogroup",
-      name: "prefTour",
-      title: "Do you prefer to take Guided Tours or to Independent Explore:",
-      choices: [
-        "Guided Tours",
-        "Independent Exploration",
-        "A Mix of Both"
-      ],
-      isRequired: true
-    },
-    {
-      type: "radiogroup",
-      name: "flexTour",
-      title: "Do you prefer to follow a Detailed Itinerary or to have Flexibility for Spontaneity:",
-      choices: [
-        "Detailed Itinerary",
-        "Flexibility for Spontaneity",
-        "A Mix of Both"
-      ],
-      isRequired: true
-    }*/
-  ]
-}
-/////////
+      name: "Social and Entertainment",
+      title: "Social and Entertainment Preferences",
+      elements: [
+        {
+          type: "checkbox",
+          name: "socialEnterAct",
+          title: "Select the types of social outings and entertainment you enjoy over a vacation:",
+          choices: [
+            "Adventure Sports",
+            "Arcades",
+            "Art Galleries",
+            "Bars",
+            "Beer / Wine Tastings",
+            "Casinos",
+            "Comedy Shows",
+            "Concerts",
+            "Cooking Classes",
+            "Interactive Group Activities",
+            "Karaoke",
+            "Movies",
+            "Museums",
+            "Nature Hikes",
+            "Nightclubs",
+            "Shopping",
+            "Spa / Wellness Retreat",
+            "Sporting Events",
+            "Theater",
+            "Theme Parks",
+            "Traditional Performances",
+            "None"
+          ],
+          hasOther: true,
+          otherText: "Yes (please specify)",
+          isRequired: true
+        },
+        {
+          type: "rating",
+          name: "prefTour",
+          title: "On a scale from 1 to 5, how much do you value a vibrant nightlife?",
+          minRateDescription: "Not at all",
+          maxRateDescription: "I love it",
+          rateValues: [1, 2, 3, 4, 5],
+          isRequired: true
+        },
+        {
+          type: "radiogroup",
+          name: "strangers",
+          title: "Indicate if you are interested in meeting and socializing with other travelers over your vacation:",
+          choices: [
+            "Yes",
+            "No"
+          ],
+          isRequired: true
+        },
+        {
+          type: "comment",
+          name: "additionalSocEnt",
+          title: "Please share the social outings and entertainment do you usually enjoy on vacations.",
+          isRequired: false
+        }
+      ]
+    }
   ]
 };
 
