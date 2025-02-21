@@ -1,14 +1,17 @@
 import logo from './logo.svg';
 import './App.css';
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/Homepage";
 import CreateTrip from './pages/CreateTrip';
 import PlanTrip from './pages/PlanTrip';
-import PreferenceSurvey from "./pages/PreferenceSurvey";
+import PreferenceSurvey from "./pages/PreferenceSurvey"
+import SignIn from "./pages/SignIn";
+
 
    function App() {
        const [message, setMessage] = useState('');
+       const [isAuthenticated, setIsAuthenticated] = useState(false);
        useEffect(() => {
         fetch("http://127.0.0.1:55000/api/trailblazer")
         .then((response) => response.json())
@@ -23,12 +26,13 @@ import PreferenceSurvey from "./pages/PreferenceSurvey";
        }, []);
        return (
         <Router>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/create" element={<CreateTrip />} />
-            <Route path="/plan" element={<PlanTrip />} />
-            <Route path="/survey" element={<PreferenceSurvey />} />
-          </Routes>
+            <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/create" element={isAuthenticated ? <CreateTrip /> : <Navigate to="/sign-in" />} />
+                <Route path="/plan" element={isAuthenticated ? <PlanTrip /> : <Navigate to="/sign-in" />} />
+                <Route path="/survey" element={isAuthenticated ? <PreferenceSurvey /> : <Navigate to="/sign-in" />} />
+                <Route path="/sign-in" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
+            </Routes>
         </Router>
       );
    }
