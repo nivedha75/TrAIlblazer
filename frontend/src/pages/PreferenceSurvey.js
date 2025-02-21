@@ -637,9 +637,9 @@ const PreferenceSurvey = () => {
           </Button>
       </Box>
       <Survey model={survey} onComplete={onComplete} />
-      <Button>
+      {/* <Button>
         <a href="http://localhost:3000/">Go back to home</>
-      </Button>
+      </Button> */}
     </Box>
   );
   
