@@ -5,7 +5,7 @@ import { Model } from "survey-core"; // If you want to manipulate the model dire
 import { useNavigate } from "react-router-dom";
 // import { ContrastDark } from "survey-core/themes";
 import { StylesManager } from "survey-core";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button, Box } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
@@ -399,16 +399,62 @@ const PreferenceSurvey = () => {
   // Apply the requirement flag before creating the model
   applyRequirementFlag(surveyJson, REQUIRE_QUESTIONS);
 
-  // Create the survey model AFTER we set isRequired
-  const survey = new Model(surveyJson);
-  
+  const [surveyData, setSurveyData] = useState(null);
+  const navigate = useNavigate();
+  const userId = "65d4f9b3c7e8a9d2f1a3b4c5"; // Replace with actual user ID
+
+  // Persist survey instance between renders
+  const [survey] = useState(() => new Model(surveyJson));
+
+  // Fetch saved progress
+  const fetchSavedProgress = async () => {
+    try {
+      const response = await fetch(`http://localhost:55000/load_progress/${userId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Methods": "GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch survey data: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("data received from fetching", data);
+      if (data.exists && data.surveyData) {
+        console.log("Survey progress loaded:", data.surveyData);
+        setSurveyData(data.surveyData);
+      } else {
+        console.warn("No saved survey data found.");
+      }
+    } catch (error) {
+      console.error("Error loading saved survey data:", error);
+    }
+  };
+
+  // Load saved survey data when component mounts
+  useEffect(() => {
+    fetchSavedProgress();
+  }, []);
+
+  // Update survey model when `surveyData` changes
+  useEffect(() => {
+    if (surveyData) {
+      survey.data = surveyData; // Properly apply fetched survey data
+    }
+  }, [surveyData]);
+
 
   const onComplete = (survey) => {
     //Set the date time of the submission in the metadata page just before submitting
     //survey.data.submissionDateTime = new Date().toISOString();
     //survey.data.user_id = "kumar502"; // Replace with actual user ID
     survey.setValue("submissionDateTime", new Date().toISOString());
-    survey.setValue("user_id", "65d4f9b3c7e8a9d2f1a3b4c5"); // Replace with actual user ID
+    survey.setValue("user_id", userId); // Replace with actual user ID
 
     // Submit results to your server if needed
     fetch("http://localhost:55000/submit_preferences", {
@@ -425,9 +471,33 @@ const PreferenceSurvey = () => {
       .then((data) => console.log("Success:", data))
       .catch((error) => console.error("Error:", error));
   };
+  
 
-  const saveAndExit = () => {
-    navigateToUrl("/");
+  // Handle "Save & Exit" functionality (No survey parameter needed)
+  const saveAndExit = async () => {
+    try {
+      if (!survey.data || Object.keys(survey.data).length === 0) {
+        console.warn("No survey data to save.");
+        return;
+      }
+
+      survey.setValue("user_id", userId); // Ensure user ID is set before saving
+
+      const response = await fetch("http://localhost:55000/save_progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, surveyData: survey.data }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to save survey progress: ${response.statusText}`);
+      }
+
+      console.log("Survey progress saved.");
+      navigate("/"); // Redirect to homepage
+    } catch (error) {
+      console.error("Error saving progress:", error);
+    }
   };
 
   return (
@@ -440,7 +510,7 @@ const PreferenceSurvey = () => {
               color: "white",
               "&:hover": { backgroundColor: "#4BAF36" }, // Slightly darker on hover
             }}
-            onClick={saveAndExit}
+            onClick={() => saveAndExit()}
           >
             Save & Exit
           </Button>
