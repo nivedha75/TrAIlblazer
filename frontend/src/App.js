@@ -7,6 +7,7 @@ import CreateTrip from './pages/CreateTrip';
 import PlanTrip from './pages/PlanTrip';
 import PreferenceSurvey from "./pages/PreferenceSurvey";
 import TripDetails from './pages/TripDetails';
+import ActivityCarousel from './pages/ActivityCarousel';
 
    function App() {
        const [message, setMessage] = useState('');
@@ -29,6 +30,7 @@ import TripDetails from './pages/TripDetails';
             <Route path="/create" element={<CreateTrip />} />
             <Route path="/plan" element={<PlanTrip />} />
             <Route path="/survey" element={<PreferenceSurvey />} />
+            <Route path="/activities" element={<ActivityCarousel />} />
             <Route path="/trip-details/:tripId" element={<TripDetails />} />
           </Routes>
         </Router>
