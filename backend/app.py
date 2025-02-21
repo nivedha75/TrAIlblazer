@@ -49,26 +49,51 @@ def submit_preferences():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route("/trips", methods=['POST'])
+@app.route("/trips", methods=['GET', 'POST', 'OPTIONS'])
 def trips():
+    if request.method == 'GET':
+        try:
+            trips = list(trip_collection.find({}))
+            for trip in trips:
+                trip["_id"] = str(trip["_id"])
+            return jsonify(trips), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            if not data:
+                return jsonify({"error": "No data provided"}), 400
+            print("Received timeRanges:", data.get("timeRanges")) 
+            trip_collection.insert_one({
+                "location": data["location"],
+                "days": data["days"],
+                "startDate": data["startDate"],
+                "endDate": data["endDate"],
+                "timeRanges": data["timeRanges"],
+                "people": data["people"]
+            })
+            return jsonify({"message": "Trip data saved successfully"}), 201
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500 
+    elif request.method == 'OPTIONS':
+        return '', 200
+
+@app.route('/trips/<trip_id>', methods=['GET', 'OPTIONS'])
+def get_trip(trip_id):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+
     try:
-        data = request.json
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
-        print("Received timeRanges:", data.get("timeRanges")) 
-        trip_collection.insert_one({
-            "location": data["location"],
-            "days": data["days"],
-            "startDate": data["startDate"],
-            "endDate": data["endDate"],
-            "timeRanges": data["timeRanges"],
-            "people": data["people"]
-        })
-        return jsonify({"message": "Trip data saved successfully"}), 201
-
+        trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
+        if trip:
+            trip["_id"] = str(trip["_id"])
+            return jsonify(trip), 200
+        else:
+            return jsonify({"error": "Trip not found"}), 404
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
-
-    
+        return jsonify({"error": str(e)}), 500
 if __name__ == '__main__':
     app.run(port=55000, debug=True)

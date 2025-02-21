@@ -185,7 +185,7 @@ const PlanTrip = () => {
         }}
         onClick={saveTrip}
       >
-        Save and Continue
+        Save Trip
       </button>
     </div>
   );

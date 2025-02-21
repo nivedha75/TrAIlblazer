@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Profile from "../assets/Profile.png";
 import Hawaii from "../assets/hawaii.png";
 import ChatBot from "../assets/Chatbot.png";
@@ -13,19 +13,36 @@ const HomePage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [trips, setTrips] = useState([]);
 
-useEffect(() => {
-  const savedTrips = JSON.parse(localStorage.getItem("trips5")) || [];
-  setTrips(savedTrips);
-}, []);
+  useEffect(() => {
+    fetch("http://localhost:55000/trips", {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Fetched data: ", data);
+        setTrips(data);
+      })
+      .catch((error) => console.error("Error fetching trips:", error));
+  }, []);
+
   const navigate = useNavigate();
 
   const navigateToCreate = () => {
     navigate("/create");
-  }
+  };
 
   const navigateToSurvey = () => {
     navigate("/survey");
-  }
+  };
+
+  const viewDetails = (tripId) => {
+    navigate(`/trip-details/${encodeURIComponent(tripId)}`);
+  };
 
   const Card = ({ image, title = "Place", buttonText = "Trip Details", button = () => alert("Trip Details") }) => {
     return (
@@ -110,8 +127,8 @@ useEffect(() => {
   <div style={{ display: "flex", gap: "10px" }}>
           <Card image={Hawaii} title="Hawaii Getaway" description="Enjoy the beaches of Hawaii." />
           <Card image={York} title="New York Adventure" description="Explore the city that never sleeps." />
-          {trips.map((trip, index) => (
-    <Card key={index} title={trip.location} description="Upcoming trip" />
+          {trips.map((trip) => (
+    <Card key={trip._id} title={trip.location} button={() => viewDetails(trip._id)} description="Upcoming trip" />
   ))}
         </div>
   </div>
