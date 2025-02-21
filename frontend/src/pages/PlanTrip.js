@@ -19,19 +19,78 @@ const PlanTrip = () => {
 
   const navigate = useNavigate();
 
-  const saveTrip = () => {
+  const formatTime = (hour) => {
+    const isPM = hour >= 12;
+    let formattedHour = hour % 12 || 12;
+    const period = isPM ? 'PM' : 'AM';
+    return `${formattedHour} ${period}`;
+  };
+  
+  const formatTimeRanges = (ranges) => {
+    const formattedRanges = {};
+    Object.keys(ranges).forEach((day, index) => {
+      const range = ranges[day];
+      formattedRanges[`Day ${index + 1}`] = {
+        start: formatTime(range[0]),
+        end: formatTime(range[1])
+      };
+    });
+    return formattedRanges;
+  };
+
+  const saveTrip = async () => {
     const trip = {
       location: location.state?.locate || "Unknown Destination",
     };
-    const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
+    const savedTrips = JSON.parse(localStorage.getItem("trips5")) || [];
     savedTrips.push(trip);
-    localStorage.setItem("trips", JSON.stringify(savedTrips));
-    navigate("/");
+    localStorage.setItem("trips5", JSON.stringify(savedTrips));
+    if (!startDate || !people || people <= 0) {
+      alert("Please select a valid start date and valid number of friends.");
+      return;
+    }
+    const tripData = {
+      location: location.state?.locate || "Unknown Destination",
+      days,
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: getEndDate(),
+      timeRanges: formatTimeRanges(timeRanges),
+      people: parseInt(people, 10)
+    };
+
+    fetch("http://localhost:55000/trips", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "http://localhost:3000",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    },
+    body: JSON.stringify(tripData)
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Success:", data);
+      alert("Trip saved successfully!");
+      navigate("/");
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Failed to save trip. Please try again.");
+    });
   };
   
   const [timeRanges, setTimeRanges] = useState(
     Array.from({ length: days }, () => [9, 17])
   );
+
+  const getEndDate = () => {
+    if (!startDate) return null;
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + days - 1);
+    return end.toISOString().split("T")[0];
+  }
 
   const isHighlighted = (date) => {
     if (!startDate) return false;
@@ -126,7 +185,7 @@ const PlanTrip = () => {
         }}
         onClick={saveTrip}
       >
-        Save and Continue
+        Save Trip
       </button>
     </div>
   );

@@ -1,26 +1,48 @@
 import React, {useState, useEffect} from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Profile from "../assets/Profile.png";
 import Hawaii from "../assets/hawaii.png";
 import ChatBot from "../assets/Chatbot.png";
+import York from "../assets/NewYork.png";
+import Indonesia from "../assets/Indonesia.png";
+import Japan from "../assets/Japan.png";
+import Paris from "../assets/Paris.png";
+import Canyon from "../assets/Canyon.png";
 
 const HomePage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [trips, setTrips] = useState([]);
 
-useEffect(() => {
-  const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
-  setTrips(savedTrips);
-}, []);
+  useEffect(() => {
+    fetch("http://localhost:55000/trips", {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Fetched data: ", data);
+        setTrips(data);
+      })
+      .catch((error) => console.error("Error fetching trips:", error));
+  }, []);
+
   const navigate = useNavigate();
 
   const navigateToCreate = () => {
     navigate("/create");
-  }
+  };
 
   const navigateToSurvey = () => {
     navigate("/survey");
-  }
+  };
+
+  const viewDetails = (tripId) => {
+    navigate(`/trip-details/${encodeURIComponent(tripId)}`);
+  };
 
   const Card = ({ image, title = "Place", buttonText = "Trip Details", button = () => alert("Trip Details") }) => {
     return (
@@ -33,7 +55,7 @@ useEffect(() => {
         textAlign: "center",
         margin: "10px",
       }}>
-        {image && <img src={image} alt={title} style={{ width: "100%", borderRadius: "10px" }} />}
+        {image && <img src={image} alt={title} style={{ width: "100%", height: "60%", borderRadius: "10px" }} />}
         <h2>{title}</h2>
         <button 
         onClick={button} 
@@ -104,9 +126,9 @@ useEffect(() => {
   <h1 style={{marginLeft: "20px"}}>My Trips:</h1>
   <div style={{ display: "flex", gap: "10px" }}>
           <Card image={Hawaii} title="Hawaii Getaway" description="Enjoy the beaches of Hawaii." />
-          <Card title="New York Adventure" description="Explore the city that never sleeps." />
-          {trips.map((trip, index) => (
-    <Card key={index} title={trip.location} description="Upcoming trip" />
+          <Card image={York} title="New York Adventure" description="Explore the city that never sleeps." />
+          {trips.map((trip) => (
+    <Card key={trip._id} title={trip.location} button={() => viewDetails(trip._id)} description="Upcoming trip" />
   ))}
         </div>
   </div>
@@ -114,8 +136,8 @@ useEffect(() => {
   <div style={{ marginTop: "40px" }}>
   <h1 style={{marginLeft: "20px"}}>Discover New Vacation Spots:</h1>
   <div style={{ display: "flex", gap: "10px" }}>
-          <Card title="Bali, Indonesia" description="Tropical paradise with beautiful landscapes." />
-          <Card title="Paris, France" description="The city of love and lights." />
+          <Card image={Indonesia} title="Bali, Indonesia" description="Tropical paradise with beautiful landscapes." />
+          <Card image={Paris} title="Paris, France" description="The city of love and lights." />
   </div>
   <button onClick={navigateToSurvey} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Take Our Travel Quiz</button>
   <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", margin: "10px 20px 0 0", position: "fixed", bottom: "0px", right: "0px" }}>
@@ -132,8 +154,8 @@ useEffect(() => {
   <div style={{ marginTop: "40px" }}>
   <h1 style={{marginLeft: "20px"}}>Past Trips:</h1>
   <div style={{ display: "flex", gap: "10px" }}>
-          <Card title="Japan Tour" description="Experience the culture and technology of Japan." />
-          <Card title="Grand Canyon" description="Explore the natural wonders of Arizona." />
+          <Card image={Japan} title="Japan Tour" description="Experience the culture and technology of Japan." />
+          <Card image={Canyon} title="Grand Canyon" description="Explore the natural wonders of Arizona." />
   </div>
   </div>
   </div>);

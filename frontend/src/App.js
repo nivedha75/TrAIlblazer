@@ -6,6 +6,7 @@ import HomePage from "./pages/Homepage";
 import CreateTrip from './pages/CreateTrip';
 import PlanTrip from './pages/PlanTrip';
 import PreferenceSurvey from "./pages/PreferenceSurvey";
+import TripDetails from './pages/TripDetails';
 
    function App() {
        const [message, setMessage] = useState('');
@@ -28,6 +29,7 @@ import PreferenceSurvey from "./pages/PreferenceSurvey";
             <Route path="/create" element={<CreateTrip />} />
             <Route path="/plan" element={<PlanTrip />} />
             <Route path="/survey" element={<PreferenceSurvey />} />
+            <Route path="/trip-details/:tripId" element={<TripDetails />} />
           </Routes>
         </Router>
       );
