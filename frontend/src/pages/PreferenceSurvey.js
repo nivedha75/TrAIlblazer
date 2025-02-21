@@ -66,18 +66,6 @@ const surveyJson = {
           ],
           isRequired: true
         },
-        {
-          type: "checkbox",
-          name: "accommodationPreferences",
-          title: "Which types of accommodation do you prefer? (Select all that apply)",
-          choices: [
-            "Hostels/Budget Stays",
-            "Mid-Range Hotels",
-            "Luxury Resorts",
-            "Boutique/Unique Stays"
-          ],
-          isRequired: true
-        },
       ]
     },
     // -------------------- LIFESTYLE PAGE 2 --------------------
@@ -449,10 +437,12 @@ const surveyJson = {
       choices: [
         "Bed and Breakfast",
         "Hostel",
-        "Hotel",
         "Motel",
-        "Resort",
+        "Mid-Range Hotels",
+        "Luxury Resorts",
         "Vacation Rental",
+        "Budget Stays",
+        "Boutique/Unique Stays",
         "Other"
       ],
       isRequired: true
@@ -647,6 +637,9 @@ const PreferenceSurvey = () => {
           </Button>
       </Box>
       <Survey model={survey} onComplete={onComplete} />
+      <Button>
+        <a href="http://localhost:3000/">Go back to home</>
+      </Button>
     </Box>
   );
   
