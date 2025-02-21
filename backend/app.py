@@ -71,8 +71,14 @@ def submit_preferences():
                 print("Converted user_id:", data["user_id"])
             except:
                 return jsonify({"error": "Invalid user_id format"}), 400  # Return error if ID is invalid
-            print("Received and Modified Data:", data)
-        collection.insert_one(data)  # Insert into MongoDB
+        print("Received and Modified Data:", data)
+        #collection.insert_one(data)  # Insert into MongoDB
+        # Update existing document or insert a new one
+        collection.update_one(
+            {"user_id": data["user_id"]},  # Match user_id
+            {"$set": data},  # Update document
+            upsert=True  # Insert if not exists
+        )
         return jsonify({"message": "Survey data saved successfully"}), 201
 
     except Exception as e:

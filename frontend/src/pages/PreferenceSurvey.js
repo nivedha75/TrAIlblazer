@@ -401,7 +401,8 @@ const PreferenceSurvey = () => {
 
   const [surveyData, setSurveyData] = useState(null);
   const navigate = useNavigate();
-  const userId = "65d4f9b3c7e8a9d2f1a3b4c5"; // Replace with actual user ID
+  //const userId = "65d4f9b3c7e8a9d2f1a3b4c5"; // Replace with actual user ID
+  const userId = "65d4f9b3c7e8a9d2f1a3b4c4"; //new one
 
   // Persist survey instance between renders
   const [survey] = useState(() => new Model(surveyJson));
@@ -424,7 +425,8 @@ const PreferenceSurvey = () => {
       }
 
       const data = await response.json();
-      console.log("data received from fetching", data);
+      console.log("user_id that app is fetching data for: ", userId);
+      console.log("data fetched: ", data);
       if (data.exists && data.surveyData) {
         console.log("Survey progress loaded:", data.surveyData);
         setSurveyData(data.surveyData);
