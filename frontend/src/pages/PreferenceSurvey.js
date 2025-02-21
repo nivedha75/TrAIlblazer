@@ -6,6 +6,18 @@ import { useNavigate } from "react-router-dom";
 // import { ContrastDark } from "survey-core/themes";
 import { StylesManager } from "survey-core";
 import { useEffect } from "react";
+import { Button, Box } from "@mui/material";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+
+// Create custom theme
+const theme = createTheme({
+  palette: {
+    purple: { main: "#c902e3" },
+    apple: { main: "#5DBA40" },
+    steelBlue: { main: "#5C76B7" },
+    violet: { main: "#BC00A3" },
+  },
+});
 
 // This variable controls if all questions are required or not
 const REQUIRE_QUESTIONS = false; // Toggle this to true/false as needed
@@ -392,7 +404,7 @@ const PreferenceSurvey = () => {
   
 
   const onComplete = (survey) => {
-    // Set the date time of the submission in the metadata page just before submitting
+    //Set the date time of the submission in the metadata page just before submitting
     //survey.data.submissionDateTime = new Date().toISOString();
     //survey.data.user_id = "kumar502"; // Replace with actual user ID
     survey.setValue("submissionDateTime", new Date().toISOString());
@@ -414,7 +426,30 @@ const PreferenceSurvey = () => {
       .catch((error) => console.error("Error:", error));
   };
 
-  return <Survey model={survey} onComplete={onComplete} />;
+  const saveAndExit = () => {
+    navigateToUrl("/");
+  };
+
+  return (
+    <Box>
+      <Box sx={{ position: "absolute", top: 20, right: 20, zIndex: 1000 }}>
+        <Button
+            variant="contained"
+            sx={{
+              backgroundColor: theme.palette.purple.main,
+              color: "white",
+              "&:hover": { backgroundColor: "#4BAF36" }, // Slightly darker on hover
+            }}
+            onClick={saveAndExit}
+          >
+            Save & Exit
+          </Button>
+      </Box>
+      <Survey model={survey} onComplete={onComplete} />
+    </Box>
+  );
+  
+  
 };
 
 export default PreferenceSurvey;
