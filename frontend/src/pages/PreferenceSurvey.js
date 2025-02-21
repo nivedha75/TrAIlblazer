@@ -401,16 +401,10 @@ const surveyJson = {
             "Jewelry",
             "Local Handicraft",
             "Souvenirs",
-            "Other",
             "None"
           ],
-          isRequired: true
-        },
-        {
-          type: "text",
-          name: "shoppingInterestsOther",
-          title: "Please specify your shopping interests:",
-          visibleIf: "{shoppingInterests} contains 'Other'",
+          hasOther: true,
+          otherText: "Other (please specify)",
           isRequired: true
         },
         {
@@ -452,16 +446,10 @@ const surveyJson = {
         "Hotel",
         "Motel",
         "Resort",
-        "Vacation Rental",
-        "Other"
+        "Vacation Rental"
       ],
-      isRequired: true
-    },
-    {
-      type: "text",
-      name: "accommodationTypeOther",
-      title: "Please specify your desired accommodation:",
-      visibleIf: "{accommodationType} contains 'Other'",
+      hasOther: true,
+      otherText: "Other (please specify)",
       isRequired: true
     },
     {
@@ -502,18 +490,6 @@ const surveyJson = {
         "A Mix of Both"
       ],
       isRequired: true
-      survey.data = {
-    "amenities": {
-      "breakfast": "Do Not Care About",
-      "fitness": "Do Not Care About",
-      "market": "Do Not Care About",
-      "pool": "Do Not Care About",
-      "restaurant": "Do Not Care About",
-      "room_service": "Do Not Care About",
-      "wc_access": "Do Not Care About",
-      "wifi": "Do Not Care About",
-    }
-  }
     }*/
   ]
 }
