@@ -402,7 +402,7 @@ const PreferenceSurvey = () => {
   const [surveyData, setSurveyData] = useState(null);
   const navigate = useNavigate();
   //const userId = "65d4f9b3c7e8a9d2f1a3b4c5"; // Replace with actual user ID
-  const userId = "65d4f9b3c7e8a9d2f1a3b4c4"; //new one
+  const userId = "65d4f9b3c7e8a9d2f1a3b4c3"; //new one
 
   // Persist survey instance between renders
   const [survey] = useState(() => new Model(surveyJson));

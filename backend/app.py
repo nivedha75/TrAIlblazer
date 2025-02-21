@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId  # Import ObjectId for MongoDB ID conversion for user_id
 
 app = Flask(__name__)
@@ -37,13 +37,21 @@ def load_progress(user_id):
 
 @app.route('/save_progress', methods=['POST'])
 def save_progress():
-    data = request.json
-    user_id = ObjectId(data["userId"])  # Convert userId to ObjectId for MongoDB
+    data = request.json  # Get JSON from frontend
+    user_id = ObjectId(data["userId"])  # Convert userId to ObjectId
 
+    # Extract survey responses
+    survey_data = data["surveyData"]  # Only survey responses
+
+    # Ensure user_id is stored in the document
+    survey_data["user_id"] = user_id
+    survey_data["lastUpdated"] = datetime.now(timezone.utc)  # Add timestamp
+
+    # Update existing document or insert a new one
     collection.update_one(
-        {"user_id": user_id},  # Find existing entry by user_id
-        {"$set": {**data["surveyData"], "user_id": user_id, "lastUpdated": datetime.utcnow()}},  # Update data
-        upsert=True  # Create new entry if not found
+        {"user_id": user_id},  # Match by user ID
+        {"$set": survey_data},  # Update survey fields
+        upsert=True  # Insert new document if none exists
     )
 
     return jsonify({"message": "Survey progress saved"}), 200
@@ -64,6 +72,9 @@ def submit_preferences():
         if "submissionDateTime" in data:
             data["submissionDateTime"] = datetime.fromisoformat(data["submissionDateTime"])
             print("Converted submissionDateTime:", data["submissionDateTime"])
+        
+        data["lastUpdated"] = datetime.now(timezone.utc)
+
         # Convert user_id to ObjectId (foreign key reference)
         if "user_id" in data:
             try:
