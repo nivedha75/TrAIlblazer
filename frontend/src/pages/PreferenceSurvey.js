@@ -551,6 +551,7 @@ const surveyJson = {
   ]
 };
 
+
 // 2. Function to update all questions with the REQUIRE_QUESTIONS setting
 const applyRequirementFlag = (surveyConfig, requireAll) => {
   if (surveyConfig.pages) {
@@ -678,6 +679,8 @@ const PreferenceSurvey = () => {
       console.error("Error saving progress:", error);
     }
   };
+
+  
 
   return (
     <Box>
