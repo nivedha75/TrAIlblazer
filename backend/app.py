@@ -21,6 +21,35 @@ def hello():
 def api_trailblazer():
     return jsonify({'message': 'TrAIlblazer'})
 
+@app.route('/load_progress/<user_id>', methods=['GET', 'OPTIONS'])
+def load_progress(user_id):
+    print("Received user_id:", user_id)
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+    
+    # Find the document but exclude `_id` and `user_id` from the response
+    result = collection.find_one({"user_id": ObjectId(user_id)}, {"_id": 0, "user_id": 0})
+
+    if result:
+        print("Survey data found:", result)  # Debugging log
+        return jsonify({"exists": True, "surveyData": result}), 200  # Return only survey data
+    return jsonify({"exists": False, "message": "No saved progress"}), 200
+
+@app.route('/save_progress', methods=['POST'])
+def save_progress():
+    data = request.json
+    user_id = ObjectId(data["userId"])  # Convert userId to ObjectId for MongoDB
+
+    collection.update_one(
+        {"user_id": user_id},  # Find existing entry by user_id
+        {"$set": {**data["surveyData"], "user_id": user_id, "lastUpdated": datetime.utcnow()}},  # Update data
+        upsert=True  # Create new entry if not found
+    )
+
+    return jsonify({"message": "Survey progress saved"}), 200
+
+
+
 @app.route('/submit_preferences', methods=['POST', 'OPTIONS'])
 def submit_preferences():
     if request.method == "OPTIONS":
@@ -42,8 +71,14 @@ def submit_preferences():
                 print("Converted user_id:", data["user_id"])
             except:
                 return jsonify({"error": "Invalid user_id format"}), 400  # Return error if ID is invalid
-            print("Received and Modified Data:", data)
-        collection.insert_one(data)  # Insert into MongoDB
+        print("Received and Modified Data:", data)
+        #collection.insert_one(data)  # Insert into MongoDB
+        # Update existing document or insert a new one
+        collection.update_one(
+            {"user_id": data["user_id"]},  # Match user_id
+            {"$set": data},  # Update document
+            upsert=True  # Insert if not exists
+        )
         return jsonify({"message": "Survey data saved successfully"}), 201
 
     except Exception as e:
