@@ -616,6 +616,26 @@ const PreferenceSurvey = () => {
     }
   };
 
+  // 2. Function to update all questions with the REQUIRE_QUESTIONS setting
+  const applyRequirementFlag = (surveyConfig, requireAll) => {
+    if (surveyConfig.pages) {
+      surveyConfig.pages.forEach(page => {
+        if (page.elements) {
+          page.elements.forEach(element => {
+            // If a question has isRequired property, set it to the given flag
+            if (typeof element.isRequired !== "undefined") {
+              element.isRequired = requireAll;
+            }
+            // If it's a matrix and has isAllRowRequired property, update it too
+            if (element.type === "matrix" && typeof element.isAllRowRequired !== "undefined") {
+              element.isAllRowRequired = requireAll;
+            }
+          });
+        }
+      });
+    }
+  };
+
   return (
     <Box>
       <Box sx={{ position: "absolute", top: 20, right: 20, zIndex: 1000 }}>
