@@ -17,6 +17,9 @@ Installed everything with
 ### `npm install survey-react`
 ### `npm install survey-react-ui`
 ### `npm install @mui/material @emotion/react @emotion/styled`
+### `npm install @mui/icons-material`
+### `npm install slick-carousel`
+
 
 Added these scripts to the package.json file
 

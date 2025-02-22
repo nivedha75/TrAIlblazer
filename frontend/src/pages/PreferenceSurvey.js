@@ -7,20 +7,11 @@ import { useNavigate } from "react-router-dom";
 import { StylesManager } from "survey-core";
 import { useEffect, useState } from "react";
 import { Button, Box } from "@mui/material";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-
-// Create custom theme
-const theme = createTheme({
-  palette: {
-    purple: { main: "#c902e3" },
-    apple: { main: "#5DBA40" },
-    steelBlue: { main: "#5C76B7" },
-    violet: { main: "#BC00A3" },
-  },
-});
+import { ThemeProvider } from "@mui/material/styles";
+import theme from "../theme"
 
 // This variable controls if all questions are required or not
-const REQUIRE_QUESTIONS = false; // Toggle this to true/false as needed
+const REQUIRE_QUESTIONS = true; // Toggle this to true/false as needed
 
 const surveyJson = {
   completeText: "Submit",
@@ -630,17 +621,38 @@ const surveyJson = {
 };
 
 
-// 2. Function to update all questions with the REQUIRE_QUESTIONS setting
+// // Function to update all questions with the REQUIRE_QUESTIONS setting
+// const applyRequirementFlag = (surveyConfig, requireAll) => {
+//   if (surveyConfig.pages) {
+//     surveyConfig.pages.forEach(page => {
+//       if (page.elements) {
+//         page.elements.forEach(element => {
+//           // If a question has isRequired property, set it to the given flag
+//           if (typeof element.isRequired !== "undefined") {
+//             element.isRequired = requireAll;
+//           }
+//           // If it's a matrix and has isAllRowRequired property, update it too
+//           if (element.type === "matrix" && typeof element.isAllRowRequired !== "undefined") {
+//             element.isAllRowRequired = requireAll;
+//           }
+//         });
+//       }
+//     });
+//   }
+// };
+
+
 const applyRequirementFlag = (surveyConfig, requireAll) => {
   if (surveyConfig.pages) {
     surveyConfig.pages.forEach(page => {
       if (page.elements) {
         page.elements.forEach(element => {
-          // If a question has isRequired property, set it to the given flag
-          if (typeof element.isRequired !== "undefined") {
+          // Exclude only text input fields from being required
+          if (element.type !== "text" && typeof element.isRequired !== "undefined") {
             element.isRequired = requireAll;
           }
-          // If it's a matrix and has isAllRowRequired property, update it too
+
+          // If it's a matrix, update isAllRowRequired too
           if (element.type === "matrix" && typeof element.isAllRowRequired !== "undefined") {
             element.isAllRowRequired = requireAll;
           }
@@ -651,9 +663,6 @@ const applyRequirementFlag = (surveyConfig, requireAll) => {
 };
 
 const PreferenceSurvey = () => {
-
-  // Apply the requirement flag before creating the model
-  applyRequirementFlag(surveyJson, REQUIRE_QUESTIONS);
 
   const [surveyData, setSurveyData] = useState(null);
   const navigate = useNavigate();
@@ -697,6 +706,7 @@ const PreferenceSurvey = () => {
   // Load saved survey data when component mounts
   useEffect(() => {
     fetchSavedProgress();
+    applyRequirementFlag(surveyJson, REQUIRE_QUESTIONS);
   }, []);
 
   // Update survey model when `surveyData` changes
@@ -704,6 +714,7 @@ const PreferenceSurvey = () => {
     if (surveyData) {
       survey.data = surveyData; // Properly apply fetched survey data
     }
+    applyRequirementFlag(surveyJson, REQUIRE_QUESTIONS);
   }, [surveyData]);
 
 
