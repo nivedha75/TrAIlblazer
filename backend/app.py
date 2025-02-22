@@ -79,7 +79,7 @@ def submit_preferences():
         # Convert user_id to ObjectId (foreign key reference)
         if "user_id" in data:
             try:
-                data['user_id'] = Cookies.get('user_id')
+                # data['user_id'] = Cookies.get('user_id')
                 data["user_id"] = ObjectId(data["user_id"])  # Convert string ID to ObjectId
                 print("Converted user_id:", data["user_id"])
             except:
