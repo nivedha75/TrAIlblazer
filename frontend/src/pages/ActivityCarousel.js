@@ -13,6 +13,7 @@ import {
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"; // "Add to Itinerary" icon
 import { useNavigate } from "react-router-dom"; // For navigation to details page
 import { settings } from "survey-react";
+import Canyon from "../assets/Canyon.png";
 
 const activities = [
   {

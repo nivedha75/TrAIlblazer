@@ -24,11 +24,10 @@ const surveyJson = {
       "name": "welcomePage",
       "title": "🏝️ Welcome to the Travel Preferences Survey! 🏕️",
       "elements": [
-    {
+      {
       "type": "html",
-      "html": "<div style='text-align:center; font-size:18px;'>✨ Help us understand your travel style so we can provide personalized recommendations.<br><br>This survey covers the following topics:<br><br> ✈️ <b>Lifestyle Preferences</b> – Travel pace and budget.<br> 🎭 <b>Interests & Hobbies</b> – Activities you enjoy while traveling.<br> 🍽️ <b>Dining & Cuisine</b> – Food preferences and dietary needs.<br> 🏨 <b>Accommodation & Comfort</b> – Lodging choices and accessibility.<br> 🎯 <b>Travel Style & Goals</b> – Purpose of travel and planning habits.<br> 🎶 <b>Social & Entertainment</b> – Nightlife, live events, and relaxation preferences.<br><br>Click 'Next' to begin! 🚀</div>"
-    }
-  ]
+      "html": "<div style='text-align:center; font-size:18px;'>✨ Help us understand your travel style so we can provide personalized recommendations.<br><br>This survey covers the following topics:<br><br> 💰 💎 <b>Lifestyle Preferences</b> – Travel pace and budget.<br> 🏄 ⛷️ <b>Interests & Hobbies</b> – Activities you enjoy while traveling.<br> 🍽️ 🍷 <b>Dining & Cuisine</b> – Food preferences and dietary needs.<br>👨‍👩‍👧‍👦 🛍️ <b>Travel Style & Goals</b> – Purpose of travel and planning habits.<br> 🏨 🛏️ <b>Accommodation & Comfort</b> – Lodging choices and accessibility.<br> 🎶 💃 <b>Social & Entertainment</b> – Nightlife, live events, and relaxation preferences.<br> 🗺️ 🔍 <b> General Preferences</b> – Additional personal travel requests. <br><br>Click 'Next' to begin! 🧳 ✈️ </div>",
+      }]
     },
     // -------------------- LIFESTYLE PAGE 1 --------------------
     {
