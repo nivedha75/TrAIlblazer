@@ -12,6 +12,7 @@ client = MongoClient("mongodb+srv://kumar502:gcstrail1@cluster0.h5zkw.mongodb.ne
 db = client["TrAIlblazer"]
 collection = db["survey_preferences"]
 trip_collection = db["trips"]
+place_collection = db["places"]
 
 @app.route('/')
 def hello():
@@ -141,5 +142,35 @@ def get_trip(trip_id):
             return jsonify({"error": "Trip not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/places", methods=['GET', 'OPTIONS'])
+def places():
+    if request.method == 'GET':
+        try:
+            places = list(place_collection.find({}))
+            for place in places:
+                place["_id"] = str(place["_id"])
+            return jsonify(places), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    elif request.method == 'OPTIONS':
+        return '', 200
+
+@app.route('/places/<place_id>', methods=['GET', 'OPTIONS'])
+def get_place(place_id):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+
+    try:
+        place = place_collection.find_one({"_id": ObjectId(place_id)})
+        if place:
+            place["_id"] = str(place["_id"])
+            return jsonify(place), 200
+        else:
+            return jsonify({"error": "Place not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(port=55000, debug=True)
