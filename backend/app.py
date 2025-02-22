@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from datetime import datetime, timezone
 from bson import ObjectId  # Import ObjectId for MongoDB ID conversion for user_id
 
+
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 #CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
@@ -79,6 +80,7 @@ def submit_preferences():
         # Convert user_id to ObjectId (foreign key reference)
         if "user_id" in data:
             try:
+                # data['user_id'] = Cookies.get('user_id')
                 data["user_id"] = ObjectId(data["user_id"])  # Convert string ID to ObjectId
                 print("Converted user_id:", data["user_id"])
             except:
