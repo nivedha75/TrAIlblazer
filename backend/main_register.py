@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 import sqlite3
 import hashlib
 import re
@@ -7,6 +7,7 @@ import uuid
 from email.message import EmailMessage
 
 app = Flask(__name__)
+app.secret_key = 'secret_key'
 
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
@@ -91,6 +92,8 @@ def verify():
     cursor.execute("UPDATE UserTable SET verified = 1, verification_token = NULL WHERE verification_token = ?", (token,))
     conn.commit()
     conn.close()
+
+    session["user"] = user[0]
     
     return jsonify({'message': 'Email verified successfully. You can now log in.'}), 200
 
@@ -117,6 +120,15 @@ def login():
         return jsonify({'error': 'Please verify your email before logging in'}), 403
     
     return jsonify({'message': 'Login successful'}), 200
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user', None)
+    return jsonify({'message': 'Logged out'})
+
+@app.route('/is_authenticated', methods=['GET'])
+def is_authenticated():
+    return jsonify({'authenticated': 'user' in session})
 
 if __name__ == '__main__':
     app.run(debug=True, port=PORT)
