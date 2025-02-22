@@ -10,132 +10,161 @@ import {
   Box,
   Tooltip,
 } from "@mui/material";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"; // "Add to Itinerary" icon
-import { useNavigate } from "react-router-dom"; // For navigation to details page
-import { settings } from "survey-react";
-import Canyon from "../assets/Canyon.png";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import { useNavigate } from "react-router-dom";
+import ChihulyGarden from "../assets/Activities/ChihulyGarden.jpg";
+import SpaceNeedle from "../assets/Activities/SpaceNeedle.jpg";
+import PikePlaceMarket from "../assets/Activities/PikePlaceMarket.jpg";
+import OlympicSculpturePark from "../assets/Activities/OlympicSculpturePark.jpg";
+import MuseumOfFlight from "../assets/Activities/MuseumOfFlight.jpeg";
+import WhalePudgetSound from "../assets/Activities/WhalePudgetSound.jpg";
 
 const activities = [
   {
     title: "Chihuly Garden and Glass",
-    image: "https://source.unsplash.com/400x600/?glass,art",
+    image: ChihulyGarden,
     location: "Seattle, WA",
     rating: 4.8,
   },
   {
     title: "Seattle Space Needle",
-    image: "https://source.unsplash.com/400x600/?seattle,needle",
+    image: SpaceNeedle,
     location: "Seattle, WA",
     rating: 4.7,
   },
   {
     title: "Pike Place Market",
-    image: "https://source.unsplash.com/400x600/?market,food",
+    image: PikePlaceMarket,
     location: "Seattle, WA",
     rating: 4.6,
   },
   {
-    title: "Museum of Pop Culture",
-    image: "https://source.unsplash.com/400x600/?museum,music",
+    title: "Whale Watching at Puget Sound",
+    image: WhalePudgetSound,
     location: "Seattle, WA",
-    rating: 4.5,
+    rating: 4.9,
   },
   {
-    title: "Kerry Park",
-    image: "https://source.unsplash.com/400x600/?park,skyline",
+    title: "Museum of Flight",
+    image: MuseumOfFlight,
     location: "Seattle, WA",
     rating: 4.9,
   },
 ];
 
+const NextArrow = ({ onClick }) => (
+  <IconButton
+    onClick={onClick}
+    sx={{
+      position: "absolute",
+      top: "50%",
+      right: "-70px",
+      transform: "translateY(-50%)",
+      backgroundColor: "#00000099",
+      color: "white",
+      "&:hover": { backgroundColor: "#000000CC" },
+    }}
+  >
+    <ArrowForwardIosIcon />
+  </IconButton>
+);
+
+const PrevArrow = ({ onClick }) => (
+  <IconButton
+    onClick={onClick}
+    sx={{
+      position: "absolute",
+      top: "50%",
+      left: "-70px",
+      transform: "translateY(-50%)",
+      backgroundColor: "#00000099",
+      color: "white",
+      "&:hover": { backgroundColor: "#000000CC" },
+    }}
+  >
+    <ArrowBackIosNewIcon />
+  </IconButton>
+);
+
 const ActivityCarousel = () => {
-  const navigate = useNavigate(); // Handles navigation
+  const navigate = useNavigate();
 
   const settings = {
     dots: false,
     infinite: true,
-    centerMode: true,
-    speed: 500,
-    slidesToShow: 3, // Show 3 at a time
+    slidesToShow: 3,
     slidesToScroll: 1,
     arrows: true,
+    nextArrow: <NextArrow />, 
+    prevArrow: <PrevArrow />, 
+    centerMode: false,
+    pauseOnHover: true,
+    autoplay: true,
+    autoplaySpeed: 5000,
     responsive: [
-      {
-        breakpoint: 1300, // Large Laptop
-        settings: {
-          slidesToShow: 3,
-        },
-      },
-      {
-        breakpoint: 1000, //Smaller Laptop/Tablet
-        settings: {
-            slidesToShow: 2,
-        }
-      },
-      {
-        breakpoint: 600, // Mobile
-        settings: {
-          slidesToShow: 1,
-        },
-      },
+      { breakpoint: 1300, settings: { slidesToShow: 3 } },
+      { breakpoint: 1000, settings: { slidesToShow: 2 } },
+      { breakpoint: 600, settings: { slidesToShow: 1 } },
     ],
   };
 
   return (
-    <Box sx={{ width: "80%", margin: "auto", padding: "20px" }}>
+    <Box sx={{ width: "90%", margin: "auto", padding: "20px", position: "relative", height: "85vh" }}>
+      <Typography variant="h4" sx={{ textAlign: "center", marginBottom: "10px", fontWeight: "bold" }}>
+        Featured Activities
+      </Typography>
       <Slider {...settings}>
         {activities.map((activity, index) => (
-          <Card
-            key={index}
-            sx={{
-              position: "relative",
-              borderRadius: "12px",
-              overflow: "hidden",
-              cursor: "pointer",
-              height: "500px",
-            }}
-            //onClick={() => navigate(`/activity/${index}`)} // Navigate to details page
-          >
-            <CardMedia
-              component="img"
-              image={activity.image}
-              alt={activity.title}
-              sx={{ height: "100%", objectFit: "cover" }}
-            />
-            {/* Overlay Information */}
-            <Box
+          <Box key={index} sx={{ display: "flex", alignItems: "center" }}>
+            <Card
               sx={{
-                position: "absolute",
-                bottom: 0,
-                width: "100%",
-                background: "rgba(0, 0, 0, 0.5)",
-                color: "white",
-                padding: "10px",
+                position: "relative",
+                borderRadius: "12px",
+                overflow: "hidden",
+                cursor: "pointer",
+                height: "85vh",
+                width: "95%",
+                margin: "0 auto",
               }}
             >
-              <Typography variant="h6">{activity.title}</Typography>
-              <Typography variant="body2">{activity.location}</Typography>
-              <Typography variant="body2">⭐ {activity.rating}</Typography>
-            </Box>
-
-            {/* "Add to Itinerary" Button */}
-            <Tooltip title="Add to Itinerary">
-              <IconButton
+              <CardMedia component="img" image={activity.image} alt={activity.title} sx={{ height: "100%", width: "100%", objectFit: "cover" }} />
+              <Box
                 sx={{
                   position: "absolute",
-                  top: 10,
-                  right: 10,
-                  backgroundColor: "rgba(255, 255, 255, 0.7)",
-                }}
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent card click navigation
-                  alert(`Added ${activity.title} to itinerary!`);
+                  bottom: 0,
+                  width: "100%",
+                  height: "25%",
+                  padding: "40px 25px",
+                  background: "linear-gradient(to top, #000000EE 20%, #000000DD 40%, #000000BB 60%, #00000088 75%, #00000055 85%, transparent)",
+                  color: "white",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-end",
                 }}
               >
-                <FavoriteBorderIcon />
-              </IconButton>
-            </Tooltip>
-          </Card>
+                <Typography variant="h6" sx={{ fontWeight: "bold", marginBottom: "12px" }}>
+                  {activity.title}
+                </Typography>
+                <Typography variant="body2" sx={{ marginBottom: "8px" }}>
+                  {activity.location}
+                </Typography>
+                <Typography variant="body2">⭐ {activity.rating}</Typography>
+              </Box>
+              <Tooltip title="Add to Itinerary">
+                <IconButton
+                  sx={{ position: "absolute", top: 10, right: 10, backgroundColor: "#FFFFFFB3" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    alert(`Added ${activity.title} to itinerary!`);
+                  }}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Tooltip>
+            </Card>
+          </Box>
         ))}
       </Slider>
     </Box>
