@@ -125,7 +125,7 @@ def register():
     
     #send_verification_email(email, verification_token)
     
-    return jsonify({'message': 'Registration successful. Please check your email to verify your account.'}), 201
+    return jsonify({'message': 'Registration successful. Please check your email to verify your account.', 'user_id': user_id}), 201
 
 @app.route('/verify', methods=['GET'])
 def verify():
@@ -178,8 +178,10 @@ def login():
     # print(session)
     # print(session['user_id'])
     # print('user_id' in session)
+
+    print(user[0])
     
-    return jsonify({'message': 'Login successful'}), 200
+    return jsonify({'message': 'Login successful', 'user_id': user[0]}), 200
     
 # @app.route('/logout', methods=['POST'])
 # def logout():

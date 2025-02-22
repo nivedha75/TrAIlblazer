@@ -44,6 +44,7 @@ const SignIn = ({ setIsAuthenticated }) => {
 
                 Cookies.set("user_id", data.user_id, { expires: 7 }); // Set the cookie for 7 days
                 console.log("User logged in and cookie set!");
+                console.log(data);
 
                 setMessage(data.message);
                 setIsSigningUp(false); // Switch to Sign In after registration

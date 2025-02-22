@@ -14,6 +14,9 @@ const HomePage = () => {
 useEffect(() => {
   // Check if the 'user_id' cookie is set
   const userId = Cookies.get("user_id");
+  //alert(document.cookie);
+  //'user_id=1;username=praveer'
+  //alert(userId);
 
   // If 'user_id' cookie exists, the user is authenticated
   if (userId) {
