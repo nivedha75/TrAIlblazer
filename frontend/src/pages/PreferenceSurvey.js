@@ -359,10 +359,21 @@ const surveyJson = {
         }
       ]
     },
-    // --------------------TRAVEL STYLE PAGE --------------------
+    // TRANSITION PAGE: Moving from Dining & Cuisines to Travel Style & Goals
     {
-      name: "Travel Style",
-      title: "Travel Style Preferences",
+      "name": "transitionToTravel",
+      "title": "🎉 Next Up: Your Travel Style & Goals!",
+      "elements": [
+        {
+          "type": "html",
+          "html": "<div font-size:18px;'>Now that we got you hungry, let's talk about what a vacation means to you.</div>"
+        }
+      ]
+    },
+    // --------------------TRAVEL STYLE PAGE 1 --------------------
+    {
+      name: "Travel Style 1",
+      title: "Travel Style Preferences Part 1",
       elements: [
         {
           type: "ranking",
@@ -395,7 +406,14 @@ const surveyJson = {
           hasOther: true,
           otherText: "Other (please specify)",
           isRequired: true
-        },
+        }
+      ]
+    },
+    // --------------------TRAVEL STYLE PAGE 2 --------------------
+    {
+      name: "Travel Style 2",
+      title: "Travel Style Preferences Part 2",
+      elements: [
         {
           type: "radiogroup",
           name: "prefTour",
@@ -426,10 +444,21 @@ const surveyJson = {
         }
       ]
     },
-    // -------------------- ACCOMMODATION PAGE --------------------
+    // TRANSITION PAGE: Moving from Travel Style & Goals to Accommodation
     {
-      name: "Accommodation Preferences",
-      title: "Accommodation Preferences",
+      "name": "transitionToTravel",
+      "title": "🎉 Next Up: Your Accommodation Preferences!",
+      "elements": [
+        {
+          "type": "html",
+          "html": "<div font-size:18px;'>Now that we understand why you are traveling, let's help you find the right place to stay.</div>"
+        }
+      ]
+    },
+    // -------------------- ACCOMMODATION PAGE 1 --------------------
+    {
+      name: "Accommodation Preferences 1",
+      title: "Accommodation Preferences Part 1",
       elements: [
         {
           type: "checkbox",
@@ -450,6 +479,24 @@ const surveyJson = {
           isRequired: true
         },
         {
+          type: "radioGroup",
+          name: "access",
+          title: "Indicate whether or not you have any accessibility needs or preferences to stay at an accommodation:",
+          choices: [
+            "No"
+          ],
+          hasOther: true,
+          otherText: "Yes (please specify)",
+          isRequired: true
+        }
+      ]
+    },
+    // -------------------- ACCOMMODATION PAGE 2 --------------------
+    {
+      name: "Accommodation Preferences 2",
+      title: "Accommodation Preferences Part 2",
+      elements: [
+        {
           type: "matrix",
           name: "amenities",
           title: "Indicate which amenities you Must Have, Would Like, or Do Not Care About:",
@@ -466,17 +513,6 @@ const surveyJson = {
           isAllRowRequired: true
         },
         {
-          type: "radioGroup",
-          name: "access",
-          title: "Indicate whether or not you have any accessibility needs or preferences to stay at an accommodation:",
-          choices: [
-            "No"
-          ],
-          hasOther: true,
-          otherText: "Yes (please specify)",
-          isRequired: true
-        },
-        {
           type: "comment",
           name: "additionalAcc",
           title: "Please share the types of accommodation you usually stay at on vacations.",
@@ -484,10 +520,21 @@ const surveyJson = {
         }
       ]
     },
-    // --------------------SOCIAL AND ENTERTAINMENT PAGE --------------------
+    // TRANSITION PAGE: Moving from Accommodation to Social & Entertainment
     {
-      name: "Social and Entertainment",
-      title: "Social and Entertainment Preferences",
+      "name": "transitionToSocEnt",
+      "title": "🎉 Next Up: Your Social and Entertainment Preferences!",
+      "elements": [
+        {
+          "type": "html",
+          "html": "<div font-size:18px;'>Now that we can find you a place to rest, let's talk about how you have fun.</div>"
+        }
+      ]
+    },
+    // --------------------SOCIAL AND ENTERTAINMENT PAGE 1 --------------------
+    {
+      name: "Social and Entertainment 1",
+      title: "Social and Entertainment Preferences Part 1",
       elements: [
         {
           type: "checkbox",
@@ -520,7 +567,14 @@ const surveyJson = {
           hasOther: true,
           otherText: "Yes (please specify)",
           isRequired: true
-        },
+        }
+      ]
+    },
+    // --------------------SOCIAL AND ENTERTAINMENT PAGE 2 --------------------
+    {
+      name: "Social and Entertainment 2",
+      title: "Social and Entertainment Preferences Part 2",
+      elements: [
         {
           type: "rating",
           name: "prefTour",
@@ -547,7 +601,31 @@ const surveyJson = {
           isRequired: false
         }
       ]
-    }
+    },
+    // TRANSITION PAGE: Moving from Social & Entertainment to General Preferences
+    {
+      "name": "transitionToGen",
+      "title": "🎉 Next Up: Your General Preferences!",
+      "elements": [
+        {
+          "type": "html",
+          "html": "<div font-size:18px;'>You're almost done! Help us round out our understanding of you by answering a few more questions.</div>"
+        }
+      ]
+    },
+    // --------------------GENERAL PAGE 1 --------------------
+    {
+      name: "General 1",
+      title: "General Preferences Part 1",
+      elements: [
+        {
+          type: "comment",
+          name: "additionalGen",
+          title: "Please share anything else that is important to you when on vacations that we missed.",
+          isRequired: false
+        }
+      ]
+    },
   ]
 };
 
