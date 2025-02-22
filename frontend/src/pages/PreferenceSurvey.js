@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Button, Box } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "../theme"
+import Cookies from "js-cookie";
 
 // This variable controls if all questions are required or not
 const REQUIRE_QUESTIONS = true; // Toggle this to true/false as needed
@@ -722,6 +723,7 @@ const PreferenceSurvey = () => {
     //survey.data.submissionDateTime = new Date().toISOString();
     //survey.data.user_id = "kumar502"; // Replace with actual user ID
     survey.setValue("submissionDateTime", new Date().toISOString());
+    //survey.setValue("user_id", Cookies.get('user_id')); // Replace with actual user ID
     survey.setValue("user_id", userId); // Replace with actual user ID
 
     // Submit results to your server if needed
