@@ -256,7 +256,7 @@ def register():
         conn.close()
         return jsonify({'error': 'Email already registered'}), 400
     
-    cursor.execute("INSERT INTO UserTable (user_id, username, email, hashed_pw, verified, verification_token) VALUES (?, ?, ?, ?, ?)", (username, email, hashed_pw, 1, verification_token))
+    cursor.execute("INSERT INTO UserTable (username, email, hashed_pw, verified, verification_token) VALUES (?, ?, ?, ?, ?)", (username, email, hashed_pw, 1, verification_token))
     user_id = cursor.lastrowid
     conn.commit()
     conn.close()
