@@ -43,12 +43,40 @@ const PlaceDetails = () => {
     const imageUrl = imageMap[place.images[0]] || place.images[0];
 
     return (
-      <div>
-        <h1>Place Details</h1>
-        {imageUrl && <img src={imageUrl} alt="" style={{ width: "100%", maxHeight: "400px", objectFit: "cover" }} />}
-        <h3>{place.name}</h3>
+      <div style={{
+        maxWidth: "1500px",
+        height: "1500px",
+        margin: "auto",
+        textAlign: "center",
+        backgroundColor: "#f9f9f9"
+      }}>
+        <h1 style={{textAlign: "center", color: "#333", marginBottom: "10px" }}>Place Details</h1>
+        <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>{place.name}</h3>
+        {imageUrl && (
+        <img 
+          src={imageUrl} 
+          alt={place.name} 
+          style={{
+            width: "100%",
+            maxHeight: "350px",
+            objectFit: "contain",
+            marginBottom: "15px"
+          }} 
+        />
+      )}
         <p>Description: {place.description}</p>
-        <button onClick={() => navigate("/")}>Back to Home</button>
+        <button style={{
+          marginTop: "20px",
+          padding: "10px 20px",
+          fontSize: "18px",
+          backgroundColor: "#007bff",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          transition: "0.3s",
+          boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)"
+        }} onClick={() => navigate("/")}>Back to Home</button>
       </div>
     );
   };
