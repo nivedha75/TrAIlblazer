@@ -91,7 +91,6 @@ useEffect(() => {
     "../assets/Paris.png": Paris,
   };
 
-  const Card = ({ image, title = "Place", buttonText = "Trip Details", button = () => alert("Trip Details"), start, end, people, share }) => {
   const navigateToSignIn = () => {
     navigate('/sign-in');
   }
@@ -104,7 +103,7 @@ useEffect(() => {
     window.location.reload();
   };
 
-  const Card = ({ image, title = "Place", buttonText = "Trip Details", button = () => alert("Trip Details") }) => {
+  const Card = ({ image, title = "Place", buttonText = "Trip Details", button = () => alert("Trip Details"), start, end, people, share }) => {
     return (
       <div style={{
         width: "250px",
