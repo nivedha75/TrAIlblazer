@@ -29,7 +29,7 @@ import SignIn from "./pages/SignIn";
        }, []);
        return (
         <Router>
-          <Routes>
+          {/* <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/create" element={isAuthenticated ? <CreateTrip /> : <Navigate to="/sign-in" />} />
             <Route path="/plan" element={isAuthenticated ? <PlanTrip /> : <Navigate to="/sign-in" />} />
@@ -37,6 +37,16 @@ import SignIn from "./pages/SignIn";
             <Route path="/activities" element={isAuthenticated ? <ActivityCarousel /> : <Navigate to="/sign-in" />} />
             <Route path="/trip-details/:tripId" element={isAuthenticated ? <TripDetails /> : <Navigate to="/sign-in" />} />
             <Route path="/place-details/:placeId" element={isAuthenticated ? <PlaceDetails /> : <Navigate to="/sign-in" />} />
+            <Route path="/sign-in" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
+          </Routes> */}
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/create" element={<CreateTrip />} />
+            <Route path="/plan" element={<PlanTrip />} />
+            <Route path="/survey" element={<PreferenceSurvey />} />
+            <Route path="/activities" element={<ActivityCarousel />} />
+            <Route path="/trip-details/:tripId" element={<TripDetails />} />
+            <Route path="/place-details/:placeId" element={<PlaceDetails />} />
             <Route path="/sign-in" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
           </Routes>
         </Router>
