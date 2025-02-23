@@ -7,6 +7,7 @@ import Hawaii from "../assets/hawaii.png";
 import York from "../assets/NewYork.png";
 import Japan from "../assets/Japan.png";
 
+
 const imageMap = {
     "../assets/Indonesia.png": Indonesia,
     "../assets/Paris.png": Paris,
@@ -16,13 +17,13 @@ const imageMap = {
     "../assets/Beijing.png": Beijing
   };
 
-const TripDetails = () => {
-    const { tripId } = useParams();
-    const [trip, setTrip] = useState(null);
+const PlaceDetails = () => {
+    const { placeId } = useParams();
+    const [place, setPlace] = useState(null);
     const navigate = useNavigate();
   
     useEffect(() => {
-      fetch(`http://localhost:55000/trips/${tripId}`, {
+      fetch(`http://localhost:55000/places/${placeId}`, {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "http://localhost:3000",
@@ -31,29 +32,30 @@ const TripDetails = () => {
         }
       })
         .then((response) => response.json())
-        .then((data) => setTrip(data))
+        .then((data) => setPlace(data))
         .catch((error) => console.error("Error fetching trip details:", error));
-    }, [tripId]);
+    }, [placeId]);
   
-    if (!trip) {
+    if (!place) {
       return <p>Loading trip details...</p>;
     }
-  
-    const imageUrl = imageMap[trip.images] || trip.images;
+    
+    const imageUrl = imageMap[place.images[0]] || place.images[0];
 
     return (
       <div style={{
         maxWidth: "1500px",
+        height: "1500px",
         margin: "auto",
         textAlign: "center",
         backgroundColor: "#f9f9f9"
       }}>
-        <h1 style={{textAlign: "center", color: "#333", marginBottom: "10px" }}>Trip Details</h1>
-        <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>{trip.location}</h3>
+        <h1 style={{textAlign: "center", color: "#333", marginBottom: "10px" }}>Place Details</h1>
+        <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>{place.name}</h3>
         {imageUrl && (
         <img 
           src={imageUrl} 
-          alt={trip.location} 
+          alt={place.name} 
           style={{
             width: "100%",
             maxHeight: "350px",
@@ -62,31 +64,8 @@ const TripDetails = () => {
           }} 
         />
       )}
-        <p style={{ fontSize: "18px", margin: "5px 0" }}><strong>Start Date:</strong> {trip.startDate}</p>
-        <p style={{ fontSize: "18px", margin: "5px 0" }}><strong>End Date:</strong> {trip.endDate}</p>
-        <p style={{ fontSize: "18px", margin: "5px 0" }}><strong>Number of people on trip:</strong> {trip.people}</p>
-        <h4 style={{ marginTop: "15px", fontSize: "20px", color: "#444" }}>Time Ranges:</h4>
-        <div style={{
-        backgroundColor: "#fff",
-        padding: "10px",
-        borderRadius: "5px",
-        textAlign: "left",
-        fontSize: "16px",
-        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-        width: "fit-content",
-        margin: "0 auto"
-      }}>
-        {trip.timeRanges &&
-          Object.entries(trip.timeRanges).map(([day, times]) => (
-            <p key={day} style={{ margin: "5px 0" }}>
-              <strong>{day}:</strong> {times.start} - {times.end}
-            </p>
-          ))}
-      </div>
-
-      <button 
-        onClick={() => navigate("/")} 
-        style={{
+        <p>Description: {place.description}</p>
+        <button style={{
           marginTop: "20px",
           padding: "10px 20px",
           fontSize: "18px",
@@ -97,14 +76,9 @@ const TripDetails = () => {
           cursor: "pointer",
           transition: "0.3s",
           boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)"
-        }}
-        onMouseEnter={(e) => e.target.style.backgroundColor = "#0056b3"}
-        onMouseLeave={(e) => e.target.style.backgroundColor = "#007bff"}
-      >
-        Back to Home
-      </button>
+        }} onClick={() => navigate("/")}>Back to Home</button>
       </div>
     );
   };
   
-  export default TripDetails;
+  export default PlaceDetails;

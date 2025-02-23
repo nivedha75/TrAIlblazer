@@ -55,7 +55,8 @@ const PlanTrip = () => {
       startDate: startDate.toISOString().split("T")[0],
       endDate: getEndDate(),
       timeRanges: formatTimeRanges(timeRanges),
-      people: parseInt(people, 10)
+      people: parseInt(people, 10),
+      images: location.state?.image || "" 
     };
 
     fetch("http://localhost:55000/trips", {

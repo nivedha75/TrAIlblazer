@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Button, Box } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "../theme"
+import Cookies from "js-cookie";
 
 // This variable controls if all questions are required or not
 const REQUIRE_QUESTIONS = true; // Toggle this to true/false as needed
@@ -24,11 +25,10 @@ const surveyJson = {
       "name": "welcomePage",
       "title": "🏝️ Welcome to the Travel Preferences Survey! 🏕️",
       "elements": [
-    {
+      {
       "type": "html",
-      "html": "<div style='text-align:center; font-size:18px;'>✨ Help us understand your travel style so we can provide personalized recommendations.<br><br>This survey covers the following topics:<br><br> ✈️ <b>Lifestyle Preferences</b> – Travel pace and budget.<br> 🎭 <b>Interests & Hobbies</b> – Activities you enjoy while traveling.<br> 🍽️ <b>Dining & Cuisine</b> – Food preferences and dietary needs.<br> 🏨 <b>Accommodation & Comfort</b> – Lodging choices and accessibility.<br> 🎯 <b>Travel Style & Goals</b> – Purpose of travel and planning habits.<br> 🎶 <b>Social & Entertainment</b> – Nightlife, live events, and relaxation preferences.<br><br>Click 'Next' to begin! 🚀</div>"
-    }
-  ]
+      "html": "<div style='text-align:center; font-size:18px;'>✨ Help us understand your travel style so we can provide personalized recommendations.<br><br>This survey covers the following topics:<br><br> 💰 💎 <b>Lifestyle Preferences</b> – Travel pace and budget.<br> 🏄 ⛷️ <b>Interests & Hobbies</b> – Activities you enjoy while traveling.<br> 🍽️ 🍷 <b>Dining & Cuisine</b> – Food preferences and dietary needs.<br>👨‍👩‍👧‍👦 🛍️ <b>Travel Style & Goals</b> – Purpose of travel and planning habits.<br> 🏨 🛏️ <b>Accommodation & Comfort</b> – Lodging choices and accessibility.<br> 🎶 💃 <b>Social & Entertainment</b> – Nightlife, live events, and relaxation preferences.<br> 🗺️ 🔍 <b> General Preferences</b> – Additional personal travel requests. <br><br>Click 'Next' to begin! 🧳 ✈️ </div>",
+      }]
     },
     // -------------------- LIFESTYLE PAGE 1 --------------------
     {
@@ -771,6 +771,7 @@ const PreferenceSurvey = () => {
     //survey.data.submissionDateTime = new Date().toISOString();
     //survey.data.user_id = "kumar502"; // Replace with actual user ID
     survey.setValue("submissionDateTime", new Date().toISOString());
+    //survey.setValue("user_id", Cookies.get('user_id')); // Replace with actual user ID
     survey.setValue("user_id", userId); // Replace with actual user ID
 
     // Submit results to your server if needed

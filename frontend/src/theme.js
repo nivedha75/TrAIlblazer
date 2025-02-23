@@ -8,6 +8,10 @@ const theme = createTheme({
     steelBlue: { main: "#5C76B7" },
     violet: { main: "#BC00A3" },
   },
+  typography: {
+    fontFamily: "Inter, Arial, sans-serif",
+    fontSize: 8, // represents "8px"
+  },
 });
 
 export default theme;
