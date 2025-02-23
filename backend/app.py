@@ -333,29 +333,29 @@ def login():
 
 # Sample activities data (In a real application, this would be retrieved from an external API)
 top_preferences = [
-    {"id": 1, "name": "Scenic Hike", "rating": 4.9, "image": "https://www.rei.com/dam/parrish_091412_0679_main_lg.jpg"},
-    {"id": 2, "name": "City Tour", "rating": 4.8, "image": "https://upload.wikimedia.org/wikipedia/commons/9/90/City_Sightseeing_Gozo_Hop-On_Hop-Off_open_top_bus_FPY_004.jpg"},
-    {"id": 3, "name": "Wine Tasting", "rating": 4.7, "image": "https://www.wienscellars.com/wp-content/uploads/2024/06/960x0-1.jpg"},
-    {"id": 4, "name": "Boat Cruise", "rating": 4.7, "image": "https://media.architecturaldigest.com/photos/5654e91c587d37cb3479de02/16:9/w_2560%2Cc_limit/regent-seven-seas-lede.jpg"},
-    {"id": 5, "name": "Hot Air Balloon Ride", "rating": 4.9, "image": "https://nvaloft.com/wp-content/uploads/2015/04/balloon-family-web.jpg"},
-    {"id": 6, "name": "Mountain Biking", "rating": 4.6, "image": "https://images.squarespace-cdn.com/content/v1/6020d1ea9c6bdd6741edae39/1712933910425-AZOHP7LDYF41WFO0CRNU/types-of-mtb-trails.jpg?format=500w"},
-    {"id": 7, "name": "Scuba Diving", "rating": 4.8, "image": "https://upload.wikimedia.org/wikipedia/commons/2/29/Underwater_photograph_of_a_recreational_scuba_diver_in_Playa_del_Carmen_2006.jpg"},
-    {"id": 8, "name": "Cultural Show", "rating": 4.5, "image": "https://dnwp63qf32y8i.cloudfront.net/49c23488bc70e81faf2ef936a95e6c6589dbcac9"},
-    {"id": 9, "name": "Cooking Class", "rating": 4.6, "image": "https://spartanspeaks.com/wp-content/uploads/2023/03/9uw2wfTT5X9SVohUw7E7KJzZ41yyDkSv5c3UXqnc.jpg"},
-    {"id": 10, "name": "Wildlife Safari", "rating": 4.7, "image": "https://sdzsafaripark.org/sites/default/files/2024-07/6242_wildlife-safari-thumb_668x540.jpg"}
+    {"id": 1, "title": "Scenic Hike", "rating": 4.9, "location": "Portland", "image": "https://www.rei.com/dam/parrish_091412_0679_main_lg.jpg"},
+    {"id": 2, "title": "City Tour", "rating": 4.8, "location": "Portland", "image": "https://upload.wikimedia.org/wikipedia/commons/9/90/City_Sightseeing_Gozo_Hop-On_Hop-Off_open_top_bus_FPY_004.jpg"},
+    {"id": 3, "title": "Wine Tasting", "rating": 4.7, "location": "Portland", "image": "https://www.wienscellars.com/wp-content/uploads/2024/06/960x0-1.jpg"},
+    {"id": 4, "title": "Boat Cruise", "rating": 4.7, "location": "Portland", "image": "https://media.architecturaldigest.com/photos/5654e91c587d37cb3479de02/16:9/w_2560%2Cc_limit/regent-seven-seas-lede.jpg"},
+    {"id": 5, "title": "Hot Air Balloon Ride", "rating": 4.9, "location": "Portland", "image": "https://nvaloft.com/wp-content/uploads/2015/04/balloon-family-web.jpg"},
+    {"id": 6, "title": "Mountain Biking", "rating": 4.6, "location": "Portland", "image": "https://images.squarespace-cdn.com/content/v1/6020d1ea9c6bdd6741edae39/1712933910425-AZOHP7LDYF41WFO0CRNU/types-of-mtb-trails.jpg?format=500w"},
+    {"id": 7, "title": "Scuba Diving", "rating": 4.8, "location": "Portland", "image": "https://upload.wikimedia.org/wikipedia/commons/2/29/Underwater_photograph_of_a_recreational_scuba_diver_in_Playa_del_Carmen_2006.jpg"},
+    {"id": 8, "title": "Cultural Show", "rating": 4.5, "location": "Portland", "image": "https://dnwp63qf32y8i.cloudfront.net/49c23488bc70e81faf2ef936a95e6c6589dbcac9"},
+    {"id": 9, "title": "Cooking Class", "rating": 4.6, "location": "Portland", "image": "https://spartanspeaks.com/wp-content/uploads/2023/03/9uw2wfTT5X9SVohUw7E7KJzZ41yyDkSv5c3UXqnc.jpg"},
+    {"id": 10, "title": "Wildlife Safari", "rating": 4.7, "location": "Portland", "image": "https://sdzsafaripark.org/sites/default/files/2024-07/6242_wildlife-safari-thumb_668x540.jpg"}
 ]
 
 next_best_preferences = [
-    {"id": 11, "name": "Kayaking", "rating": 4.5, "image": "https://res.cloudinary.com/gofjords-com/images/c_scale,w_448,h_299,dpr_2/f_auto,q_auto:eco/v1683890721/Experiences/XXLofoten/Kayaking/Evening%20kayaking%202020/Evening-kayaking-Svolvaer-Lofoten-XXlofoten-1/Evening-kayaking-Svolvaer-Lofoten-XXlofoten-1.jpg?_i=AA"},
-    {"id": 12, "name": "Zip Lining", "rating": 4.4, "image": "https://www.begripped.com/media/uqxptd5d/istock-1157735556.jpg?rxy=0.5369316873186236,0.4318488529014845&width=1000&height=1000&rnd=132996903195930000"},
-    {"id": 13, "name": "Rock Climbing", "rating": 4.3, "image": "https://alpineairadventures.com/wp-content/uploads/2019/03/rock-climbing-Banff.jpg"},
-    {"id": 14, "name": "Fishing Trip", "rating": 4.2, "image": "https://assets.simpleviewinc.com/simpleview/image/upload/c_fill,f_jpg,h_358,q_65,w_639/v1/clients/southshore/Big_Lake_Equals_Big_Fish_Charter_Fishing_fc285f5f-300c-4a49-8e33-e931dd7a814c.jpg"},
-    {"id": 15, "name": "Amusement Park", "rating": 4.1, "image": "https://s3-media0.fl.yelpcdn.com/bphoto/6v_1shpFJrAUOde4ZifKUw/1000s.jpg"},
-    {"id": 16, "name": "Museum Visit", "rating": 4.0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyYrLtBFpiv7QpzyMKf3A4YHjJxHYdm0Xu4Q&s"},
-    {"id": 17, "name": "Botanical Garden Tour", "rating": 4.2, "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/10/a3/0a/4e/beautiful-botanical-garden.jpg?w=800&h=500&s=1"},
-    {"id": 18, "name": "Horseback Riding", "rating": 4.3, "image": "https://rjclassics.com/cdn/shop/articles/English-riding-dressage-rider.jpg?v=1715610957"},
-    {"id": 19, "name": "ATV Adventure", "rating": 4.4, "image": "https://aceraft.com/wp-content/uploads/2019/05/new-river-gorge-atv-tour-ace-adventure-resort-3-scaled.jpg"},
-    {"id": 20, "name": "Escape Room", "rating": 4.1, "image": "https://m.media-amazon.com/images/I/91CVLmjQVJL.jpg"}
+    {"id": 11, "title": "Kayaking", "rating": 4.5, "location": "Portland", "image": "https://res.cloudinary.com/gofjords-com/images/c_scale,w_448,h_299,dpr_2/f_auto,q_auto:eco/v1683890721/Experiences/XXLofoten/Kayaking/Evening%20kayaking%202020/Evening-kayaking-Svolvaer-Lofoten-XXlofoten-1/Evening-kayaking-Svolvaer-Lofoten-XXlofoten-1.jpg?_i=AA"},
+    {"id": 12, "title": "Zip Lining", "rating": 4.4, "location": "Portland", "image": "https://www.begripped.com/media/uqxptd5d/istock-1157735556.jpg?rxy=0.5369316873186236,0.4318488529014845&width=1000&height=1000&rnd=132996903195930000"},
+    {"id": 13, "title": "Rock Climbing", "rating": 4.3, "location": "Portland", "image": "https://alpineairadventures.com/wp-content/uploads/2019/03/rock-climbing-Banff.jpg"},
+    {"id": 14, "title": "Fishing Trip", "rating": 4.2, "location": "Portland", "image": "https://assets.simpleviewinc.com/simpleview/image/upload/c_fill,f_jpg,h_358,q_65,w_639/v1/clients/southshore/Big_Lake_Equals_Big_Fish_Charter_Fishing_fc285f5f-300c-4a49-8e33-e931dd7a814c.jpg"},
+    {"id": 15, "title": "Amusement Park", "rating": 4.1, "location": "Portland", "image": "https://s3-media0.fl.yelpcdn.com/bphoto/6v_1shpFJrAUOde4ZifKUw/1000s.jpg"},
+    {"id": 16, "title": "Museum Visit", "rating": 4.0, "location": "Portland", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyYrLtBFpiv7QpzyMKf3A4YHjJxHYdm0Xu4Q&s"},
+    {"id": 17, "title": "Botanical Garden Tour", "rating": 4.2, "location": "Portland", "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/10/a3/0a/4e/beautiful-botanical-garden.jpg?w=800&h=500&s=1"},
+    {"id": 18, "title": "Horseback Riding", "rating": 4.3, "location": "Portland", "image": "https://rjclassics.com/cdn/shop/articles/English-riding-dressage-rider.jpg?v=1715610957"},
+    {"id": 19, "title": "ATV Adventure", "rating": 4.4, "location": "Portland", "image": "https://aceraft.com/wp-content/uploads/2019/05/new-river-gorge-atv-tour-ace-adventure-resort-3-scaled.jpg"},
+    {"id": 20, "title": "Escape Room", "rating": 4.1, "location": "Portland", "image": "https://m.media-amazon.com/images/I/91CVLmjQVJL.jpg"}
 ]
 
 @app.route("/get_activities", methods=["POST"])
@@ -370,18 +370,20 @@ def get_activities():
         "top_preferences": [
             {
                 "id": activity["id"],
-                "name": activity["name"],
+                "title": activity["title"],
                 "rating": activity["rating"],
                 "image": activity["image"],
+                "location": activity["location"]
             }
             for activity in top_preferences
         ],
         "next_best_preferences": [
             {
                 "id": activity["id"],
-                "name": activity["name"],
+                "title": activity["title"],
                 "rating": activity["rating"],
                 "image": activity["image"],
+                "location": activity["location"]
             }
             for activity in next_best_preferences
         ]
