@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Profile from "../assets/Profile.png";
+import Beijing from "../assets/Beijing.png";
 import Hawaii from "../assets/hawaii.png";
 import ChatBot from "../assets/Chatbot.png";
 import York from "../assets/NewYork.png";
@@ -8,6 +9,7 @@ import Indonesia from "../assets/Indonesia.png";
 import Japan from "../assets/Japan.png";
 import Paris from "../assets/Paris.png";
 import Canyon from "../assets/Canyon.png";
+import Share from "../assets/share.png";
 import Cookies from "js-cookie";
 
 const HomePage = () => {
@@ -89,6 +91,10 @@ useEffect(() => {
   const imageMap = {
     "../assets/Indonesia.png": Indonesia,
     "../assets/Paris.png": Paris,
+    "../assets/NewYork.png": York, 
+    "../assets/Japan.png": Japan, 
+    "../assets/hawaii.png": Hawaii,
+    "../assets/Beijing.png": Beijing
   };
 
   const navigateToSignIn = () => {
@@ -110,29 +116,55 @@ useEffect(() => {
         padding: "20px",
         borderRadius: "10px",
         boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-        backgroundColor: "white",
+        backgroundColor: "#90EE90",
         textAlign: "center",
         margin: "10px",
+        position: "relative", 
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        minHeight: "350px",
       }}>
-        {image && <img src={image} alt={title} style={{ width: "100%", height: "60%", borderRadius: "10px" }} />}
-        <h2>{title}</h2>
-        {start && <h3>{start} - {end}</h3>}
-        {people && <h3>{people} Travelers</h3>}
-        {share && <img src={share} alt={title} style={{ width: "10%", height: "10%", borderRadius: "10px" }}/>}
-        <button 
-        onClick={button} 
-        style={{
-          padding: "10px 15px",
-          border: "none",
-          backgroundColor: "#007bff",
-          color: "white",
-          borderRadius: "5px",
-          cursor: "pointer",
-          marginTop: "10px"
-        }}
-      >
-        {buttonText}
-      </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
+        {image && <img src={image} alt={title} style={{ width: "100%", height: "50%", borderRadius: "10px" }} />}
+        <h2 style={{ margin: "5px", padding: "0" }}>{title}</h2>
+        {start && <h3 style={{ margin: "5px", padding: "0" }}>{start} - {end}</h3>}
+        {people && <h3 style={{ margin: "5px", padding: "0" }}>{people} {people == 1 ? "Traveler" : "Travelers"}</h3>}
+        </div>
+        <div style={{
+          position: "absolute",
+          bottom: "10px",
+          left: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "45px" 
+        }}>
+         {share && (
+            <img 
+              src={share} 
+              alt="Share" 
+              style={{ 
+                width: "30px", 
+                height: "30px", 
+                cursor: "pointer" 
+              }}
+            />
+          )}
+          <button 
+          onClick={button} 
+          style={{
+            padding: "10px 15px",
+            border: "none",
+            backgroundColor: "#800080",
+            color: "white",
+            borderRadius: "5px",
+            cursor: "pointer",
+            marginTop: "auto"
+          }}
+        >
+          {buttonText}
+        </button>
+        </div>
       </div>
     );
   };
@@ -224,13 +256,13 @@ useEffect(() => {
       <div>
         <h1 style={{ marginLeft: "20px" }}>My Trips:</h1>
         <div style={{ display: "flex", gap: "10px" }}>
-          <Card image={Hawaii} title="Hawaii Getaway" description="Enjoy the beaches of Hawaii." />
-          <Card image={York} title="New York Adventure" description="Explore the city that never sleeps." />
+          <Card image={Hawaii} title="Hawaii Getaway" description="Enjoy the beaches of Hawaii." share={Share} />
+          <Card image={York} title="New York Adventure" description="Explore the city that never sleeps." share={Share} />
           {trips.map((trip) => {
              const formattedStartDate = new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
              const formattedEndDate = new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
              return (
-    <Card key={trip._id} title={trip.location} button={() => viewDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" />
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
   );})}
         </div>
   </div>
@@ -240,7 +272,7 @@ useEffect(() => {
   <div style={{ display: "flex", gap: "10px" }}>
           {places.map((place) => {
              return (
-    <Card key={place._id} image={imageMap[place.images[0]]} title={place.name} description={place.description} button={() => placeDetails(place._id)}/>
+    <Card key={place._id} image={imageMap[place.images[0]]} title={place.name} description={place.description} button={() => placeDetails(place._id)} buttonText="Place Details"/>
   );})}
   </div>
   <button onClick={navigateToSurvey} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Take Our Travel Quiz</button>

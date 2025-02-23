@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 
 const locations = [
@@ -13,6 +13,25 @@ const CreateTrip = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [days, setDays] = useState("");
   const [selectLocation, setSelectLocation] = useState("");
+  const [places, setPlaces] = useState([]);
+  const [selectedImage, setSelectedImage] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:55000/places", {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Fetched data: ", data);
+        setPlaces(data);
+      })
+      .catch((error) => console.error("Error fetching places:", error));
+  }, []);
 
   const navigate = useNavigate();
   
@@ -25,21 +44,22 @@ const CreateTrip = () => {
       alert("Please enter a valid number of days!");
       return;
     }
-    navigate("/plan", { state: { days: parseInt(days, 10), locate: selectLocation } });
+    navigate("/plan", { state: { days: parseInt(days, 10), locate: selectLocation, image: selectedImage } });
   };
 
   const handleInputChange = (event) => {
     const value = event.target.value;
     setQuery(value);
     setFilteredLocations(
-        locations.filter((location) => location.toLowerCase().includes(value.toLowerCase()))
+      places.filter((place) => place.name.toLowerCase().includes(value.toLowerCase()))
       );
     setShowOptions(true);
   };
 
-  const handleSelect = (loc) => {
-    setQuery(loc);
-    setSelectLocation(loc);
+  const handleSelect = (place) => {
+    setQuery(place.name);
+    setSelectLocation(place.name);
+    setSelectedImage(place.images[0]);
     setShowOptions(false);
   };
 
@@ -70,7 +90,7 @@ const CreateTrip = () => {
         onChange={handleInputChange}
         onFocus={() => {
             setQuery("");
-            setFilteredLocations(locations);
+            setFilteredLocations(places);
             setShowOptions(true);
           }}
         onBlur={() => setShowOptions(false)}
@@ -98,17 +118,17 @@ const CreateTrip = () => {
           left: "50%",
           transform: "translateX(-50%)"
         }}>
-          {filteredLocations.map((location, index) => (
-            <li key={index} style={{
+          {filteredLocations.map((place) => (
+            <li key={place._id} style={{
               padding: "10px",
               cursor: "pointer",
               transition: "background 0.2s ease-in-out"
             }}
               onMouseEnter={(e) => (e.target.style.backgroundColor = "#f0f0f0")}
               onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
-              onMouseDown={() => handleSelect(location)}
+              onMouseDown={() => handleSelect(place)}
             >
-              {location}
+              {place.name}
             </li>
           ))}
         </ul>

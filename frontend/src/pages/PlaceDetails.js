@@ -2,11 +2,20 @@ import {useEffect, useState} from "react";
 import {useParams, useNavigate} from "react-router-dom";
 import Indonesia from "../assets/Indonesia.png";
 import Paris from "../assets/Paris.png";
+import Beijing from "../assets/Beijing.png";
+import Hawaii from "../assets/hawaii.png";
+import York from "../assets/NewYork.png";
+import Japan from "../assets/Japan.png";
+
 
 const imageMap = {
     "../assets/Indonesia.png": Indonesia,
     "../assets/Paris.png": Paris,
-};
+    "../assets/NewYork.png": York, 
+    "../assets/Japan.png": Japan, 
+    "../assets/hawaii.png": Hawaii,
+    "../assets/Beijing.png": Beijing
+  };
 
 const PlaceDetails = () => {
     const { placeId } = useParams();

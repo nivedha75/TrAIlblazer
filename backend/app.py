@@ -148,7 +148,8 @@ def trips():
                 "startDate": data["startDate"],
                 "endDate": data["endDate"],
                 "timeRanges": data["timeRanges"],
-                "people": data["people"]
+                "people": data["people"],
+                "images": data["images"]
             })
             return jsonify({"message": "Trip data saved successfully"}), 201
 
