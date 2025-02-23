@@ -11,6 +11,48 @@ import Paris from "../assets/Paris.png";
 import Canyon from "../assets/Canyon.png";
 import Share from "../assets/share.png";
 import Cookies from "js-cookie";
+import Slider from "react-slick";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import {IconButton} from "@mui/material";
+
+const NextArrow = ({ onClick }) => (
+  <IconButton
+    onClick={onClick}
+    sx={{
+      position: "absolute",
+      top: "50%",
+      right: "-40px",
+      transform: "translateY(-50%)",
+      backgroundColor: "#00000099",
+      color: "white",
+      zIndex: 2,
+      "&:hover": { backgroundColor: "#000000CC" },
+    }}
+  >
+    <ArrowForwardIosIcon />
+  </IconButton>
+);
+
+const PrevArrow = ({ onClick }) => (
+  <IconButton
+    onClick={onClick}
+    sx={{
+      position: "absolute",
+      top: "50%",
+      left: "-50px",
+      transform: "translateY(-50%)",
+      backgroundColor: "#00000099",
+      color: "white",
+      zIndex: 2,
+      "&:hover": { backgroundColor: "#000000CC" },
+    }}
+  >
+    <ArrowBackIosNewIcon />
+  </IconButton>
+);
 
 const HomePage = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -169,6 +211,23 @@ useEffect(() => {
     );
   };
 
+  const settings = {
+    dots: false,
+    infinite: true,
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    arrows: true,
+    nextArrow: <NextArrow />, 
+    prevArrow: <PrevArrow />, 
+    centerMode: false,
+    speed: 500,
+    responsive: [
+      { breakpoint: 1300, settings: { slidesToShow: 3 } },
+      { breakpoint: 1000, settings: { slidesToShow: 2 } },
+      { breakpoint: 600, settings: { slidesToShow: 1 } },
+    ],
+  };
+
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
@@ -255,25 +314,39 @@ useEffect(() => {
   
       <div>
         <h1 style={{ marginLeft: "20px" }}>My Trips:</h1>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Card image={Hawaii} title="Hawaii Getaway" description="Enjoy the beaches of Hawaii." share={Share} />
-          <Card image={York} title="New York Adventure" description="Explore the city that never sleeps." share={Share} />
+        <div style={{ width: "90%", margin: "auto", position: "relative" }}>
+        <Slider {...settings}>
           {trips.map((trip) => {
              const formattedStartDate = new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
              const formattedEndDate = new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
              return (
     <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
   );})}
+  </Slider>
         </div>
+        {/* <div style={{ display: "flex", gap: "10px" }}>
+          <Card image={Hawaii} title="Hawaii Getaway" description="Enjoy the beaches of Hawaii." share={Share} />
+          <Card image={York} title="New York Adventure" description="Explore the city that never sleeps." share={Share} />
+          <Slider {...settings}>
+          {trips.map((trip) => {
+             const formattedStartDate = new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+             const formattedEndDate = new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+             return (
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
+  );})}
+        </Slider>
+        </div> */}
   </div>
   <button onClick={navigateToCreate} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Create Trip (+)</button>
   <div style={{ marginTop: "40px" }}>
   <h1 style={{marginLeft: "20px"}}>Discover New Vacation Spots:</h1>
-  <div style={{ display: "flex", gap: "10px" }}>
+  <div style={{ width: "90%", margin: "auto", position: "relative" }}>
+  <Slider {...settings}>
           {places.map((place) => {
              return (
     <Card key={place._id} image={imageMap[place.images[0]]} title={place.name} description={place.description} button={() => placeDetails(place._id)} buttonText="Place Details"/>
   );})}
+  </Slider>
   </div>
   <button onClick={navigateToSurvey} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Take Our Travel Quiz</button>
   <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", margin: "10px 20px 0 0", position: "fixed", bottom: "0px", right: "0px" }}>
