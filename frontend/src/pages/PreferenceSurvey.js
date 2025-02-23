@@ -571,7 +571,7 @@ const surveyJson = {
           name: "prefTour",
           title: "On a scale from 1 to 5, how much do you value a vibrant nightlife?",
           minRateDescription: "Not at all",
-          maxRateDescription: "I love it",
+          maxRateDescription: "Very much so",
           rateValues: [1, 2, 3, 4, 5],
           isRequired: true
         },
@@ -610,13 +610,61 @@ const surveyJson = {
       title: "General Preferences Part 1",
       elements: [
         {
-          type: "comment",
-          name: "additionalGen",
-          title: "Please share anything else that is important to you when on vacations that we missed.",
-          isRequired: false
+          type: "checkbox",
+          name: "companion",
+          title: "Who do you usually travel with?",
+          choices: [
+            "Family",
+            "Friends",
+            "Partner / Spouse",
+            "Alone",
+          ],
+          isRequired: true
+        },
+        {
+          type: "rating",
+          name: "spontaneous",
+          title: "On a scale from 1 to 5, how spontaneous you are with your travel plans?",
+          minRateDescription: "Not at all",
+          maxRateDescription: "Very much so",
+          rateValues: [1, 2, 3, 4, 5],
+          isRequired: true
         }
       ]
     },
+    // --------------------GENERAL PAGE 2 --------------------
+    {
+      name: "General 2",
+      title: "General Preferences Part 2",
+      elements: [
+        {
+          type: "comment",
+          name: "goodPast",
+          title: "Please tell us about some activites that you really enjoyed on past vacations to help us recommend you similar activities you may also enjoy:",
+          "description": `
+          You can also share activities that you are fairly certain you would like.\n
+          If there are none you would like to share, just type \"N/A\".\n
+          `,
+          isRequired: true
+        },
+        {
+          type: "comment",
+          name: "badPast",
+          title: "Please tell us about some activites from your past vacations that you do not want to experience again to help us recommend you different activities you may enjoy instead:",
+          "description": `
+          You can also share activities that you are fairly certain you would not like.\n
+          If there are none you would like to share, just type \"N/A\".\n
+          `,
+          isRequired: true
+        },
+        {
+          type: "comment",
+          name: "additionalGen",
+          title: "Please share anything else that is important to you when on vacations that we missed:",
+          isRequired: false
+        }
+      ]
+    }
   ]
 };
 
