@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Profile from "../assets/Profile.png";
 import Beijing from "../assets/Beijing.png";
@@ -17,6 +17,8 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import {IconButton} from "@mui/material";
+import PersonIcon from "@mui/icons-material/Person";
+import { isPast, parseISO, format, isBefore, startOfDay, parse } from 'date-fns'; 
 
 const NextArrow = ({ onClick }) => (
   <IconButton
@@ -24,7 +26,7 @@ const NextArrow = ({ onClick }) => (
     sx={{
       position: "absolute",
       top: "50%",
-      right: "-40px",
+      right: "-55px",
       transform: "translateY(-50%)",
       backgroundColor: "#00000099",
       color: "white",
@@ -59,6 +61,23 @@ const HomePage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [trips, setTrips] = useState([]);
   const [places, setPlaces] = useState([]);
+  const ddRef = useRef(null);
+  const [upcomingTrips, setUpcomingTrips] = useState([]);
+  const [pastTrips, setPastTrips] = useState([]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (ddRef.current && !ddRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     fetch("http://localhost:55000/trips", {
@@ -76,6 +95,30 @@ const HomePage = () => {
       })
       .catch((error) => console.error("Error fetching trips:", error));
   }, []);
+
+  useEffect(() => {
+    if (trips.length > 0) {
+      const today = startOfDay(new Date());
+      console.log("Today: ", today);
+      const upcoming = trips.filter(trip => {
+        const tripEndDate = startOfDay(parse(trip.endDate, 'yyyy-MM-dd', new Date()));
+        console.log("End date: ", tripEndDate);
+        return tripEndDate >= today;
+      });
+  
+      const past = trips.filter(trip => {
+        const tripEndDate = startOfDay(parse(trip.endDate, 'yyyy-MM-dd', new Date()));
+        return tripEndDate < today;
+      });
+  
+      
+      setUpcomingTrips(upcoming);
+      setPastTrips(past);
+
+      console.log("Upcoming Trips: ", upcoming);
+      console.log("Past Trips: ", past);
+    }
+  }, [trips]);
 
 
   useEffect(() => {
@@ -109,8 +152,8 @@ useEffect(() => {
   } else {
     setIsAuthenticated(false);
   }
-  const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
-  setTrips(savedTrips);
+  //const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
+  //setTrips(savedTrips);
 }, []);
   const navigate = useNavigate();
 
@@ -154,10 +197,10 @@ useEffect(() => {
   const Card = ({ image, title = "Place", buttonText = "Trip Details", button = () => alert("Trip Details"), start, end, people, share }) => {
     return (
       <div style={{
-        width: "250px",
+        width: "270px",
         padding: "20px",
         borderRadius: "10px",
-        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+        boxShadow: "0px 8px 8px rgba(0, 0, 0, 0.1), -3px -6px 8px rgba(0, 0, 0, 0.15)",
         backgroundColor: "#90EE90",
         textAlign: "center",
         margin: "10px",
@@ -166,20 +209,33 @@ useEffect(() => {
         flexDirection: "column",
         justifyContent: "center",
         minHeight: "350px",
-      }}>
+        transition: "transform 0.3s ease, box-shadow 0.3s ease"
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"}
+      onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
         {image && <img src={image} alt={title} style={{ width: "100%", height: "50%", borderRadius: "10px" }} />}
         <h2 style={{ margin: "5px", padding: "0" }}>{title}</h2>
         {start && <h3 style={{ margin: "5px", padding: "0" }}>{start} - {end}</h3>}
-        {people && <h3 style={{ margin: "5px", padding: "0" }}>{people} {people == 1 ? "Traveler" : "Travelers"}</h3>}
+        {people && (
+          <h3 style={{ margin: "5px", padding: "0", display: "flex", alignItems: "center", gap: "5px" }}>
+            {people} {people === 1 ? "Traveler" : "Travelers"}
+            <span style={{ display: "flex", gap: "2px" }}>
+              {Array.from({ length: people }).map((_, index) => (
+                <PersonIcon key={index} style={{ fontSize: "30px", color: "#555" }} />
+              ))}
+            </span>
+          </h3>
+        )}
         </div>
         <div style={{
           position: "absolute",
           bottom: "10px",
-          left: "10px",
+          left: share ? "10px" : "50%",
+          transform: share ? "none" : "translateX(-50%)",       
           display: "flex",
           alignItems: "center",
-          gap: "45px" 
+          gap: share ? "65px" : "0px",
         }}>
          {share && (
             <img 
@@ -201,7 +257,17 @@ useEffect(() => {
             color: "white",
             borderRadius: "5px",
             cursor: "pointer",
-            marginTop: "auto"
+            marginTop: "auto",
+            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+            transition: "transform 0.2s ease, box-shadow 0.2s ease"
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = "scale(1.05)";
+            e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "scale(1)";
+            e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
           }}
         >
           {buttonText}
@@ -212,6 +278,24 @@ useEffect(() => {
   };
 
   const settings = {
+    dots: false,
+    infinite: upcomingTrips.length > 1,
+    slidesToShow: Math.min(4, upcomingTrips.length),
+    slidesToScroll: 1,
+    arrows: upcomingTrips.length > 1,
+    nextArrow: <NextArrow />, 
+    prevArrow: <PrevArrow />, 
+    centerMode: upcomingTrips.length == 1,
+    speed: 500,
+    variableWidth: false,
+    responsive: [
+      { breakpoint: 1300, settings: { slidesToShow: Math.min(3, upcomingTrips.length) } },
+      { breakpoint: 1000, settings: { slidesToShow: Math.min(2, upcomingTrips.length) } },
+      { breakpoint: 600, settings: { slidesToShow: Math.min(1, upcomingTrips.length) } },
+    ],
+  };
+
+  const settings2 = {
     dots: false,
     infinite: true,
     slidesToShow: 4,
@@ -228,26 +312,40 @@ useEffect(() => {
     ],
   };
 
+  const settings3 = {
+    dots: false,
+    infinite: pastTrips.length > 1,
+    slidesToShow: Math.min(4, pastTrips.length),
+    slidesToScroll: 1,
+    arrows: pastTrips.length > 1,
+    nextArrow: <NextArrow />, 
+    prevArrow: <PrevArrow />, 
+    centerMode: pastTrips.length == 1,
+    speed: 500,
+    variableWidth: false,
+    responsive: [
+      { breakpoint: 1300, settings: { slidesToShow: Math.min(3, pastTrips.length) } },
+      { breakpoint: 1000, settings: { slidesToShow: Math.min(2, pastTrips.length) } },
+      { breakpoint: 600, settings: { slidesToShow: Math.min(1, pastTrips.length) } },
+    ],
+  };
+
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
   return (
     <div>
       <div>
-        <h1 style={{ textAlign: "center", color: "#32CD32" }}>
+        <h1 style={{ textAlign: "center", color: "#32CD32",  textShadow: "3px 3px 6px rgba(0, 0, 0, 0.3)", fontWeight: "bold" }}>
           Tr<span style={{ color: "#800080" }}>AI</span>lblazer
         </h1>
   
         {isAuthenticated ? (
-          <div style={{ position: "relative" }}>
-            <img
-              src={Profile}
-              alt="Profile"
+          <div style={{  position: "absolute", top: "10px", right: "20px"  }} ref={ddRef}>
+           <PersonIcon
               style={{
-                position: "relative",
-                left: "1350px",
-                top: "-60px",
-                cursor: "pointer",
+                fontSize: "50px",
+                cursor: "pointer"
               }}
               onClick={toggleDropdown}
             />
@@ -255,13 +353,14 @@ useEffect(() => {
               <div
                 style={{
                   position: "absolute",
-                  top: "80px",
-                  left: "1300px",
+                  top: "60px",
+                  right: "0px",
                   backgroundColor: "white",
                   boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
                   borderRadius: "5px",
                   padding: "10px",
                   zIndex: 10,
+                  minWidth: "150px"
                 }}
               >
                 <ul
@@ -282,7 +381,10 @@ useEffect(() => {
                       }}
                       onMouseEnter={(e) => (e.target.style.backgroundColor = "#f0f0f0")}
                       onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
-                      onClick={option === "Logout" ? handleLogout : null}
+                      onClick={() => {
+                        if (option === "Logout") handleLogout();
+                        if (option === "Edit Survey") navigate("/survey");
+                      }}
                     >
                       {option}
                     </li>
@@ -316,9 +418,11 @@ useEffect(() => {
         <h1 style={{ marginLeft: "20px" }}>My Trips:</h1>
         <div style={{ width: "90%", margin: "auto", position: "relative" }}>
         <Slider {...settings}>
-          {trips.map((trip) => {
-             const formattedStartDate = new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
-             const formattedEndDate = new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+          {upcomingTrips.map((trip) => {
+            const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
+            const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
+             //const formattedStartDate = new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+             //const formattedEndDate = new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
              return (
     <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
   );})}
@@ -337,18 +441,32 @@ useEffect(() => {
         </Slider>
         </div> */}
   </div>
-  <button onClick={navigateToCreate} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Create Trip (+)</button>
+  <button onClick={navigateToCreate} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)", transition: "transform 0.2s ease, box-shadow 0.2s e"}} onMouseEnter={(e) => {
+            e.target.style.transform = "scale(1.05)";
+            e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "scale(1)";
+            e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
+          }}>Create Trip (+)</button>
   <div style={{ marginTop: "40px" }}>
   <h1 style={{marginLeft: "20px"}}>Discover New Vacation Spots:</h1>
   <div style={{ width: "90%", margin: "auto", position: "relative" }}>
-  <Slider {...settings}>
+  <Slider {...settings2}>
           {places.map((place) => {
              return (
     <Card key={place._id} image={imageMap[place.images[0]]} title={place.name} description={place.description} button={() => placeDetails(place._id)} buttonText="Place Details"/>
   );})}
   </Slider>
   </div>
-  <button onClick={navigateToSurvey} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px" }}>Take Our Travel Quiz</button>
+  <button onClick={navigateToSurvey} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)", transition: "transform 0.2s ease, box-shadow 0.2s e"}} onMouseEnter={(e) => {
+            e.target.style.transform = "scale(1.05)";
+            e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "scale(1)";
+            e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
+          }}>Take Our Travel Quiz</button>
   <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", margin: "10px 20px 0 0", position: "fixed", bottom: "0px", right: "0px" }}>
   <p style={{ fontSize: "16px", color: "#555", marginRight: "10px", maxWidth: "250px" }}>
     Meet your personal AI travel assistant! Get personalized recommendations and plan your next trip with ease.
@@ -362,10 +480,18 @@ useEffect(() => {
   </div>
   <div style={{ marginTop: "40px" }}>
   <h1 style={{marginLeft: "20px"}}>Past Trips:</h1>
-  <div style={{ display: "flex", gap: "10px" }}>
-          <Card image={Japan} title="Japan Tour" description="Experience the culture and technology of Japan." />
-          <Card image={Canyon} title="Grand Canyon" description="Explore the natural wonders of Arizona." />
-  </div>
+  <div style={{ width: "90%", margin: "auto", position: "relative" }}>
+        <Slider {...settings3}>
+          {pastTrips.map((trip) => {
+            const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
+            const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
+             //const formattedStartDate = new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+             //const formattedEndDate = new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+             return (
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
+  );})}
+  </Slider>
+        </div>
   </div>
   </div>);
 };

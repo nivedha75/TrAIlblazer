@@ -20,6 +20,7 @@ Installed everything with
 ### `npm install @mui/icons-material`
 ### `npm install slick-carousel`
 ### `npm install js-cookie`
+### `npm install date-fns`
 
 
 Added these scripts to the package.json file
