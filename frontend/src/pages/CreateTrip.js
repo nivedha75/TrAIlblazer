@@ -44,6 +44,10 @@ const CreateTrip = () => {
       alert("Please enter a valid number of days!");
       return;
     }
+    else if (!selectLocation) {
+      alert("Please select a location!");
+      return;
+    }
     navigate("/plan", { state: { days: parseInt(days, 10), locate: selectLocation, image: selectedImage } });
   };
 
@@ -64,8 +68,19 @@ const CreateTrip = () => {
   };
 
     return (
-        <div style={{textAlign: "center"}}>
-        <h1 style={{textAlign: "center"}}>Create a Trip</h1>
+      <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #32CD32, #800080)", 
+        color: "white",
+        paddingBottom: "50px"
+      }}
+    >
+        <div style={{background: "white", padding: "30px", borderRadius: "10px", boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)", textAlign: "center",  width: "650px"}}>
+        <h1 style={{textAlign: "center", color: "#800080"}}>Create a Trip</h1>
         <div>
         <input
           type="number"
@@ -79,11 +94,13 @@ const CreateTrip = () => {
             borderRadius: "5px",
             border: "1px solid #ccc",
             marginBottom: "20px",
+            fontSize: "16px",
+            boxShadow: "inset 0 0 5px rgba(0, 0, 0, 0.1)"
           }}
         />
       </div>
         <div>
-        <h2>Select a Location: </h2>
+        <h2 style={{color: "#800080"}}>Select a Location: </h2>
         <input
         type="text"
         value={query}
@@ -101,7 +118,8 @@ const CreateTrip = () => {
           padding: "10px",
           borderRadius: "5px",
           border: "1px solid #ccc",
-          marginBottom: "10px",
+          fontSize: "16px",
+          boxShadow: "inset 0 0 5px rgba(0, 0, 0, 0.1)",
           
         }}
       />
@@ -115,8 +133,14 @@ const CreateTrip = () => {
           width: "600px",
           backgroundColor: "white",
           position: "absolute",
-          left: "50%",
-          transform: "translateX(-50%)"
+          left: "29%",
+          zIndex: 10,
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+          marginTop: "5px",
+          textAlign: "left",
+          color: "black", 
+          maxHeight: "200px", 
+          overflowY: "auto"
         }}>
           {filteredLocations.map((place) => (
             <li key={place._id} style={{
@@ -146,11 +170,21 @@ const CreateTrip = () => {
           border: "none",
           borderRadius: "5px",
           cursor: "pointer",
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+          transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        }} onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.05)";
+          e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
         }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = "scale(1)";
+          e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";}}
+
         onClick={goToPlanPage}
       >
         Next
       </button>
+        </div>
         </div>
     );
 };

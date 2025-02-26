@@ -18,7 +18,8 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import {IconButton} from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-import { isPast, parseISO, format, isBefore, startOfDay, parse } from 'date-fns'; 
+import { isPast, parseISO, format, isBefore, startOfDay, parse } from 'date-fns';
+import AddIcon from "@mui/icons-material/Add"; 
 
 const NextArrow = ({ onClick }) => (
   <IconButton
@@ -421,8 +422,6 @@ useEffect(() => {
           {upcomingTrips.map((trip) => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
-             //const formattedStartDate = new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
-             //const formattedEndDate = new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
              return (
     <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
   );})}
@@ -441,14 +440,14 @@ useEffect(() => {
         </Slider>
         </div> */}
   </div>
-  <button onClick={navigateToCreate} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)", transition: "transform 0.2s ease, box-shadow 0.2s e"}} onMouseEnter={(e) => {
+  <button onClick={navigateToCreate} style={{ marginTop: "30px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)", transition: "transform 0.2s ease, box-shadow 0.2s e", display: "flex", alignItems: "center"}} onMouseEnter={(e) => {
             e.target.style.transform = "scale(1.05)";
             e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
           }}
           onMouseLeave={(e) => {
             e.target.style.transform = "scale(1)";
             e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
-          }}>Create Trip (+)</button>
+          }}>Create Trip <AddIcon style={{ fontSize: "24px" }} /></button>
   <div style={{ marginTop: "40px" }}>
   <h1 style={{marginLeft: "20px"}}>Discover New Vacation Spots:</h1>
   <div style={{ width: "90%", margin: "auto", position: "relative" }}>
@@ -485,8 +484,6 @@ useEffect(() => {
           {pastTrips.map((trip) => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
-             //const formattedStartDate = new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
-             //const formattedEndDate = new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric" });
              return (
     <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
   );})}

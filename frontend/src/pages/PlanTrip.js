@@ -4,6 +4,8 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
+import { Card, CardContent } from "@mui/material";
+
 
 const timeLabels = [
     "12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM", "7 AM", "8 AM",
@@ -112,10 +114,30 @@ const PlanTrip = () => {
   }
 
   return (
-    <div style={{ textAlign: "center", padding: "20px" }}>
-      <h1>Plan Your Trip</h1>
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #32CD32, #800080)",
+      color: "white",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingBottom: "50px",
+    }}>
+      <Card
+        sx={{
+          background: "white",
+          padding: "30px",
+          borderRadius: "10px",
+          boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
+          textAlign: "center",
+          width: "650px",
+        }}
+      >
+      <CardContent>
+      <h1 style={{ color: "#800080" }}>Plan Your Trip</h1>
     
-      <h2>Select Start Date</h2>
+      <h2 style={{ color: "#32CD32" }}>Select Start Date</h2>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
         <Calendar
           onClickDay={setStartDate}
@@ -130,10 +152,10 @@ const PlanTrip = () => {
         }
 `       }</style>
       </div>
-      <h2>Daily Plans</h2>
+      <h2 style={{ color: "#32CD32" }}>Daily Plans</h2>
       {Array.from({ length: days }).map((_, index) => (
         <div key={index} style={{ marginBottom: "20px" }}>
-          <h3>Day {index + 1}</h3>
+          <h3 style={{ color: "#800080" }}>Day {index + 1}</h3>
           <div style={{ display: "flex", justifyContent: "space-between", width: "600px", margin: "auto" }}>
             <span>12 AM</span>
             <span>12 AM</span>
@@ -154,7 +176,7 @@ const PlanTrip = () => {
             renderThumb={(props, state) => <div {...props}>{timeLabels[state.valueNow]}</div>}
             style={{ width: "600px", margin: "auto", cursor: "pointer" }}
           />
-          <p>Selected Time: {timeLabels[timeRanges[index][0]]} - {timeLabels[timeRanges[index][1]]}</p>
+          <p style={{ color: "#800080" }}>Selected Time: {timeLabels[timeRanges[index][0]]} - {timeLabels[timeRanges[index][1]]}</p>
         </div>
       ))}
      <div>
@@ -170,6 +192,8 @@ const PlanTrip = () => {
             borderRadius: "5px",
             border: "1px solid #ccc",
             marginBottom: "20px",
+            fontSize: "16px",
+            boxShadow: "inset 0 0 5px rgba(0, 0, 0, 0.1)"
           }}
         />
       </div>
@@ -183,11 +207,23 @@ const PlanTrip = () => {
           borderRadius: "5px",
           cursor: "pointer",
           marginTop: "20px",
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+          transition: "transform 0.2s ease, box-shadow 0.2s ease"
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.05)";
+          e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = "scale(1)";
+          e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
         }}
         onClick={saveTrip}
       >
         Save Trip
       </button>
+      </CardContent>
+      </Card>
     </div>
   );
 };
