@@ -19,6 +19,7 @@ Installed everything with
 ### `npm install @mui/material @emotion/react @emotion/styled`
 ### `npm install @mui/icons-material`
 ### `npm install slick-carousel`
+### `npm install react-slick`
 ### `npm install js-cookie`
 ### `npm install date-fns`
 

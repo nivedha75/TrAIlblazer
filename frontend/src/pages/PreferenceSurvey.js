@@ -12,7 +12,7 @@ import theme from "../theme"
 import Cookies from "js-cookie";
 
 // This variable controls if all questions are required or not
-const REQUIRE_QUESTIONS = true; // Toggle this to true/false as needed
+const REQUIRE_QUESTIONS = false; // Toggle this to true/false as needed
 
 const surveyJson = {
   completeText: "Submit",
@@ -43,7 +43,7 @@ const surveyJson = {
           rateMax: 5,
           minRateDescription: "Very Relaxed",
           maxRateDescription: "Very Fast-Paced",
-          isRequired: true
+          isRequired: false
         },
         {
           type: "dropdown",
@@ -55,7 +55,7 @@ const surveyJson = {
             "$250–$500",
             "Over $500"
           ],
-          isRequired: true
+          isRequired: false
         },
       ]
     },
@@ -70,7 +70,7 @@ const surveyJson = {
           title: "Are you open to participating in group tours or shared experiences?",
           labelTrue: "Yes",
           labelFalse: "No",
-          isRequired: true
+          isRequired: false
         },
         {
           type: "rating",
@@ -80,7 +80,7 @@ const surveyJson = {
           rateMax: 5,
           minRateDescription: "Not Comfortable",
           maxRateDescription: "Very Comfortable",
-          isRequired: true
+          isRequired: false
         },
         {
           type: "comment",
@@ -137,7 +137,7 @@ const surveyJson = {
           ],
           hasOther: true,
           otherText: "Other (please specify)",
-          isRequired: true
+          isRequired: false
         },
         {
           type: "checkbox",
@@ -151,7 +151,7 @@ const surveyJson = {
           ],
           hasOther: true,
           otherText: "Other (please specify)",
-          isRequired: true
+          isRequired: false
         }
       ]
     },
@@ -168,7 +168,7 @@ const surveyJson = {
           rateMax: 5,
           minRateDescription: "Not Interested",
           maxRateDescription: "Extremely Interested",
-          isRequired: true
+          isRequired: false
         },
         {
           type: "rating",
@@ -178,7 +178,7 @@ const surveyJson = {
           rateMax: 5,
           minRateDescription: "Not Interested",
           maxRateDescription: "Extremely Interested",
-          isRequired: true
+          isRequired: false
         },
         {
           type: "radiogroup",
@@ -189,7 +189,7 @@ const surveyJson = {
             "Medium (Moderate hikes, some water sports)",
             "High (Extreme sports, challenging hikes, thrill-seeking)"
           ],
-          isRequired: true
+          isRequired: false
         }
       ]
     },
@@ -217,7 +217,7 @@ const surveyJson = {
             { value: "nightlife", text: "Nightlife (bars, clubs)" }
           ],
           // Force an answer for each row
-          isAllRowRequired: true
+          isAllRowRequired: false
         },
         {
           type: "comment",
@@ -256,7 +256,7 @@ const surveyJson = {
           ],
           hasOther: true,
           otherText: "Other (please specify)",
-          isRequired: true
+          isRequired: false
         },
         {
           "type": "ranking",
@@ -272,7 +272,7 @@ const surveyJson = {
             "Chinese",
             "American"
           ],
-          "isRequired": true
+          "isRequired": false
         }
       ]
     },
@@ -310,7 +310,7 @@ const surveyJson = {
             "Trendy/Modern Restaurants",
             "Quirky/Local Eateries"
           ],
-          isRequired: true
+          isRequired: false
         },
         {
           type: "rating",
@@ -320,7 +320,7 @@ const surveyJson = {
           rateMax: 5,
           minRateDescription: "Not Important",
           maxRateDescription: "Extremely Important",
-          isRequired: true
+          isRequired: false
         },
         {
           type: "rating",
@@ -330,7 +330,7 @@ const surveyJson = {
           rateMax: 5,
           minRateDescription: "Not Interested",
           maxRateDescription: "Extremely Interested",
-          isRequired: true
+          isRequired: false
         }
       ]
     },
@@ -377,7 +377,7 @@ const surveyJson = {
             "Family Bonding",
             "Relaxation"
           ],
-          isRequired: true
+          isRequired: false
         },
         {
           type: "checkbox",
@@ -396,7 +396,7 @@ const surveyJson = {
           ],
           hasOther: true,
           otherText: "Other (please specify)",
-          isRequired: true
+          isRequired: false
         }
       ]
     },
@@ -414,7 +414,7 @@ const surveyJson = {
             "Independent Exploration",
             "A Mix of Both"
           ],
-          isRequired: true
+          isRequired: false
         },
         {
           type: "radiogroup",
@@ -425,7 +425,7 @@ const surveyJson = {
             "Flexibility for Spontaneity",
             "A Mix of Both"
           ],
-          isRequired: true
+          isRequired: false
         },
         {
           type: "comment",
@@ -467,7 +467,7 @@ const surveyJson = {
           ],
           hasOther: true,
           otherText: "Other (please specify)",
-          isRequired: true
+          isRequired: false
         },
         {
           type: "radioGroup",
@@ -478,7 +478,7 @@ const surveyJson = {
           ],
           hasOther: true,
           otherText: "Yes (please specify)",
-          isRequired: true
+          isRequired: false
         }
       ]
     },
@@ -501,7 +501,7 @@ const surveyJson = {
             { value: "room_service", text: "Room Service" },
             { value: "wifi", text: "WiFi" }
           ],
-          isAllRowRequired: true
+          isAllRowRequired: false
         },
         {
           type: "comment",
@@ -557,7 +557,7 @@ const surveyJson = {
           ],
           hasOther: true,
           otherText: "Yes (please specify)",
-          isRequired: true
+          isRequired: false
         }
       ]
     },
@@ -573,7 +573,7 @@ const surveyJson = {
           minRateDescription: "Not at all",
           maxRateDescription: "Very much so",
           rateValues: [1, 2, 3, 4, 5],
-          isRequired: true
+          isRequired: false
         },
         {
           type: "radiogroup",
@@ -583,7 +583,7 @@ const surveyJson = {
             "Yes",
             "No"
           ],
-          isRequired: true
+          isRequired: false
         },
         {
           type: "comment",
@@ -619,7 +619,7 @@ const surveyJson = {
             "Partner / Spouse",
             "Alone",
           ],
-          isRequired: true
+          isRequired: false
         },
         {
           type: "rating",
@@ -628,7 +628,7 @@ const surveyJson = {
           minRateDescription: "Not at all",
           maxRateDescription: "Very much so",
           rateValues: [1, 2, 3, 4, 5],
-          isRequired: true
+          isRequired: false
         }
       ]
     },
@@ -645,7 +645,7 @@ const surveyJson = {
           You can also share activities that you are fairly certain you would like.\n
           If there are none you would like to share, just type \"N/A\".\n
           `,
-          isRequired: true
+          isRequired: false
         },
         {
           type: "comment",
@@ -655,7 +655,7 @@ const surveyJson = {
           You can also share activities that you are fairly certain you would not like.\n
           If there are none you would like to share, just type \"N/A\".\n
           `,
-          isRequired: true
+          isRequired: false
         },
         {
           type: "comment",
@@ -696,9 +696,10 @@ const applyRequirementFlag = (surveyConfig, requireAll) => {
       if (page.elements) {
         page.elements.forEach(element => {
           // Exclude only text input fields from being required
-          if (element.type !== "text" && typeof element.isRequired !== "undefined") {
-            element.isRequired = requireAll;
-          }
+          // if (element.type !== "text" && typeof element.isRequired !== "undefined") {
+          //   element.isRequired = requireAll;
+          // }
+          element.isRequired = requireAll;
 
           // If it's a matrix, update isAllRowRequired too
           if (element.type === "matrix" && typeof element.isAllRowRequired !== "undefined") {
@@ -710,12 +711,15 @@ const applyRequirementFlag = (surveyConfig, requireAll) => {
   }
 };
 
+
+
 const PreferenceSurvey = () => {
 
   const [surveyData, setSurveyData] = useState(null);
   const navigate = useNavigate();
   //const userId = "65d4f9b3c7e8a9d2f1a3b4c5"; // Replace with actual user ID
-  const userId = "65d4f9b3c7e8a9d2f1a3b4c3"; //new one
+  //const userId = "65d4f9b3c7e8a9d2f1a3b4c3"; //new one
+  const userId = Cookies.get('user_id');
 
   // Persist survey instance between renders
   const [survey] = useState(() => new Model(surveyJson));
@@ -754,7 +758,7 @@ const PreferenceSurvey = () => {
   // Load saved survey data when component mounts
   useEffect(() => {
     fetchSavedProgress();
-    applyRequirementFlag(surveyJson, REQUIRE_QUESTIONS);
+    //applyRequirementFlag(surveyJson, REQUIRE_QUESTIONS);
   }, []);
 
   // Update survey model when `surveyData` changes
@@ -762,7 +766,7 @@ const PreferenceSurvey = () => {
     if (surveyData) {
       survey.data = surveyData; // Properly apply fetched survey data
     }
-    applyRequirementFlag(surveyJson, REQUIRE_QUESTIONS);
+    //applyRequirementFlag(surveyJson, REQUIRE_QUESTIONS);
   }, [surveyData]);
 
 
@@ -771,8 +775,8 @@ const PreferenceSurvey = () => {
     //survey.data.submissionDateTime = new Date().toISOString();
     //survey.data.user_id = "kumar502"; // Replace with actual user ID
     survey.setValue("submissionDateTime", new Date().toISOString());
-    //survey.setValue("user_id", Cookies.get('user_id')); // Replace with actual user ID
     survey.setValue("user_id", userId); // Replace with actual user ID
+    //survey.setValue("user_id", userId); // Replace with actual user ID
 
     // Submit results to your server if needed
     fetch("http://localhost:55000/submit_preferences", {
@@ -798,8 +802,9 @@ const PreferenceSurvey = () => {
         console.warn("No survey data to save.");
         return;
       }
-
-      survey.setValue("user_id", userId); // Ensure user ID is set before saving
+      // This may be extra:
+      survey.setValue("user_id", userId);
+      //survey.setValue("user_id", userId); // Ensure user ID is set before saving
 
       const response = await fetch("http://localhost:55000/save_progress", {
         method: "POST",

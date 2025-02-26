@@ -99,6 +99,7 @@ const ActivityCarousel = () => {
   const navigate = useNavigate();
 
   const [activities, setActivities] = useState(activitiesDefault);
+  const itineraryId = 1; // Hardcoded for now
 
   // Fetch saved progress
   const fetchAdditionalActivities = async () => {

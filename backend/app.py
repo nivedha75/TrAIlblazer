@@ -4,7 +4,7 @@ from flask_cors import CORS
 from pymongo import MongoClient
 from datetime import datetime, timezone
 from bson import ObjectId  # Import ObjectId for MongoDB ID conversion for user_id
-
+import os
 
 import sqlite3
 import hashlib
@@ -14,6 +14,9 @@ import uuid
 from email.message import EmailMessage
 
 app = Flask(__name__)
+
+DB_PATH = os.path.join(os.path.dirname(__file__), 'main.db')
+print(">>> Using database at:", DB_PATH)
 
 # app.config['SESSION_COOKIE_NAME'] = 'session'
 # app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -57,7 +60,9 @@ def load_progress(user_id):
         return jsonify({"message": "CORS preflight passed"}), 200
     
     # Find the document but exclude `_id` and `user_id` from the response
-    result = collection.find_one({"user_id": ObjectId(user_id)}, {"_id": 0, "user_id": 0})
+    #result = collection.find_one({"user_id": ObjectId(user_id)}, {"_id": 0, "user_id": 0})
+    result = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
+
 
     if result:
         print("Survey data found:", result)  # Debugging log
@@ -67,8 +72,8 @@ def load_progress(user_id):
 @app.route('/save_progress', methods=['POST'])
 def save_progress():
     data = request.json  # Get JSON from frontend
-    user_id = ObjectId(data["userId"])  # Convert userId to ObjectId
-
+    #user_id = ObjectId(data["userId"])  # Convert userId to ObjectId
+    user_id = data["userId"]
     # Extract survey responses
     survey_data = data["surveyData"]  # Only survey responses
 
@@ -105,13 +110,13 @@ def submit_preferences():
         data["lastUpdated"] = datetime.now(timezone.utc)
 
         # Convert user_id to ObjectId (foreign key reference)
-        if "user_id" in data:
-            try:
-                # data['user_id'] = Cookies.get('user_id')
-                data["user_id"] = ObjectId(data["user_id"])  # Convert string ID to ObjectId
-                print("Converted user_id:", data["user_id"])
-            except:
-                return jsonify({"error": "Invalid user_id format"}), 400  # Return error if ID is invalid
+        # if "user_id" in data:
+        #     try:
+        #         # data['user_id'] = Cookies.get('user_id')
+        #         data["user_id"] = ObjectId(data["user_id"])  # Convert string ID to ObjectId
+        #         print("Converted user_id:", data["user_id"])
+        #     except:
+        #         return jsonify({"error": "Invalid user_id format"}), 400  # Return error if ID is invalid
         print("Received and Modified Data:", data)
         #collection.insert_one(data)  # Insert into MongoDB
         # Update existing document or insert a new one
@@ -232,6 +237,7 @@ def send_verification_email(email, token):
 
 @app.route('/register', methods=['POST'])
 def register():
+    print("In register function in app.py")
     data = request.json
     username = data.get('username')
     email = data.get('email')
@@ -249,9 +255,12 @@ def register():
     hashed_pw = hash_password(password)
     verification_token = str(uuid.uuid4())
     
-    conn = sqlite3.connect("main.db")
-    cursor = conn.cursor()
+    # conn = sqlite3.connect("main.db") does not work if the current working directory is NOT the backend folder
+    DB_PATH = os.path.join(os.path.dirname(__file__), 'main.db') # working version
+    print("Using database at: ", DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
     
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM UserTable WHERE email = ?", (email,))
     if cursor.fetchone():
         conn.close()
@@ -303,8 +312,12 @@ def login():
     if not email or not password:
         return jsonify({'error': 'Email and password are required'}), 400
     
-    conn = sqlite3.connect("main.db")
+    # conn = sqlite3.connect("main.db") does not work if the current working directory is NOT the backend folder
+
+    DB_PATH = os.path.join(os.path.dirname(__file__), 'main.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     
     cursor.execute("SELECT user_id, hashed_pw, verified FROM UserTable WHERE email = ?", (email,))
     user = cursor.fetchone()
