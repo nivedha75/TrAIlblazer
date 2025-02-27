@@ -9,7 +9,7 @@ import Indonesia from "../assets/Indonesia.png";
 import Japan from "../assets/Japan.png";
 import Paris from "../assets/Paris.png";
 import Canyon from "../assets/Canyon.png";
-import Share from "../assets/share.png";
+import Share from "@mui/icons-material/Share";
 import Cookies from "js-cookie";
 import Slider from "react-slick";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
@@ -20,6 +20,7 @@ import {IconButton} from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import { isPast, parseISO, format, isBefore, startOfDay, parse } from 'date-fns';
 import AddIcon from "@mui/icons-material/Add"; 
+import Bot from "../assets/Bot.avif";
 
 const NextArrow = ({ onClick }) => (
   <IconButton
@@ -239,15 +240,7 @@ useEffect(() => {
           gap: share ? "65px" : "0px",
         }}>
          {share && (
-            <img 
-              src={share} 
-              alt="Share" 
-              style={{ 
-                width: "30px", 
-                height: "30px", 
-                cursor: "pointer" 
-              }}
-            />
+             <Share style={{ fontSize: 24, color: "#555" }} />
           )}
           <button 
           onClick={button} 
@@ -417,7 +410,7 @@ useEffect(() => {
   
       <div>
         <h1 style={{ marginLeft: "20px" }}>My Trips:</h1>
-        <div style={{ width: "90%", margin: "auto", position: "relative" }}>
+        <div style={{ width: "90%", margin: "auto", position: "relative", zIndex: 1 }}>
         <Slider {...settings}>
           {upcomingTrips.map((trip) => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
@@ -450,7 +443,7 @@ useEffect(() => {
           }}>Create Trip <AddIcon style={{ fontSize: "24px" }} /></button>
   <div style={{ marginTop: "40px" }}>
   <h1 style={{marginLeft: "20px"}}>Discover New Vacation Spots:</h1>
-  <div style={{ width: "90%", margin: "auto", position: "relative" }}>
+  <div style={{ width: "90%", margin: "auto", position: "relative", zIndex: 1 }}>
   <Slider {...settings2}>
           {places.map((place) => {
              return (
@@ -466,14 +459,14 @@ useEffect(() => {
             e.target.style.transform = "scale(1)";
             e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
           }}>Take Our Travel Quiz</button>
-  <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", margin: "10px 20px 0 0", position: "fixed", bottom: "0px", right: "0px" }}>
-  <p style={{ fontSize: "16px", color: "#555", marginRight: "10px", maxWidth: "250px" }}>
+  <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", margin: "10px 20px 0 0", position: "fixed", bottom: "0px", right: "0px", zIndex: 0 }}>
+  <p style={{ fontSize: "16px", color: "#555", marginRight: "10px", maxWidth: "250px"}}>
     Meet your personal AI travel assistant! Get personalized recommendations and plan your next trip with ease.
   </p>
   <img
-    src={ChatBot}
+    src={Bot}
     alt="ChatBot"
-    style={{ width: "80px", height: "80px" }}
+    style={{ width: "80px", height: "80px"}}
   />
 </div>
   </div>
