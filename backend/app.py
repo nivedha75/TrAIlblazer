@@ -110,16 +110,8 @@ def submit_preferences():
         
         data["lastUpdated"] = datetime.now(timezone.utc)
 
-        # Convert user_id to ObjectId (foreign key reference)
-        # if "user_id" in data:
-        #     try:
-        #         # data['user_id'] = Cookies.get('user_id')
-        #         data["user_id"] = ObjectId(data["user_id"])  # Convert string ID to ObjectId
-        #         print("Converted user_id:", data["user_id"])
-        #     except:
-        #         return jsonify({"error": "Invalid user_id format"}), 400  # Return error if ID is invalid
         print("Received and Modified Data:", data)
-        #collection.insert_one(data)  # Insert into MongoDB
+        
         # Update existing document or insert a new one
         collection.update_one(
             {"user_id": data["user_id"]},  # Match user_id
@@ -291,7 +283,7 @@ def register():
     DB_PATH = os.path.join(os.path.dirname(__file__), 'main.db') # working version
     print("Using database at: ", DB_PATH)
     conn = sqlite3.connect(DB_PATH)
-    
+
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM UserTable WHERE email = ?", (email,))
     if cursor.fetchone():

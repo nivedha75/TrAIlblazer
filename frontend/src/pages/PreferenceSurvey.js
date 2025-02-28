@@ -290,7 +290,7 @@ const surveyJson = {
         {
           type: "comment",
           name: "dislikedFoods",
-          title: "What are your foods you dislike?",
+          title: "What are the foods you dislike?",
           isRequired: false
         }
       ]
@@ -803,7 +803,6 @@ const PreferenceSurvey = () => {
         return;
       }
       // This may be extra:
-      survey.setValue("user_id", userId);
       //survey.setValue("user_id", userId); // Ensure user ID is set before saving
 
       const response = await fetch("http://localhost:55000/save_progress", {
