@@ -33,30 +33,35 @@ const activitiesDefault = [
     image: ChihulyGarden,
     location: "Seattle, WA",
     rating: 4.8,
+    activityId: "67c0ec23869bb9853f9588fe",
   },
   {
     title: "Seattle Space Needle",
     image: SpaceNeedle,
     location: "Seattle, WA",
     rating: 4.7,
+    activityId: "67c10de0d592e3c35dedf769",
   },
   {
     title: "Pike Place Market",
     image: PikePlaceMarket,
     location: "Seattle, WA",
     rating: 4.6,
+    activityId: "67c10e18d592e3c35dedf76a",
   },
   {
     title: "Whale Watching at Puget Sound",
     image: WhalePudgetSound,
     location: "Seattle, WA",
     rating: 4.9,
+    activityId: "67c10e4ed592e3c35dedf76c",
   },
   {
     title: "Museum of Flight",
     image: MuseumOfFlight,
     location: "Tukwila, WA",
     rating: 4.9,
+    activityId: "67c10e32d592e3c35dedf76b",
   },
 ];
 
@@ -213,7 +218,7 @@ const ActivityCarousel = () => {
                         size="large" readOnly value={activity.rating}/>
                         {/* <Button variant="contained">More Details</Button> */}
                     </Box>
-                    <Button variant="contained" onClick={() => navigate("/activities")}
+                    <Button variant="contained" onClick={() => navigate(`/activity-details/${encodeURIComponent(activity.activityId)}`)}
                         sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
                             "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem",
                             boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)", position: "absolute", bottom: "2rem", right: "5rem"}}>
