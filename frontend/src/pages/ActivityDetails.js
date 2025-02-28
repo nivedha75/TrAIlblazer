@@ -19,6 +19,7 @@ import {
   Button,
   ThemeProvider
 } from "@mui/material";
+import Link from '@mui/material/Link';
 import React from "react";
 import theme from "../theme";
 import AddIcon from "@mui/icons-material/Add";
@@ -147,15 +148,13 @@ const ActivityDetails = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Paper elevation={3} sx={{ p: 4, borderRadius: 2, backgroundColor: "#f9f9f9" }}>
           <Typography variant="h3" align="center" gutterBottom>
-            {activity.name}
+            <Link href={activity.website} sx={{ color: theme.palette.purple.main, "&:hover": { color: theme.palette.apple.main}}}>{activity.name}</Link>
+          </Typography>
+          <Typography variant="h4" align="center" gutterBottom>
+            {activity.city}
           </Typography>
   
           <Grid2 container spacing={3}>
-            {/* <Grid2 item xs={12} md={6}>
-              <Card sx={{ maxHeight: 400, overflow: "hidden" }}>
-                <CardMedia component="img" image={activity.images[0]} alt={activity.name} sx={{ height: 400 }} />
-              </Card>
-            </Grid2> */}
             <ThemeProvider theme={theme}>
         <Box sx={{ width: "90%", margin: "auto", padding: "20px", position: "relative", height: "40vh" }}>
 
@@ -196,8 +195,12 @@ const ActivityDetails = () => {
                   <Typography variant="body1" paragraph>
                     {activity.description}
                   </Typography>
-                  <Typography variant="h6">Visitor Experience</Typography>
-                  <Typography variant="body2">{activity.experience}</Typography>
+                  <Typography variant="h5" gutterBottom>
+                    Visitor Experience
+                  </Typography>
+                  <Typography variant="body1" paragraph>
+                    {activity.experience}
+                  </Typography>
                 </CardContent>
               </Card>
             </Grid2>
@@ -220,6 +223,24 @@ const ActivityDetails = () => {
             </Grid2>
             <Grid2 item xs={12} md={6}>
               <Card sx={{ p: 2, backgroundColor: "#ffffff" }}>
+              <CardContent>
+                <Typography variant="h5" gutterBottom>
+                  Contact Information
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Address:</strong> {activity.address}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Phone:</strong> {activity.number}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Email:</strong> {activity.email}
+                </Typography>
+              </CardContent>
+              </Card>
+            </Grid2>
+            <Grid2 item xs={12} md={6}>
+              <Card sx={{ p: 2, backgroundColor: "#ffffff" }}>
                 <CardContent>
                   <Typography variant="h5" gutterBottom>
                     Rating
@@ -233,22 +254,7 @@ const ActivityDetails = () => {
             </Grid2>
           </Grid2>
   
-          <Card sx={{ p: 2, backgroundColor: "#ffffff", mt: 3 }}>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                Contact Information
-              </Typography>
-              <Typography variant="body1">
-                <strong>Address:</strong> {activity.address}
-              </Typography>
-              <Typography variant="body1">
-                <strong>Phone:</strong> {activity.number}
-              </Typography>
-              <Typography variant="body1">
-                <strong>Email:</strong> {activity.email}
-              </Typography>
-            </CardContent>
-          </Card>
+          
   
           <Box display="flex" justifyContent="center" sx={{ mt: 4 }}>
             <Button variant="contained" sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
