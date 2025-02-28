@@ -107,45 +107,45 @@ const ActivityCarousel = () => {
   const itineraryId = 1; // Hardcoded for now
 
   // Fetch saved progress
-  const fetchAdditionalActivities = async () => {
-    try {
-      const response = await fetch(`http://localhost:55000/additional_activities/${itineraryId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "http://localhost:3000",
-          "Access-Control-Allow-Methods": "GET, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
-      });
+  // const fetchAdditionalActivities = async () => {
+  //   try {
+  //     const response = await fetch(`http://localhost:55000/additional_activities/${itineraryId}`, {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         "Access-Control-Allow-Origin": "http://localhost:3000",
+  //         "Access-Control-Allow-Methods": "GET, OPTIONS",
+  //         "Access-Control-Allow-Headers": "Content-Type"
+  //       }
+  //     });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch additional activities: ${response.statusText}`);
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`Failed to fetch additional activities: ${response.statusText}`);
+  //     }
 
-      const data = await response.json();
-      console.log("user_id that app is fetching additional activities for: ", itineraryId);
-      console.log("additional activities fetched: ", data);
-      if (data.exists && data.additionalActivities) {
-        console.log("Additional Activities loaded:", data.additionalActivities);
-        setActivities(data.additionalActivities);
-      } else {
-        console.warn("No additional activities found.");
-      }
-    } catch (error) {
-      console.error("Error loading saved additional activities:", error);
-    }
-  };
+  //     const data = await response.json();
+  //     console.log("user_id that app is fetching additional activities for: ", itineraryId);
+  //     console.log("additional activities fetched: ", data);
+  //     if (data.exists && data.additionalActivities) {
+  //       console.log("Additional Activities loaded:", data.additionalActivities);
+  //       setActivities(data.additionalActivities);
+  //     } else {
+  //       console.warn("No additional activities found.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error loading saved additional activities:", error);
+  //   }
+  // };
 //   // Load activities when component mounts
 //   useEffect(() => {
 //     fetchAdditionalActivities();
 //   }, []);
 
-  useEffect(() => {
-    if (activities) {
-      fetchAdditionalActivities(); // Properly set fetched activities
-    }
-  }, [activities]);
+  // useEffect(() => {
+  //   if (activities) {
+  //     fetchAdditionalActivities(); // Properly set fetched activities
+  //   }
+  // }, [activities]);
 
   const settings = {
     dots: false,
