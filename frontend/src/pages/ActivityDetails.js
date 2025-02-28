@@ -158,7 +158,7 @@ const ActivityDetails = () => {
             </Grid2> */}
             <ThemeProvider theme={theme}>
         <Box sx={{ width: "90%", margin: "auto", padding: "20px", position: "relative", height: "40vh" }}>
-        
+
         {images && images.length > 0 ? (
         <Slider {...settings}>
             {images.map((image, index) => (
@@ -251,7 +251,9 @@ const ActivityDetails = () => {
           </Card>
   
           <Box display="flex" justifyContent="center" sx={{ mt: 4 }}>
-            <Button variant="contained" color="primary" onClick={() => navigate("/activities")}>
+            <Button variant="contained" sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
+                            "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}
+                             onClick={() => navigate("/activities")}>
               Back to Activities
             </Button>
           </Box>
