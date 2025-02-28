@@ -568,7 +568,7 @@ const surveyJson = {
       elements: [
         {
           type: "rating",
-          name: "prefTour",
+          name: "prefSoc",
           title: "On a scale from 1 to 5, how much do you value a vibrant nightlife?",
           minRateDescription: "Not at all",
           maxRateDescription: "Very much so",
