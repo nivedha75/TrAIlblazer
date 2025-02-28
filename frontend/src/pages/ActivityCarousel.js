@@ -21,7 +21,7 @@ import ChihulyGarden from "../assets/Activities/ChihulyGarden.jpg";
 import SpaceNeedle from "../assets/Activities/SpaceNeedle.jpg";
 import PikePlaceMarket from "../assets/Activities/PikePlaceMarket.jpg";
 import OlympicSculpturePark from "../assets/Activities/OlympicSculpturePark.jpg";
-import MuseumOfFlight from "../assets/Activities/MuseumOfFlight.jpeg";
+import MuseumOfFlight from "../assets/Activities/MuseumOfFlight.jpg";
 import WhalePudgetSound from "../assets/Activities/WhalePudgetSound.jpg";
 import theme from "../theme";
 import Rating from '@mui/material/Rating';

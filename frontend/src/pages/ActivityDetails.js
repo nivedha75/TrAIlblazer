@@ -24,10 +24,17 @@ import ChihulyGarden from "../assets/Activities/ChihulyGarden.jpg";
 import ChihulyGarden2 from "../assets/Activities/ChihulyGarden2.jpg";
 import ChihulyGarden3 from "../assets/Activities/ChihulyGarden2.jpg";
 import SpaceNeedle from "../assets/Activities/SpaceNeedle.jpg";
+import SpaceNeedle2 from "../assets/Activities/SpaceNeedle2.jpg";
+import SpaceNeedle3 from "../assets/Activities/SpaceNeedle3.jpg";
 import PikePlaceMarket from "../assets/Activities/PikePlaceMarket.jpg";
-import OlympicSculpturePark from "../assets/Activities/OlympicSculpturePark.jpg";
-import MuseumOfFlight from "../assets/Activities/MuseumOfFlight.jpeg";
+import PikePlaceMarket2 from "../assets/Activities/PikePlaceMarket2.jpg";
+import PikePlaceMarket3 from "../assets/Activities/PikePlaceMarket3.jpg";
+import MuseumOfFlight from "../assets/Activities/MuseumOfFlight.jpg";
+import MuseumOfFlight2 from "../assets/Activities/MuseumOfFlight2.jpg";
+import MuseumOfFlight3 from "../assets/Activities/MuseumOfFlight3.jpg";
 import WhalePudgetSound from "../assets/Activities/WhalePudgetSound.jpg";
+import WhalePudgetSound2 from "../assets/Activities/WhalePudgetSound2.jpg";
+import WhalePudgetSound3 from "../assets/Activities/WhalePudgetSound3.jpg";
 
 
 
@@ -36,10 +43,17 @@ const imageMap = {
   "../assets/Activities/ChihulyGarden2.jpg": ChihulyGarden2,
   "../assets/Activities/ChihulyGarden3.jpg": ChihulyGarden3,
   "../assets/Activities/SpaceNeedle.jpg": SpaceNeedle,
+  "../assets/Activities/SpaceNeedle2.jpg": SpaceNeedle2,
+  "../assets/Activities/SpaceNeedle3.jpg": SpaceNeedle3,
   "../assets/Activities/PikePlaceMarket.jpg": PikePlaceMarket,
-  "../assets/Activities/OlympicSculpturePark.jpg": OlympicSculpturePark,
-  "../assets/Activities/MuseumOfFlight.jpeg": MuseumOfFlight,
-  "../assets/Activities/WhalePudgetSound.jpg": WhalePudgetSound
+  "../assets/Activities/PikePlaceMarket2.jpg": PikePlaceMarket2,
+  "../assets/Activities/PikePlaceMarket3.jpg": PikePlaceMarket3,
+  "../assets/Activities/MuseumOfFlight.jpg": MuseumOfFlight,
+  "../assets/Activities/MuseumOfFlight2.jpg": MuseumOfFlight2,
+  "../assets/Activities/MuseumOfFlight3.jpg": MuseumOfFlight3,
+  "../assets/Activities/WhalePudgetSound.jpg": WhalePudgetSound,
+  "../assets/Activities/WhalePudgetSound2.jpg": WhalePudgetSound2,
+  "../assets/Activities/WhalePudgetSound3.jpg": WhalePudgetSound3,
 };
 
 
