@@ -5,6 +5,7 @@ import "react-calendar/dist/Calendar.css";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { Card, CardContent } from "@mui/material";
+import Cookies from "js-cookie";
 
 
 const timeLabels = [
@@ -52,6 +53,7 @@ const PlanTrip = () => {
       return;
     }
     const tripData = {
+      userId: Cookies.get("user_id"),
       location: location.state?.locate || "Unknown Destination",
       days,
       startDate: startDate.toISOString().split("T")[0],

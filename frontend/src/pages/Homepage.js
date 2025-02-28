@@ -171,6 +171,10 @@ useEffect(() => {
     navigate(`/trip-details/${encodeURIComponent(tripId)}`);
   };
 
+  const itineraryDetails = (tripId) => {
+    navigate(`/itinerary-details/${encodeURIComponent(tripId)}`);
+  };
+
   const placeDetails = (placeId) => {
     navigate(`/place-details/${encodeURIComponent(placeId)}`);
   };
@@ -196,7 +200,17 @@ useEffect(() => {
     window.location.reload();
   };
 
-  const Card = ({ image, title = "Place", buttonText = "Trip Details", button = () => alert("Trip Details"), start, end, people, share }) => {
+  const Card = ({ 
+    image, 
+    title = "Place", 
+    buttonText = "Trip Details", 
+    button = () => alert("Trip Details"), 
+    itineraryButton = null,
+    start, 
+    end, 
+    people, 
+    share 
+  }) => {
     return (
       <div style={{
         width: "270px",
@@ -215,61 +229,104 @@ useEffect(() => {
       }}
       onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"}
       onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}>
+        
         <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
-        {image && <img src={image} alt={title} style={{ width: "100%", height: "50%", borderRadius: "10px" }} />}
-        <h2 style={{ margin: "5px", padding: "0" }}>{title}</h2>
-        {start && <h3 style={{ margin: "5px", padding: "0" }}>{start} - {end}</h3>}
-        {people && (
-          <h3 style={{ margin: "5px", padding: "0", display: "flex", alignItems: "center", gap: "5px" }}>
-            {people} {people === 1 ? "Traveler" : "Travelers"}
-            <span style={{ display: "flex", gap: "2px" }}>
-              {Array.from({ length: people }).map((_, index) => (
-                <PersonIcon key={index} style={{ fontSize: "30px", color: "#555" }} />
-              ))}
-            </span>
-          </h3>
-        )}
+          {image && <img src={image} alt={title} style={{ width: "100%", height: "50%", borderRadius: "10px" }} />}
+          <h2 style={{ margin: "5px", padding: "0" }}>{title}</h2>
+          {start && <h3 style={{ margin: "5px", padding: "0" }}>{start} - {end}</h3>}
+          {people && (
+            <h3 style={{ margin: "5px", padding: "0", display: "flex", alignItems: "center", gap: "5px" }}>
+              {people} {people === 1 ? "Traveler" : "Travelers"}
+              <span style={{ display: "flex", gap: "2px" }}>
+                {Array.from({ length: people }).map((_, index) => (
+                  <PersonIcon key={index} style={{ fontSize: "30px", color: "#555" }} />
+                ))}
+              </span>
+            </h3>
+          )}
         </div>
+  
+        {/* Buttons Container */}
         <div style={{
           position: "absolute",
           bottom: "10px",
           left: share ? "10px" : "50%",
           transform: share ? "none" : "translateX(-50%)",       
           display: "flex",
+          flexDirection: "row", /* Stack buttons vertically */
           alignItems: "center",
-          gap: share ? "65px" : "0px",
+          gap: "8px"
         }}>
          {share && (
              <Share style={{ fontSize: 24, color: "#555" }} />
+          // {share && (
+          //   <img 
+          //     src={share} 
+          //     alt="Share" 
+          //     style={{ 
+          //       width: "30px", 
+          //       height: "30px", 
+          //       cursor: "pointer" 
+          //     }}
+          //   />
           )}
+          
+          {/* Trip Details Button */}
           <button 
-          onClick={button} 
-          style={{
-            padding: "10px 15px",
-            border: "none",
-            backgroundColor: "#800080",
-            color: "white",
-            borderRadius: "5px",
-            cursor: "pointer",
-            marginTop: "auto",
-            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
-            transition: "transform 0.2s ease, box-shadow 0.2s ease"
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = "scale(1.05)";
-            e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "scale(1)";
-            e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
-          }}
-        >
-          {buttonText}
-        </button>
+            onClick={button} 
+            style={{
+              padding: "10px 15px",
+              border: "none",
+              backgroundColor: "#800080",
+              color: "white",
+              borderRadius: "5px",
+              cursor: "pointer",
+              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = "scale(1.05)";
+              e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = "scale(1)";
+              e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
+            }}
+          >
+            {buttonText}
+          </button>
+  
+          {/* Itinerary Details Button */}
+          {itineraryButton && (
+          <button 
+            onClick={itineraryButton} 
+            style={{
+              padding: "10px 15px",
+              border: "none",
+              backgroundColor: "#0066CC",
+              color: "white",
+              borderRadius: "5px",
+              cursor: "pointer",
+              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = "scale(1.05)";
+              e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = "scale(1)";
+              e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
+            }}
+          >
+            Itinerary Details
+          </button>)}
         </div>
+  
       </div>
     );
   };
+  
 
   const settings = {
     dots: false,
@@ -416,7 +473,7 @@ useEffect(() => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
              return (
-    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
   );})}
   </Slider>
         </div>
@@ -478,7 +535,7 @@ useEffect(() => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
              return (
-    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
   );})}
   </Slider>
         </div>
