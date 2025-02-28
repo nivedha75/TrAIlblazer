@@ -12,6 +12,8 @@ import re
 import smtplib
 import uuid
 from email.message import EmailMessage
+import requests
+import json
 
 app = Flask(__name__)
 
@@ -40,11 +42,14 @@ EMAIL_PASSWORD = "Test@1234"
 PORT = 55000
 
 client = MongoClient("mongodb+srv://kumar502:gcstrail1@cluster0.h5zkw.mongodb.net/")
+
+
 db = client["TrAIlblazer"]
 collection = db["survey_preferences"]
 trip_collection = db["trips"]
 place_collection = db["places"]
 activity_collection = db["activities"]
+itinerary_collection = db["itineraries"]
 
 @app.route('/')
 def hello():
@@ -140,7 +145,8 @@ def trips():
             if not data:
                 return jsonify({"error": "No data provided"}), 400
             print("Received timeRanges:", data.get("timeRanges")) 
-            trip_collection.insert_one({
+            print(data)
+            trip_result = trip_collection.insert_one({
                 "location": data["location"],
                 "days": data["days"],
                 "startDate": data["startDate"],
@@ -149,6 +155,13 @@ def trips():
                 "people": data["people"],
                 "images": data["images"]
             })
+            trip_id = trip_result.inserted_id
+            # print('generating itinerary?')
+            # print("Data received:", data)
+            # print("UserId:", data.get("userId", "No userId in data"))
+            # print("Location:", data.get("location", "No location in data"))
+            print(data["userId"], data["location"], trip_id)
+            generate_itinerary(data["userId"], data["location"], trip_id)
             return jsonify({"message": "Trip data saved successfully"}), 201
 
         except Exception as e:
@@ -168,6 +181,19 @@ def get_trip(trip_id):
             return jsonify(trip), 200
         else:
             return jsonify({"error": "Trip not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/itinerary/<trip_id>', methods=['GET'])
+def get_itinerary(trip_id):
+    try:
+        itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
+        if itinerary:
+            itinerary["_id"] = str(itinerary["_id"])
+            return jsonify(itinerary), 200
+        else:
+            print('itinerary not found')
+            return jsonify({"error": "Itinerary not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
@@ -394,6 +420,117 @@ next_best_preferences = [
     {"id": 19, "title": "ATV Adventure", "rating": 4.4, "location": "Portland", "image": "https://aceraft.com/wp-content/uploads/2019/05/new-river-gorge-atv-tour-ace-adventure-resort-3-scaled.jpg"},
     {"id": 20, "title": "Escape Room", "rating": 4.1, "location": "Portland", "image": "https://m.media-amazon.com/images/I/91CVLmjQVJL.jpg"}
 ]
+
+def extract_json(text):
+    start = text.find('{')
+    end = text.rfind('}')
+    if start != -1 and end != -1:
+        return text[start:end+1]  # Extract JSON portion
+    return None
+
+#@app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
+def generate_itinerary(user_id, location, trip_id):
+    print('generating itinerary')
+    preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
+    preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
+    #print(preferences_str_format)
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    prompt = """I am building a travel itinerary recommendation app. Given a user's travel preferences and destination, generate an itinerary with 10 activities: 5 as top preferences and 5 as next best preferences. Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination. Format it as the following JSON STRICTLY, NO OTHER WORDS:
+        \"top_preferences\": [
+            {
+            \"title\": ...title...,
+            \"rating\": ...rating out of 5...,
+            \"description\": ...very short description...,
+            \"location\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
+            \"context\": ...Because you liked (and then list something specific in the preferences JSON that explains the choice)...
+            }
+            ...
+            4 more
+            ...
+            ],
+        \"next_best_preferences\": exact same format as top_preferences\n
+        The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
+    
+    #print(prompt)
+
+    data = {
+        "contents": [{
+            "parts": [{"text": prompt}]
+        }]
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+
+    print(response.json())  # Print the response as JSON
+
+    response_json = response.json()  # Your provided JSON response
+    #print(json.dumps(response_json, indent=4))
+    #print(response_json.keys())
+
+    # Extract the text content
+    text_content = extract_json(response_json["candidates"][0]["content"]["parts"][0]["text"])
+
+    print(text_content)
+
+    # Parse the text as JSON
+    parsed_json = json.loads(text_content)
+    for activity in parsed_json["top_preferences"]:
+        activity['image'] = get_image(activity['title'])
+
+    for activity in parsed_json["next_best_preferences"]:
+        activity['image'] = get_image(activity['title'])
+    
+    print(parsed_json)
+
+    itinerary_data = {
+        "_id": trip_id,  # Same _id as the trip document
+        "activities": parsed_json  # Ensure activities are passed in the request
+    }
+
+    itinerary_collection.insert_one(itinerary_data)
+
+    #return jsonify({"response": {}}), 200
+
+    #return jsonify({"response": parsed_json}), 200
+
+#@app.route('/get_image/<query>')
+def get_image(query):
+    # Replace these with your actual API key and Custom Search Engine (CX) ID
+    API_KEY = "AIzaSyClHKoSP7fOjxrCB2Dx94szQs5fOMjJsx4"
+    CX = "750536663af024901"
+
+    # Search query
+    #query = "Sushi"
+
+    # Define the API URL
+    url = f"https://www.googleapis.com/customsearch/v1?q={query}&key={API_KEY}&cx={CX}&searchType=image"
+
+    # Make the request
+    response = requests.get(url)
+    first_image_url = ""
+
+    # Check if request was successful
+    if response.status_code == 200:
+        data = response.json()
+        
+        # Extract first image result
+        if "items" in data and len(data["items"]) > 0:
+            first_image_url = data["items"][0]["link"]
+            print("First Image URL:", first_image_url)
+        else:
+            print("No images found for the search query.")
+    else:
+        print(f'Ran over quota')
+        #print(f"Error: {response.status_code}, {response.text}")
+    
+    return first_image_url
+    
+    #return jsonify({"response": first_image_url}), 200
 
 @app.route("/get_activities", methods=["POST"])
 def get_activities():

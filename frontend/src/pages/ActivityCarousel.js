@@ -16,7 +16,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import ChihulyGarden from "../assets/Activities/ChihulyGarden.jpg";
 import SpaceNeedle from "../assets/Activities/SpaceNeedle.jpg";
 import PikePlaceMarket from "../assets/Activities/PikePlaceMarket.jpg";
@@ -102,40 +102,36 @@ const PrevArrow = ({ onClick }) => (
 
 const ActivityCarousel = () => {
   const navigate = useNavigate();
+  const { tripId } = useParams();
 
   const [activities, setActivities] = useState(activitiesDefault);
-  const itineraryId = 1; // Hardcoded for now
 
   // Fetch saved progress
-  // const fetchAdditionalActivities = async () => {
-  //   try {
-  //     const response = await fetch(`http://localhost:55000/additional_activities/${itineraryId}`, {
-  //       method: "GET",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         "Access-Control-Allow-Origin": "http://localhost:3000",
-  //         "Access-Control-Allow-Methods": "GET, OPTIONS",
-  //         "Access-Control-Allow-Headers": "Content-Type"
-  //       }
-  //     });
+  const fetchItineraryActivities = async () => {
+    try {
+      const response = await fetch(`http://localhost:55000/itinerary/${tripId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch itinerary: ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+      console.log("Fetched itinerary:", data);
+  
+      if (data.activities.next_best_preferences) {
+        setActivities(data.activities.next_best_preferences);
+      } else {
+        console.warn("No next best preferences found.");
+      }
+    } catch (error) {
+      console.error("Error loading itinerary activities:", error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchItineraryActivities();
+  }, []);
 
-  //     if (!response.ok) {
-  //       throw new Error(`Failed to fetch additional activities: ${response.statusText}`);
-  //     }
-
-  //     const data = await response.json();
-  //     console.log("user_id that app is fetching additional activities for: ", itineraryId);
-  //     console.log("additional activities fetched: ", data);
-  //     if (data.exists && data.additionalActivities) {
-  //       console.log("Additional Activities loaded:", data.additionalActivities);
-  //       setActivities(data.additionalActivities);
-  //     } else {
-  //       console.warn("No additional activities found.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error loading saved additional activities:", error);
-  //   }
-  // };
 //   // Load activities when component mounts
 //   useEffect(() => {
 //     fetchAdditionalActivities();

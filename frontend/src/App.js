@@ -7,10 +7,12 @@ import CreateTrip from './pages/CreateTrip';
 import PlanTrip from './pages/PlanTrip';
 import PreferenceSurvey from "./pages/PreferenceSurvey";
 import TripDetails from './pages/TripDetails';
+import ItineraryDetails from './pages/ItineraryDetails';
 import ActivityCarousel from './pages/ActivityCarousel';
 import PlaceDetails from './pages/PlaceDetails';
 import ActivityDetails from './pages/ActivityDetails';
 import SignIn from "./pages/SignIn";
+import NextBestActivities from './pages/NextBestActivities';
 
 
    function App() {
@@ -46,8 +48,10 @@ import SignIn from "./pages/SignIn";
             <Route path="/create" element={<CreateTrip />} />
             <Route path="/plan" element={<PlanTrip />} />
             <Route path="/survey" element={<PreferenceSurvey />} />
-            <Route path="/activities" element={<ActivityCarousel />} />
+            <Route path="/activities/:tripId" element={<ActivityCarousel />} />
             <Route path="/trip-details/:tripId" element={<TripDetails />} />
+            <Route path="/itinerary-details/:tripId" element={<ItineraryDetails />} />
+            {/* <Route path="/next-best-activities/:tripId" element={<NextBestActivities />} /> */}
             <Route path="/place-details/:placeId" element={<PlaceDetails />} />
             <Route path="/activity-details/:activityId" element={<ActivityDetails />} />
             <Route path="/sign-in" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
