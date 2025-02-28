@@ -106,7 +106,7 @@ const ItineraryDetails = () => {
         {trip.activities.top_preferences.length > 0 ? "Activities for the Trip" : "No Activities Found"}
       </h3>
 
-      <button
+      {/* <button
         onClick={() => navigate("/activities/" + tripId)}
         style={{
           marginTop: "20px",
@@ -124,7 +124,7 @@ const ItineraryDetails = () => {
         onMouseLeave={(e) => e.target.style.backgroundColor = "#007bff"}
       >
         View Next Best Activities
-      </button>
+      </button> */}
 
       {trip.activities.top_preferences && trip.activities.top_preferences.length > 0 ? (
         trip.activities.top_preferences.map((activity) => (
