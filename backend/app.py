@@ -44,6 +44,7 @@ db = client["TrAIlblazer"]
 collection = db["survey_preferences"]
 trip_collection = db["trips"]
 place_collection = db["places"]
+activity_collection = db["activities"]
 
 @app.route('/')
 def hello():
@@ -207,6 +208,37 @@ def get_place(place_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+
+@app.route("/activities", methods=['GET', 'OPTIONS'])
+def activities():
+    if request.method == 'GET':
+        try:
+            activities = list(activity_collection.find({}))
+            for activity in activities:
+                activity["_id"] = str(activity["_id"])
+            return jsonify(activities), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    elif request.method == 'OPTIONS':
+        return '', 200
+
+@app.route('/activities/<activity_id>', methods=['GET', 'OPTIONS'])
+def get_activity(activity_id):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+
+    try:
+        activity = activity_collection.find_one({"_id": ObjectId(activity_id)})
+        if activity:
+            activity["_id"] = str(activity["_id"])
+            return jsonify(activity), 200
+        else:
+            return jsonify({"error": "Activity not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
 # @app.route('/is_authenticated', methods=['GET'])
 # def is_authenticated():
 #     print('user_id' in session)
