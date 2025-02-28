@@ -43,6 +43,7 @@ const SignIn = ({ setIsAuthenticated }) => {
                 if (!response.ok) throw new Error(data.error || "Registration failed");
 
                 Cookies.set("user_id", data.user_id, { expires: 7 }); // Set the cookie for 7 days
+                Cookies.set("username", data.username, { expires: 7 });
                 console.log("User logged in and cookie set!");
                 console.log(data);
 
@@ -70,6 +71,7 @@ const SignIn = ({ setIsAuthenticated }) => {
                 if (!response.ok) throw new Error(data.error || "Login failed");
 
                 Cookies.set("user_id", data.user_id, { expires: 7 }); // Set the cookie for 7 days
+                Cookies.set("username", data.username, { expires: 7 });
                 console.log("User logged in and cookie set!");
 
                 setIsAuthenticated(true);

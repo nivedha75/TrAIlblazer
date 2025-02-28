@@ -195,6 +195,7 @@ useEffect(() => {
   const handleLogout = () => {
     // Remove the 'user_id' cookie
     Cookies.remove("user_id");
+    Cookies.remove("username");
 
     // Reload the page
     window.location.reload();
@@ -400,6 +401,7 @@ useEffect(() => {
               }}
               onClick={toggleDropdown}
             />
+            <p>{Cookies.get("username")}</p>
             {isOpen && (
               <div
                 style={{

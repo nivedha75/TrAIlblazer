@@ -315,6 +315,10 @@ def register():
     if cursor.fetchone():
         conn.close()
         return jsonify({'error': 'Email already registered'}), 400
+    cursor.execute("SELECT * FROM UserTable WHERE username = ?", (username,))
+    if cursor.fetchone():
+        conn.close()
+        return jsonify({'error': 'Username is already taken'}), 400
     
     cursor.execute("INSERT INTO UserTable (username, email, hashed_pw, verified, verification_token) VALUES (?, ?, ?, ?, ?)", (username, email, hashed_pw, 1, verification_token))
     user_id = cursor.lastrowid
@@ -327,7 +331,7 @@ def register():
     
     #send_verification_email(email, verification_token)
     
-    return jsonify({'message': 'Registration successful. Please check your email to verify your account.', 'user_id': user_id}), 201
+    return jsonify({'message': 'Registration successful. Please check your email to verify your account.', 'user_id': user_id, 'username': username}), 201
 
 @app.route('/verify', methods=['GET'])
 def verify():
@@ -369,14 +373,16 @@ def login():
     cursor = conn.cursor()
 
     
-    cursor.execute("SELECT user_id, hashed_pw, verified FROM UserTable WHERE email = ?", (email,))
+    cursor.execute("SELECT user_id, username, hashed_pw, verified FROM UserTable WHERE email = ?", (email,))
     user = cursor.fetchone()
     conn.close()
+
+    if not user:
+        return jsonify({'error': 'Invalid credentials'}), 401 
+    elif user[2] != hash_password(password):
+        return jsonify({'error': 'Incorrect password'}), 401
     
-    if not user or user[1] != hash_password(password):
-        return jsonify({'error': 'Invalid email or password'}), 401
-    
-    if user[2] == 0:
+    if user[3] == 0:
         return jsonify({'error': 'Please verify your email before logging in'}), 403
     
     # session["user_id"] = user[0]
@@ -387,7 +393,7 @@ def login():
 
     print(user[0])
     
-    return jsonify({'message': 'Login successful', 'user_id': user[0]}), 200
+    return jsonify({'message': 'Login successful', 'user_id': user[0], 'username': user[1]}), 200
     
 # @app.route('/logout', methods=['POST'])
 # def logout():
