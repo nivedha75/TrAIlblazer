@@ -21,6 +21,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import { isPast, parseISO, format, isBefore, startOfDay, parse } from 'date-fns';
 import AddIcon from "@mui/icons-material/Add"; 
 import Bot from "../assets/Bot.avif";
+import Seattle from "../assets/Seattle2.png";
 
 const NextArrow = ({ onClick }) => (
   <IconButton
@@ -185,7 +186,8 @@ useEffect(() => {
     "../assets/NewYork.png": York, 
     "../assets/Japan.png": Japan, 
     "../assets/hawaii.png": Hawaii,
-    "../assets/Beijing.png": Beijing
+    "../assets/Beijing.png": Beijing,
+    "../assets/Seattle2.png": Seattle
   };
 
   const navigateToSignIn = () => {
