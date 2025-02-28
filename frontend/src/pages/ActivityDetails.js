@@ -27,7 +27,7 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ChihulyGarden from "../assets/Activities/ChihulyGarden.jpg";
 import ChihulyGarden2 from "../assets/Activities/ChihulyGarden2.jpg";
-import ChihulyGarden3 from "../assets/Activities/ChihulyGarden2.jpg";
+import ChihulyGarden3 from "../assets/Activities/ChihulyGarden3.jpg";
 import SpaceNeedle from "../assets/Activities/SpaceNeedle.jpg";
 import SpaceNeedle2 from "../assets/Activities/SpaceNeedle2.jpg";
 import SpaceNeedle3 from "../assets/Activities/SpaceNeedle3.jpg";
@@ -96,11 +96,31 @@ const PrevArrow = ({ onClick }) => (
   </IconButton>
 );
 
+const settings = {
+  dots: false,
+  infinite: true,
+  slidesToShow: 3,
+  slidesToScroll: 1,
+  arrows: true,
+  nextArrow: <NextArrow />, 
+  prevArrow: <PrevArrow />, 
+  centerMode: false,
+  pauseOnHover: true,
+  autoplay: true,
+  autoplaySpeed: 5000,
+  responsive: [
+    { breakpoint: 1300, settings: { slidesToShow: 3 } },
+    { breakpoint: 1000, settings: { slidesToShow: 2 } },
+    { breakpoint: 600, settings: { slidesToShow: 1 } },
+  ],
+};
 
 const ActivityDetails = () => {
     const { activityId } = useParams();
     const [activity, setActivity] = useState(null);
     const navigate = useNavigate();
+    const [images, setImages] = useState([]);
+
   
     useEffect(() => {
       fetch(`http://localhost:55000/activities/${activityId}`, {
@@ -112,7 +132,10 @@ const ActivityDetails = () => {
         }
       })
         .then((response) => response.json())
-        .then((data) => setActivity(data))
+        .then((data) => {
+          setActivity(data);
+          setImages(data.images || [] );
+        })
         .catch((error) => console.error("Error fetching trip details:", error));
     }, [activityId]);
   
@@ -120,8 +143,6 @@ const ActivityDetails = () => {
       return <p>Loading activity details...</p>;
     }
     
-    const imageUrl = imageMap[activity.images[0]] || activity.images[0];
-
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Paper elevation={3} sx={{ p: 4, borderRadius: 2, backgroundColor: "#f9f9f9" }}>
@@ -130,11 +151,42 @@ const ActivityDetails = () => {
           </Typography>
   
           <Grid2 container spacing={3}>
-            <Grid2 item xs={12} md={6}>
+            {/* <Grid2 item xs={12} md={6}>
               <Card sx={{ maxHeight: 400, overflow: "hidden" }}>
                 <CardMedia component="img" image={activity.images[0]} alt={activity.name} sx={{ height: 400 }} />
               </Card>
-            </Grid2>
+            </Grid2> */}
+            <ThemeProvider theme={theme}>
+        <Box sx={{ width: "90%", margin: "auto", padding: "20px", position: "relative", height: "40vh" }}>
+        
+        {images && images.length > 0 ? (
+        <Slider {...settings}>
+            {images.map((image, index) => (
+            <Box key={index} sx={{ display: "flex", alignItems: "center" }}>
+                <Card
+                sx={{
+                    position: "relative",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    height: "40vh",
+                    width: "95%",
+                    margin: "0 auto",
+                }}
+                >
+                <CardMedia component="img" image={imageMap[image]} alt={image} sx={{ height: "100%", width: "100%", objectFit: "cover" }} />
+                
+                </Card>
+            </Box>
+            ))}
+        </Slider>) : (
+            <Box sx={{ textAlign: "center", padding: "20px" }}>
+                <Typography variant="h5" color="gray" sx={{fontStyle: "italic"}}>No images available</Typography>
+            </Box>
+        )}
+        </Box>
+        </ThemeProvider>
+
             <Grid2 item xs={12} md={6}>
               <Card sx={{ p: 2, backgroundColor: "#ffffff" }}>
                 <CardContent>
@@ -209,3 +261,4 @@ const ActivityDetails = () => {
   };
   
   export default ActivityDetails;
+
