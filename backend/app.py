@@ -331,7 +331,7 @@ def register():
     
     #send_verification_email(email, verification_token)
     
-    return jsonify({'message': 'Registration successful. Please check your email to verify your account.', 'user_id': user_id, 'username': username}), 201
+    return jsonify({'message': 'Registration successful. Try logging in.', 'user_id': user_id, 'username': username}), 201
 
 @app.route('/verify', methods=['GET'])
 def verify():

@@ -16,7 +16,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ChihulyGarden from "../assets/Activities/ChihulyGarden.jpg";
 import SpaceNeedle from "../assets/Activities/SpaceNeedle.jpg";
 import PikePlaceMarket from "../assets/Activities/PikePlaceMarket.jpg";
@@ -102,35 +102,35 @@ const PrevArrow = ({ onClick }) => (
 
 const ActivityCarousel = () => {
   const navigate = useNavigate();
-  const { tripId } = useParams();
+  // const { tripId } = useParams();
 
   const [activities, setActivities] = useState(activitiesDefault);
 
   // Fetch saved progress
-  const fetchItineraryActivities = async () => {
-    try {
-      const response = await fetch(`http://localhost:55000/itinerary/${tripId}`);
+  // const fetchItineraryActivities = async () => {
+  //   try {
+  //     const response = await fetch(`http://localhost:55000/itinerary/${tripId}`);
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch itinerary: ${response.statusText}`);
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`Failed to fetch itinerary: ${response.statusText}`);
+  //     }
   
-      const data = await response.json();
-      console.log("Fetched itinerary:", data);
+  //     const data = await response.json();
+  //     console.log("Fetched itinerary:", data);
   
-      if (data.activities.next_best_preferences) {
-        setActivities(data.activities.next_best_preferences);
-      } else {
-        console.warn("No next best preferences found.");
-      }
-    } catch (error) {
-      console.error("Error loading itinerary activities:", error);
-    }
-  };
+  //     if (data.activities.next_best_preferences) {
+  //       setActivities(data.activities.next_best_preferences);
+  //     } else {
+  //       console.warn("No next best preferences found.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error loading itinerary activities:", error);
+  //   }
+  // };
   
-  useEffect(() => {
-    fetchItineraryActivities();
-  }, []);
+  // useEffect(() => {
+  //   fetchItineraryActivities();
+  // }, []);
 
 //   // Load activities when component mounts
 //   useEffect(() => {
@@ -142,6 +142,10 @@ const ActivityCarousel = () => {
   //     fetchAdditionalActivities(); // Properly set fetched activities
   //   }
   // }, [activities]);
+
+    useEffect(() => {
+      setActivities(activitiesDefault);
+    }, [activitiesDefault]);
 
   const settings = {
     dots: false,
