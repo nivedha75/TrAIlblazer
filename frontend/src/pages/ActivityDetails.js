@@ -8,9 +8,12 @@ import "slick-carousel/slick/slick-theme.css";
 import {
   Card,
   CardMedia,
+  CardContent,
   Container,
   IconButton,
   Typography,
+  Paper,
+  Grid2,
   Box,
   Tooltip,
   Button,
@@ -120,46 +123,87 @@ const ActivityDetails = () => {
     const imageUrl = imageMap[activity.images[0]] || activity.images[0];
 
     return (
-      <Container maxWidth="md" sx={{ textAlign: "center", py: 4, backgroundColor: "#f9f9f9", borderRadius: 2 }}>
-        <Typography variant="h3" color="textPrimary" gutterBottom>
-          Activity Details
-        </Typography>
-        <Typography variant="h4" color="textSecondary" gutterBottom>
-          {activity.name}
-        </Typography>
-        
-        <Typography variant="h5" color="textPrimary" gutterBottom>Description</Typography>
-        <Typography variant="body1" paragraph>{activity.description}</Typography>
-        
-        <Typography variant="h5" color="textPrimary" gutterBottom>Hours of Operation</Typography>
-        {Object.entries(activity.hours).map(([day, times]) => (
-          <Typography key={day} variant="body1">
-            <strong>{day.charAt(0).toUpperCase() + day.slice(1)}:</strong> {times.open} – {times.close}
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 2, backgroundColor: "#f9f9f9" }}>
+          <Typography variant="h3" align="center" gutterBottom>
+            {activity.name}
           </Typography>
-        ))}
-        
-        <Typography variant="h5" color="textPrimary" gutterBottom>Visitor Experience</Typography>
-        <Typography variant="body1" paragraph>{activity.experience}</Typography>
-        
-        <Typography variant="h5" color="textPrimary" gutterBottom>Rating</Typography>
-        <Box display="flex" alignItems="center" justifyContent="center" mb={2}>
-          <Typography variant="h6" sx={{ pr: 1 }}>{activity.rating}</Typography>
-          <Rating name="activity-rating" precision={0.1} size="large" readOnly value={activity.rating} />
-        </Box>
-        
-        <Typography variant="h5" color="textPrimary" gutterBottom>Contact Information</Typography>
-        <Typography variant="body1"><strong>Address:</strong> {activity.address}</Typography>
-        <Typography variant="body1"><strong>Phone:</strong> {activity.number}</Typography>
-        <Typography variant="body1"><strong>Email:</strong> {activity.email}</Typography>
-        
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 3, px: 4, py: 1.5, fontSize: "1rem" }}
-          onClick={() => navigate("/activities")}
-        >
-          Back to Activities
-        </Button>
+  
+          <Grid2 container spacing={3}>
+            <Grid2 item xs={12} md={6}>
+              <Card sx={{ maxHeight: 400, overflow: "hidden" }}>
+                <CardMedia component="img" image={activity.images[0]} alt={activity.name} sx={{ height: 400 }} />
+              </Card>
+            </Grid2>
+            <Grid2 item xs={12} md={6}>
+              <Card sx={{ p: 2, backgroundColor: "#ffffff" }}>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom>
+                    Description
+                  </Typography>
+                  <Typography variant="body1" paragraph>
+                    {activity.description}
+                  </Typography>
+                  <Typography variant="h6">Visitor Experience</Typography>
+                  <Typography variant="body2">{activity.experience}</Typography>
+                </CardContent>
+              </Card>
+            </Grid2>
+          </Grid2>
+  
+          <Grid2 container spacing={3} sx={{ mt: 2 }}>
+            <Grid2 item xs={12} md={6}>
+              <Card sx={{ p: 2, backgroundColor: "#ffffff" }}>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom>
+                    Hours of Operation
+                  </Typography>
+                  {Object.entries(activity.hours).map(([day, times]) => (
+                    <Typography key={day} variant="body2">
+                      <strong>{day.charAt(0).toUpperCase() + day.slice(1)}:</strong> {times.open} – {times.close}
+                    </Typography>
+                  ))}
+                </CardContent>
+              </Card>
+            </Grid2>
+            <Grid2 item xs={12} md={6}>
+              <Card sx={{ p: 2, backgroundColor: "#ffffff" }}>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom>
+                    Rating
+                  </Typography>
+                  <Box display="flex" alignItems="center">
+                    <Typography variant="h6" sx={{ pr: 1 }}>{activity.rating}</Typography>
+                    <Rating name="activity-rating" precision={0.1} size="large" readOnly value={activity.rating} />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid2>
+          </Grid2>
+  
+          <Card sx={{ p: 2, backgroundColor: "#ffffff", mt: 3 }}>
+            <CardContent>
+              <Typography variant="h5" gutterBottom>
+                Contact Information
+              </Typography>
+              <Typography variant="body1">
+                <strong>Address:</strong> {activity.address}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Phone:</strong> {activity.number}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Email:</strong> {activity.email}
+              </Typography>
+            </CardContent>
+          </Card>
+  
+          <Box display="flex" justifyContent="center" sx={{ mt: 4 }}>
+            <Button variant="contained" color="primary" onClick={() => navigate("/activities")}>
+              Back to Activities
+            </Button>
+          </Box>
+        </Paper>
       </Container>
     );
   };
