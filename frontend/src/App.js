@@ -48,7 +48,7 @@ import NextBestActivities from './pages/NextBestActivities';
             <Route path="/create" element={<CreateTrip />} />
             <Route path="/plan" element={<PlanTrip />} />
             <Route path="/survey" element={<PreferenceSurvey />} />
-            <Route path="/activities/:tripId" element={<ActivityCarousel />} />
+            <Route path="/activities" element={<ActivityCarousel />} />
             <Route path="/trip-details/:tripId" element={<TripDetails />} />
             <Route path="/itinerary-details/:tripId" element={<ItineraryDetails />} />
             {/* <Route path="/next-best-activities/:tripId" element={<NextBestActivities />} /> */}
