@@ -16,12 +16,13 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import {IconButton} from "@mui/material";
+import {IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Button} from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import { isPast, parseISO, format, isBefore, startOfDay, parse } from 'date-fns';
 import AddIcon from "@mui/icons-material/Add"; 
 import Bot from "../assets/Bot.avif";
 import Seattle from "../assets/Seattle2.png";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const NextArrow = ({ onClick }) => (
   <IconButton
@@ -212,8 +213,38 @@ useEffect(() => {
     start, 
     end, 
     people, 
-    share 
+    share,
+    deleteTrip, 
+    type,
+    tripId,
+    setTrips,
+    trips 
   }) => {
+    const [open, setOpen] = useState(false);
+    const handleDeleteClick = () => setOpen(true);
+    const handleConfirmDelete = (tripId) => {
+      setOpen(false);
+      console.log("Trip ID being deleted:", tripId);
+      fetch(`http://localhost:55000/trips/${tripId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Methods": "POST, GET, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      })
+        .then((response) => {
+          if (response.ok) {
+            setTrips(trips.filter((trip) => trip._id !== tripId));
+          } else {
+            throw new Error("Failed to delete trip");
+          }
+        })
+        .catch((error) => {
+          console.error("Error deleting trip:", error);
+        });
+    };
     return (
       <div style={{
         width: "270px",
@@ -232,7 +263,33 @@ useEffect(() => {
       }}
       onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"}
       onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}>
-        
+        {type !== "discover" && (
+       <IconButton 
+        onClick={handleDeleteClick} 
+        sx={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          color: "red",
+          backgroundColor: "rgba(255, 255, 255, 0.7)",
+          transition: "background-color 0.3s ease-in-out",
+          "&:hover": { backgroundColor: "rgba(255, 0, 0, 0.8)" }
+        }}
+      >
+        <DeleteIcon />
+      </IconButton> 
+      )}
+      <Dialog open={open} onClose={() => setOpen(false)}  BackdropProps={{
+    style: { backgroundColor: "rgba(0, 0, 0, 0.5)" }
+  }}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>Are you sure you want to delete this trip?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)} color="primary">Cancel</Button>
+          <Button onClick={() => handleConfirmDelete(tripId)} color="error">Delete</Button>
+        </DialogActions>
+      </Dialog>
+
         <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
           {image && <img src={image} alt={title} style={{ width: "100%", height: "50%", borderRadius: "10px" }} />}
           <h2 style={{ margin: "5px", padding: "0" }}>{title}</h2>
@@ -387,6 +444,11 @@ useEffect(() => {
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
+
+  const deleteTrip = (tripId) => {
+    setTrips((prevTrips) => prevTrips.filter((trip) => trip._id !== tripId));
+};
+
   return (
     <div>
       <div>
@@ -477,7 +539,7 @@ useEffect(() => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
              return (
-    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="upcoming" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setUpcomingTrips} trips={upcomingTrips}/>
   );})}
   </Slider>
         </div>
@@ -508,7 +570,7 @@ useEffect(() => {
   <Slider {...settings2}>
           {places.map((place) => {
              return (
-    <Card key={place._id} image={imageMap[place.images[0]]} title={place.name} description={place.description} button={() => placeDetails(place._id)} buttonText="Place Details"/>
+    <Card key={place._id} image={imageMap[place.images[0]]} title={place.name} description={place.description} button={() => placeDetails(place._id)} buttonText="Place Details" type="discover"/>
   );})}
   </Slider>
   </div>
@@ -539,7 +601,7 @@ useEffect(() => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
              return (
-    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} />
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="past" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setPastTrips} trips={pastTrips}/>
   );})}
   </Slider>
         </div>

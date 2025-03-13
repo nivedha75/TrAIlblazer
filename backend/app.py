@@ -169,20 +169,31 @@ def trips():
     elif request.method == 'OPTIONS':
         return '', 200
 
-@app.route('/trips/<trip_id>', methods=['GET', 'OPTIONS'])
+@app.route('/trips/<trip_id>', methods=['GET', 'DELETE', 'OPTIONS'])
 def get_trip(trip_id):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
+    elif request.method == "GET":
+        try:
+            trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
+            if trip:
+                trip["_id"] = str(trip["_id"])
+                return jsonify(trip), 200
+            else:
+                return jsonify({"error": "Trip not found"}), 404
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    elif request.method == "DELETE":
+        try:
+            result = trip_collection.delete_one({"_id": ObjectId(trip_id)})
+            print(f"Trip: {trip_id}")
+            if result.deleted_count > 0:
+                return jsonify({"message": "Trip deleted successfully"}), 200
+            else:
+                return jsonify({"error": "Trip not found"}), 404
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
-    try:
-        trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
-        if trip:
-            trip["_id"] = str(trip["_id"])
-            return jsonify(trip), 200
-        else:
-            return jsonify({"error": "Trip not found"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
     
 @app.route('/itinerary/<trip_id>', methods=['GET'])
 def get_itinerary(trip_id):
