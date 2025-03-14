@@ -147,6 +147,7 @@ def trips():
             print("Received timeRanges:", data.get("timeRanges")) 
             print(data)
             trip_result = trip_collection.insert_one({
+                "userId": data["userId"], 
                 "location": data["location"],
                 "days": data["days"],
                 "startDate": data["startDate"],
@@ -194,7 +195,18 @@ def get_trip(trip_id):
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-    
+@app.route('/trips/user/<user_id>', methods=['GET'])
+def get_trips_by_user(user_id):
+    try:
+        trips = trip_collection.find({"userId": user_id}) 
+        trip_list = []
+        for trip in trips:
+            trip["_id"] = str(trip["_id"])
+            trip_list.append(trip)
+        return jsonify(trip_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/itinerary/<trip_id>', methods=['GET'])
 def get_itinerary(trip_id):
     try:

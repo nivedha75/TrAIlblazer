@@ -95,7 +95,6 @@ const HomePage = () => {
       .then((response) => response.json())
       .then((data) => {
         console.log("Fetched data: ", data);
-        setTrips(data);
       })
       .catch((error) => console.error("Error fetching trips:", error));
   }, []);
@@ -153,8 +152,25 @@ useEffect(() => {
   // If 'user_id' cookie exists, the user is authenticated
   if (userId) {
     setIsAuthenticated(true);
+    fetch(`http://localhost:55000/trips/user/${userId}`, {
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "http://localhost:3000",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    }
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Fetched user trips: ", data);
+      setTrips(data);
+    })
+    .catch((error) => {console.error("Error fetching trips:", error);
+      setTrips([]);
+    });
   } else {
     setIsAuthenticated(false);
+    setTrips([]);
   }
   //const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
   //setTrips(savedTrips);
@@ -582,7 +598,7 @@ useEffect(() => {
             e.target.style.transform = "scale(1)";
             e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
           }}>Take Our Travel Quiz</button>
-  <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", margin: "10px 20px 0 0", position: "fixed", bottom: "0px", right: "0px", zIndex: 0 }}>
+  <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", margin: "10px 20px 0 0", position: "fixed", bottom: "0px", right: "-20px", zIndex: 0 }}>
   <p style={{ fontSize: "16px", color: "#555", marginRight: "10px", maxWidth: "250px"}}>
     Meet your personal AI travel assistant! Get personalized recommendations and plan your next trip with ease.
   </p>
