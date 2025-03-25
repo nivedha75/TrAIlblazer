@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import Bot from "../assets/Bot.avif";
 
 const ItineraryDetails = () => {
@@ -9,6 +11,10 @@ const ItineraryDetails = () => {
   const [error, setError] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,7 +32,7 @@ const ItineraryDetails = () => {
         }
         return response.json();
       })
-      .then((data) => setTrip(data))
+      .then((data) => {setTrip(data);})
       .catch((error) => {
         console.error("Error fetching itinerary details:", error);
         setError(error.message); // Set the error message
@@ -47,12 +53,44 @@ const ItineraryDetails = () => {
       .catch((error) => console.error("Error fetching trip details:", error));
   }, [tripId]);
 
+  function confirmDelete(tripId, activityId) {
+    fetch(`http://localhost:55000/delete_itinerary_activity/${tripId}/${activityId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    })
+    .then(response => {
+        if (response.ok) {
+            setTrip(prevItinerary => ({
+                ...prevItinerary,
+                activities: {
+                    top_preferences: prevItinerary.activities.top_preferences.filter(activity => activity.activityID !== activityId),
+                    next_best_preferences: prevItinerary.activities.next_best_preferences.filter(activity => activity.activityID !== activityId)
+                }
+            }));
+        } else {
+            console.error("Failed to delete activity");
+        }
+    })
+    .catch(error => console.error("Error:", error));
+}
+
   const handleSendMessage = () => {
     if (inputMessage.trim() !== "") {
       setChatMessages([...chatMessages, { text: inputMessage, sender: "user" }]);
       setInputMessage("");
     }
   };
+
+  const handleDeleteClick = (activity) => {
+    setSelectedActivity(activity);
+    setOpenDialog(true);
+  };
+
+  
 
   if (error) {
     return (
@@ -171,8 +209,17 @@ const ItineraryDetails = () => {
           padding: "20px",
           textAlign: "center",
           backgroundColor: "#f9f9f9",
+          position: "relative"
         }}
       >
+        <Button
+          variant="contained"
+          color="error"
+          style={{ position: "absolute", top: 10, right: 10 }}
+          onClick={() => setDeleteMode(!deleteMode)}
+        >
+          {deleteMode ? "Cancel Delete" : "Delete Activities"}
+        </Button>
         <h1 style={{ textAlign: "center", color: "#333", marginBottom: "10px" }}>
           Itinerary Details
         </h1>
@@ -199,8 +246,12 @@ const ItineraryDetails = () => {
                 marginBottom: "20px",
                 borderRadius: "10px",
                 boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
               }}
             >
+               <div style={{ textAlign: "left", flex: 1 }}>
               <h4 style={{ fontSize: "20px", color: "#444" }}>{activity.title}</h4>
               <span> ({activity.context})</span>
               <p>Rating: {activity.rating}</p>
@@ -216,12 +267,29 @@ const ItineraryDetails = () => {
                   <strong>Notes:</strong> {activity.notes}
                 </p>
               )}
+              </div>
+              {deleteMode && (
+                <DeleteIcon
+                style={{ cursor: "pointer", color: "red", fontSize: "35px", marginLeft: "20px" }}
+                  onClick={() => handleDeleteClick(activity)}
+                />
+              )}
             </div>
           ))
         ) : (
           <p>No activities to display.</p>
         )}
-
+         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+          <DialogTitle>Confirm</DialogTitle>
+          <DialogContent>
+            Are you sure you want to delete the activity "{selectedActivity?.title}"?
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+            <Button onClick={() => {confirmDelete(trip._id, selectedActivity.activityID);
+        setOpenDialog(false);}} color="error">Delete</Button>
+          </DialogActions>
+        </Dialog>
         <button
           onClick={() => navigate("/")}
           style={{

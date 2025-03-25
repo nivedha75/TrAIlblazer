@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from pymongo import MongoClient
 from datetime import datetime, timezone
+from itertools import count
 from bson import ObjectId  # Import ObjectId for MongoDB ID conversion for user_id
 import os
 
@@ -457,6 +458,11 @@ def extract_json(text):
         return text[start:end+1]  # Extract JSON portion
     return None
 
+activity_id_counter = count(1)
+
+def generate_activity_id():
+    return next(activity_id_counter)
+
 #@app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
 def generate_itinerary(user_id, location, trip_id):
     print('generating itinerary')
@@ -509,9 +515,11 @@ def generate_itinerary(user_id, location, trip_id):
     # Parse the text as JSON
     parsed_json = json.loads(text_content)
     for activity in parsed_json["top_preferences"]:
+        activity["activityID"] = generate_activity_id()
         activity['image'] = get_image(activity['title'])
 
     for activity in parsed_json["next_best_preferences"]:
+        activity["activityID"] = generate_activity_id()
         activity['image'] = get_image(activity['title'])
     
     print(parsed_json)
@@ -566,6 +574,24 @@ def get_image(query):
     return first_image_url
     
     #return jsonify({"response": first_image_url}), 200
+
+@app.route("/delete_itinerary_activity/<trip_id>/<int:activityID>", methods=["GET", "DELETE"])
+def delete_itinerary_activity(trip_id, activityID):
+    itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
+    
+    if not itinerary:
+        return jsonify({"error": "Itinerary not found"}), 404
+
+    updated_top = [act for act in itinerary["activities"]["top_preferences"] if act["activityID"] != activityID]
+    updated_next_best = [act for act in itinerary["activities"]["next_best_preferences"] if act["activityID"] != activityID]
+    itinerary_collection.update_one(
+        {"_id": ObjectId(trip_id)},
+        {"$set": {
+            "activities.top_preferences": updated_top,
+            "activities.next_best_preferences": updated_next_best
+        }}
+    )
+    return jsonify({"message": "Activity deleted successfully"}), 200
 
 @app.route("/get_activities", methods=["POST"])
 def get_activities():
