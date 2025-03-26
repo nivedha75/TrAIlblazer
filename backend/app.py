@@ -1,5 +1,5 @@
 from datetime import timedelta
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, make_response
 from flask_cors import CORS
 from pymongo import MongoClient
 from datetime import datetime, timezone
@@ -592,6 +592,51 @@ def delete_itinerary_activity(trip_id, activityID):
         }}
     )
     return jsonify({"message": "Activity deleted successfully"}), 200
+
+def convert_objectid(itinerary):
+    if isinstance(itinerary, dict):
+        return {key: convert_objectid(value) for key, value in itinerary.items()}
+    elif isinstance(itinerary, list):
+        return [convert_objectid(item) for item in itinerary]
+    elif isinstance(itinerary, ObjectId):
+        return str(itinerary)
+    else:
+        return itinerary
+    
+@app.route("/move_itinerary_activity/<trip_id>/<int:activityID>", methods=["GET", "POST", "OPTIONS"])
+def move_itinerary_activity(trip_id, activityID):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+    
+    itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
+    if not itinerary:
+        return jsonify({"error": "Itinerary not found"}), 404
+
+    next_best = itinerary.get("activities", {}).get("next_best_preferences", [])
+    activity = next((act for act in next_best if act.get("activityID") == activityID), None)
+    if not activity:
+        return jsonify({"error": "Activity not found in next_best_preferences"}), 404
+
+    updated_next_best = [act for act in next_best if act.get("activityID") != activityID]
+    
+    itinerary["activities"]["top_preferences"].append(activity)
+
+    itinerary_collection.update_one(
+        {"_id": ObjectId(trip_id)},
+        {
+            "$set": {
+                "activities.top_preferences": itinerary["activities"]["top_preferences"],
+                "activities.next_best_preferences": updated_next_best
+            }
+        }
+    )
+
+    response = jsonify({
+        "message": "Activity moved successfully",
+        "updated_itinerary": convert_objectid(itinerary)
+    })
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
 
 @app.route("/get_activities", methods=["POST"])
 def get_activities():

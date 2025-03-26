@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Menu, MenuItem  } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import Bot from "../assets/Bot.avif";
 
 const ItineraryDetails = () => {
@@ -14,6 +15,7 @@ const ItineraryDetails = () => {
   const [deleteMode, setDeleteMode] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const navigate = useNavigate();
 
@@ -90,6 +92,41 @@ const ItineraryDetails = () => {
     setOpenDialog(true);
   };
 
+  const handleAddClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+  
+  function handleSelectActivity(tripId, activity) {
+    fetch(`http://localhost:55000/move_itinerary_activity/${tripId}/${activity.activityID}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.message === "Activity moved successfully") {
+        setTrip((prevTrip) => ({
+          ...prevTrip,
+          activities: {
+            ...prevTrip.activities,
+            next_best_preferences: prevTrip.activities.next_best_preferences.filter(
+              (a) => a.activityID !== activity.activityID
+            ),
+            top_preferences: [...prevTrip.activities.top_preferences, activity],
+          },
+        }));
+      }
+  })
+  .catch(error => console.error("Error:", error));
+    handleClose();
+  };
   
 
   if (error) {
@@ -290,6 +327,7 @@ const ItineraryDetails = () => {
         setOpenDialog(false);}} color="error">Delete</Button>
           </DialogActions>
         </Dialog>
+        <div style={{display: "flex", justifyContent: "center", alignItems: "center", gap: "500px", marginTop: "20px"}}>
         <button
           onClick={() => navigate("/")}
           style={{
@@ -303,12 +341,37 @@ const ItineraryDetails = () => {
             cursor: "pointer",
             transition: "0.3s",
             boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+            position: "relative",
+            top:"-10px"
           }}
           onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
           onMouseLeave={(e) => (e.target.style.backgroundColor = "#007bff")}
         >
           Back to Home
         </button>
+        <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        cursor: "pointer",
+      }}
+    >
+      <AddCircleIcon
+        style={{ fontSize: "50px", color: "#007bff" }}
+        onClick={handleAddClick}
+      />
+      <span onClick={handleAddClick} style={{ fontSize: "18px", marginLeft: "2px", color: "#007bff", fontWeight: "bold" }}>
+        Add Activity
+      </span>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+        {trip.activities.next_best_preferences.map((activity) => (
+          <MenuItem key={activity.activityID} onClick={() => handleSelectActivity(trip._id, activity)}>
+            {activity.title}
+          </MenuItem>
+        ))}
+      </Menu>
+    </div> 
+    </div>
       </div>
     </div>
   );
