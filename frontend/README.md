@@ -22,6 +22,9 @@ Installed everything with
 ### `npm install react-slick`
 ### `npm install js-cookie`
 ### `npm install date-fns`
+### `npm install react-beautiful-dnd`
+### `npm install react-sortable-hoc --legacy-peer-deps`
+### `npm install array-move --legacy-peer-deps`
 
 
 Added these scripts to the package.json file

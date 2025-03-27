@@ -638,6 +638,27 @@ def move_itinerary_activity(trip_id, activityID):
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
+@app.route("/update_activity_order/<trip_id>", methods=["GET", "POST", "OPTIONS"])
+def update_activity_order(trip_id):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+
+    data = request.get_json()
+    new_order = data.get("activities", [])
+
+    itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
+    if not itinerary:
+        return jsonify({"error": "Itinerary not found"}), 404
+
+    itinerary_collection.update_one(
+        {"_id": ObjectId(trip_id)},
+        {"$set": {"activities.top_preferences": new_order}}
+    )
+
+    response = jsonify({"message": "Activity order updated successfully"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
 @app.route("/get_activities", methods=["POST"])
 def get_activities():
     #data = request.get_json()

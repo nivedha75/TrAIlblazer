@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Menu, MenuItem  } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import Bot from "../assets/Bot.avif";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { SortableContainer, SortableElement } from "react-sortable-hoc";
+import {arrayMoveImmutable} from "array-move";
 
 const ItineraryDetails = () => {
   const { tripId } = useParams();
@@ -128,6 +131,92 @@ const ItineraryDetails = () => {
     handleClose();
   };
   
+  const saveActivityOrder = (tripId, newOrder) => {
+    fetch(`http://localhost:55000/update_activity_order/${tripId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      },
+      body: JSON.stringify({ activities: newOrder }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message === "Activity order updated successfully") {
+          setTrip((prevTrip) => ({
+            ...prevTrip,
+            activities: { ...prevTrip.activities, top_preferences: newOrder },
+          }));
+        }
+      })
+      .catch(error => console.error("Error saving activity order:", error));
+  };
+
+const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return <div
+    style={{
+      backgroundColor: isHovered ? "#e0e0e0" : "#fff",
+      minHeight: "50px",
+      padding: "15px",
+      marginBottom: "20px",
+      borderRadius: "10px",
+      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      transition: "background-color 0.2s ease-in-out",
+      cursor: "grab",
+    }}
+    onMouseEnter={() => setIsHovered(true)}
+    onMouseLeave={() => setIsHovered(false)}
+
+  >
+    <div style={{ textAlign: "left", flex: 1 }}>
+      <h4 style={{ fontSize: "20px", color: "#444" }}>{activity.title}</h4>
+      <span> ({activity.context})</span>
+      <p>Rating: {activity.rating}</p>
+      <p style={{ fontSize: "18px", margin: "5px 0" }}>
+        <strong>Location:</strong> {activity?.location || ""}
+      </p>
+      <p style={{ fontSize: "18px", margin: "5px 0" }}>
+        <strong>Description:</strong> {activity.description}
+      </p>
+      <img src={activity.image} width="500" height="500" alt={activity.title} />
+      {activity.notes && (
+        <p style={{ fontSize: "18px", margin: "5px 0", fontStyle: "italic" }}>
+          <strong>Notes:</strong> {activity.notes}
+        </p>
+      )}
+    </div>
+    {deleteMode && (
+      <DeleteIcon
+        style={{ cursor: "pointer", color: "red", fontSize: "35px", marginLeft: "20px" }}
+        onClick={() => handleDeleteClick(activity)}
+      />
+    )}
+  </div>
+});
+
+const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteClick }) => (
+  <div>
+    {activities.length > 0 ? (
+      activities.map((activity, index) => (
+        <SortableItem
+          key={activity.activityID}
+          index={index}
+          activity={activity}
+          deleteMode={deleteMode}
+          handleDeleteClick={handleDeleteClick}
+        />
+      ))
+    ) : (
+      <p>No activities to display.</p>
+    )}
+  </div>
+));
 
   if (error) {
     return (
@@ -272,50 +361,21 @@ const ItineraryDetails = () => {
         <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
           {trip.activities.top_preferences.length > 0 ? "Activities for the Trip" : "No Activities Found"}
         </h3>
+      <SortableList
+        activities={trip.activities.top_preferences}
+        deleteMode={deleteMode}
+        handleDeleteClick={handleDeleteClick}
+        onSortEnd={({ oldIndex, newIndex }) => {
+          const newOrder = arrayMoveImmutable(trip.activities.top_preferences, oldIndex, newIndex);
+          setTrip((prevTrip) => ({
+            ...prevTrip,
+            activities: { ...prevTrip.activities, top_preferences: newOrder },
+          }));
+          saveActivityOrder(trip._id, newOrder);
+        }}
+        distance={10} 
+      />
 
-        {trip.activities.top_preferences && trip.activities.top_preferences.length > 0 ? (
-          trip.activities.top_preferences.map((activity) => (
-            <div
-              key={activity.activityID}
-              style={{
-                backgroundColor: "#fff",
-                padding: "15px",
-                marginBottom: "20px",
-                borderRadius: "10px",
-                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between"
-              }}
-            >
-               <div style={{ textAlign: "left", flex: 1 }}>
-              <h4 style={{ fontSize: "20px", color: "#444" }}>{activity.title}</h4>
-              <span> ({activity.context})</span>
-              <p>Rating: {activity.rating}</p>
-              <p style={{ fontSize: "18px", margin: "5px 0" }}>
-                <strong>Location:</strong> {activity?.location || ""}
-              </p>
-              <p style={{ fontSize: "18px", margin: "5px 0" }}>
-                <strong>Description:</strong> {activity.description}
-              </p>
-              <img src={activity.image} width="500" height="500" alt={activity.title} />
-              {activity.notes && (
-                <p style={{ fontSize: "18px", margin: "5px 0", fontStyle: "italic" }}>
-                  <strong>Notes:</strong> {activity.notes}
-                </p>
-              )}
-              </div>
-              {deleteMode && (
-                <DeleteIcon
-                style={{ cursor: "pointer", color: "red", fontSize: "35px", marginLeft: "20px" }}
-                  onClick={() => handleDeleteClick(activity)}
-                />
-              )}
-            </div>
-          ))
-        ) : (
-          <p>No activities to display.</p>
-        )}
          <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Confirm</DialogTitle>
           <DialogContent>
