@@ -16,6 +16,16 @@ from email.message import EmailMessage
 import requests
 import json
 
+from chains.travel_chain import get_langchain_agent
+
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+
 app = Flask(__name__)
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'main.db')
@@ -162,9 +172,16 @@ def trips():
             # print('generating itinerary?')
             # print("Data received:", data)
             # print("UserId:", data.get("userId", "No userId in data"))
-            # print("Location:", data.get("location", "No location in data"))
+            print("Location:", data.get("location", "No location in data"))
             print(data["userId"], data["location"], trip_id)
-            generate_itinerary(data["userId"], data["location"], trip_id)
+            # Step 1: Use LangChain to fetch only relevant real-time data
+            #user_query = "What is the weather like, and what are some top tourist attractions and hotels in the city " + data["location"] + "?"
+            user_query = "What is the weather like and what are hotels in the city " + data["location"] + "?"
+            agent = get_langchain_agent(OPENAI_API_KEY)
+            city_data = agent.run(user_query)
+            print(f"\n\nCity data:", city_data)
+            # Step 2: Use Gemini Flash to generate a personalized itinerary
+            generate_itinerary(data["userId"], data["location"], trip_id, city_data)
             generate_restaurant_recommendations(data["userId"], data["location"], trip_id)
             return jsonify({"message": "Trip data saved successfully"}), 201
 
@@ -479,6 +496,7 @@ def generate_activity_id():
     return next(activity_id_counter)
 
 #@app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
+#add this parameter later: city_data
 def generate_itinerary(user_id, location, trip_id):
     print('generating itinerary')
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
@@ -490,7 +508,10 @@ def generate_itinerary(user_id, location, trip_id):
         "Content-Type": "application/json"
     }
 
-    prompt = """I am building a travel itinerary recommendation app. Given a user's travel preferences and destination, generate an itinerary with 10 activities: 5 as top preferences and 5 as next best preferences. Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination. Format it as the following JSON STRICTLY, NO OTHER WORDS:
+    prompt = """I am building a travel itinerary recommendation app.
+    Given a user's travel preferences and destination, generate an itinerary with 10 activities: 5 as top preferences and 5 as next best preferences.
+    Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination.
+    Format it as the following JSON STRICTLY, NO OTHER WORDS:
         \"top_preferences\": [
             {
             \"title\": ...title...,
@@ -504,9 +525,11 @@ def generate_itinerary(user_id, location, trip_id):
             ...
             ],
         \"next_best_preferences\": exact same format as top_preferences\n
+        Here is the real-time data for weather, activities, and/or hotels in that city: {city_data}\n
         The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
     
     #print(prompt)
+    #Here is the real-time data for weather, activities, and/or hotels in that city: {city_data}
 
     data = {
         "contents": [{
