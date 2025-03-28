@@ -6,6 +6,7 @@ OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 #TRIPADVISOR_API_KEY = os.getenv("TRIPADVISOR_API_KEY")
 SKYSCANNER_API_KEY = os.getenv("SKYSCANNER_API_KEY")
 RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
+#print("RAPIDAPI_KEY loaded:", RAPIDAPI_KEY)
 
 def get_geo_id(city):
     url = "https://tripadvisor16.p.rapidapi.com/api/v1/hotels/searchLocation"
@@ -16,6 +17,7 @@ def get_geo_id(city):
     params = { "query": city }
 
     response = requests.get(url, headers=headers, params=params)
+    #print("GeoID raw response:", response.status_code, response.text)
     data = response.json()
     
     if "data" in data and len(data["data"]) > 0:
@@ -46,6 +48,14 @@ def get_attractions(city):
 def get_hotels(city):
     print("in get_hotels(), value of city:", city)
     geo_id = get_geo_id("New York City")
+    # print(get_geo_id("New York"))
+    # print(get_geo_id("new york city"))
+    # print(get_geo_id("new york"))
+    # print(get_geo_id("Los Angeles"))
+    # print(get_geo_id("San Francisco"))
+    # print(get_geo_id("Chicago"))
+    # print(get_geo_id("Miami"))
+    # print(get_geo_id("Las Vegas"))
     if not geo_id:
         print("City not found!")
         return {}

@@ -497,7 +497,7 @@ def generate_activity_id():
 
 #@app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
 #add this parameter later: city_data
-def generate_itinerary(user_id, location, trip_id):
+def generate_itinerary(user_id, location, trip_id, city_data):
     print('generating itinerary')
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
     preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
@@ -626,12 +626,12 @@ def generate_restaurant_recommendations(user_id, location, trip_id):
 def get_image(query):
     # Replace these with your actual API key and Custom Search Engine (CX) ID
         # Praveer
-    API_KEY = "AIzaSyClHKoSP7fOjxrCB2Dx94szQs5fOMjJsx4"
-    CX = "750536663af024901"
+    #API_KEY = "AIzaSyClHKoSP7fOjxrCB2Dx94szQs5fOMjJsx4"
+    #CX = "750536663af024901"
     
     # Ed
-    # API_KEY = "AIzaSyBEKQ5QQXSMGXSyVQ3UmvqgrvxjKq__g_0"
-    # CX = "564958a336c094aae"
+    API_KEY = "AIzaSyBEKQ5QQXSMGXSyVQ3UmvqgrvxjKq__g_0"
+    CX = "564958a336c094aae"
 
 
     # Search query
