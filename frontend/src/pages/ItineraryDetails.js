@@ -7,6 +7,49 @@ import Bot from "../assets/Bot.avif";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import {arrayMoveImmutable} from "array-move";
+// import { Input } from "@/components/ui/input";
+// import { Button as ChatButton} from "@/components/ui/button";
+
+// const ChatComponent = ({ sendMessage, messages }) => {
+//   const [input, setInput] = useState("");
+
+//   const handleSend = () => {
+//     if (input.trim() !== "") {
+//       sendMessage(input);
+//       setInput("");
+//     }
+//   };
+
+//   return (
+//     <div className="tailwind">
+//     <div className="flex flex-col h-full w-full border rounded-lg shadow-md">
+//       <div className="flex-1 overflow-y-auto p-4 space-y-2">
+//         {messages.map((msg, index) => (
+//           <div
+//             key={index}
+//             className={`p-3 rounded-lg ${
+//               msg.sender === "user" ? "bg-blue-500 text-white self-end" : "bg-gray-300 text-black"
+//             }`}
+//           >
+//             {msg.text}
+//           </div>
+//         ))}
+//       </div>
+//       <div className="p-4 flex border-t">
+//         <Input
+//           value={input}
+//           onChange={(e) => setInput(e.target.value)}
+//           placeholder="Ask anything..."
+//           className="flex-1 p-2 border rounded focus:outline-none"
+//         />
+//         <ChatButton onClick={handleSend} className="ml-2 bg-blue-600 text-white">
+//           Send
+//         </ChatButton>
+//       </div>
+//     </div>
+//     </div>
+//   );
+// };
 
 const ItineraryDetails = () => {
   const { tripId } = useParams();
@@ -271,7 +314,12 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          overflowY: "auto"
+          overflowY: "auto",
+          position: "fixed", // Keeps the chat fixed even while scrolling
+    top: "0", // Adjust the vertical position as needed
+    left: "0",
+    height: "calc(100vh - 40px)", //
+    zIndex: 9999
         }}
       >
        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "10px" }}>
@@ -279,6 +327,9 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           <img src={Bot} alt="Bot" style={{ width: "40px", height: "40px", marginLeft: "10px" }} />
           </h2>
         </div>
+        {/* <div className="tailwind">
+        <ChatComponent sendMessage={sendMessage} messages={chatMessages} />
+        </div> */}
         <div
           style={{
             flexGrow: 1,
@@ -335,13 +386,14 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           padding: "20px",
           textAlign: "center",
           backgroundColor: "#f9f9f9",
-          position: "relative"
+          position: "relative",
+          left: "450px"
         }}
       >
         <Button
           variant="contained"
           color="error"
-          style={{ position: "absolute", top: 10, right: 10 }}
+          style={{ position: "absolute", top: 10, right: 70 }}
           onClick={() => setDeleteMode(!deleteMode)}
         >
           {deleteMode ? "Cancel Delete" : "Delete Activities"}
