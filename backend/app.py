@@ -51,6 +51,7 @@ trip_collection = db["trips"]
 place_collection = db["places"]
 activity_collection = db["activities"]
 itinerary_collection = db["itineraries"]
+restaurant_collection = db["restaurants"]
 
 @app.route('/')
 def hello():
@@ -164,6 +165,7 @@ def trips():
             # print("Location:", data.get("location", "No location in data"))
             print(data["userId"], data["location"], trip_id)
             generate_itinerary(data["userId"], data["location"], trip_id)
+            generate_restaurant_recommendations(data["userId"], data["location"], trip_id)
             return jsonify({"message": "Trip data saved successfully"}), 201
 
         except Exception as e:
@@ -218,6 +220,19 @@ def get_itinerary(trip_id):
         else:
             print('itinerary not found')
             return jsonify({"error": "Itinerary not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/restaurants/<trip_id>', methods=['GET'])
+def get_restaurants(trip_id):
+    try:
+        restaurants = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
+        if restaurants:
+            restaurants["_id"] = str(restaurants["_id"])
+            return jsonify(restaurants), 200
+        else:
+            print('restaurants not found')
+            return jsonify({"error": "Restaurants not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
@@ -535,6 +550,55 @@ def generate_itinerary(user_id, location, trip_id):
 
     #return jsonify({"response": parsed_json}), 200
 
+def generate_restaurant_recommendations(user_id, location, trip_id):
+    print('Generating restaurant recommendations')
+    preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
+    preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
+    
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+    
+    headers = {
+        "Content-Type": "application/json"
+    }
+    
+    prompt = f"""I am building a travel itinerary recommendation app. Given a user's preferences, generate 20 restaurant recommendations for the location {location}. Format it as the following JSON STRICTLY:
+    "restaurants": [
+        {{
+            "title": ...title...,
+            "rating": ...rating out of 5...,
+            "description": ...very short description...,
+            "location": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
+            "context": ...Because you liked (list something specific from preferences JSON that explains the choice)...
+        }},
+        ... 19 more ...
+    ]
+    Here are the user preferences: {preferences_str_format}
+    """
+    
+    data = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+    
+    response = requests.post(url, headers=headers, json=data)
+    response_json = response.json()
+    
+    text_content = extract_json(response_json["candidates"][0]["content"]["parts"][0]["text"])
+    parsed_json = json.loads(text_content)
+    
+    for restaurant in parsed_json["restaurants"]:
+        restaurant["activityID"] = generate_activity_id()
+        restaurant['image'] = get_image(restaurant['title'])
+    
+    print(parsed_json)
+    
+    itinerary_data = {
+        "_id": trip_id,
+        "restaurants": parsed_json["restaurants"]
+    }
+    
+    restaurant_collection.insert_one(itinerary_data)
+    
+
 #@app.route('/get_image/<query>')
 def get_image(query):
     # Replace these with your actual API key and Custom Search Engine (CX) ID
@@ -627,6 +691,41 @@ def move_itinerary_activity(trip_id, activityID):
             "$set": {
                 "activities.top_preferences": itinerary["activities"]["top_preferences"],
                 "activities.next_best_preferences": updated_next_best
+            }
+        }
+    )
+
+    response = jsonify({
+        "message": "Activity moved successfully",
+        "updated_itinerary": convert_objectid(itinerary)
+    })
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@app.route("/move_restaurant_activity/<trip_id>/<int:activityID>", methods=["GET", "POST", "OPTIONS"])
+def move_restaurant_activity(trip_id, activityID):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+    
+    itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
+    if not itinerary:
+        return jsonify({"error": "Itinerary not found"}), 404
+    restaurant = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
+    if not restaurant:
+        return jsonify({"error": "Restaurant not found"}), 404
+    
+    next_best = restaurant.get("restaurants", [])
+    activity = next((act for act in next_best if act.get("activityID") == activityID), None)
+    if not activity:
+        return jsonify({"error": "Activity not found in next_best_preferences"}), 404
+    
+    itinerary["activities"]["top_preferences"].append(activity)
+
+    itinerary_collection.update_one(
+        {"_id": ObjectId(trip_id)},
+        {
+            "$set": {
+                "activities.top_preferences": itinerary["activities"]["top_preferences"],
             }
         }
     )

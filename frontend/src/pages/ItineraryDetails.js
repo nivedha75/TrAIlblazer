@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Menu, MenuItem  } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -62,8 +62,31 @@ const ItineraryDetails = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [restaurantsData, setRestaurantsData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const dropdownRef = useRef(null);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!showSearch) return; 
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowSearch(false);
+      }
+    };
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+    }, 500); 
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSearch]);
+
 
   useEffect(() => {
     fetch(`http://localhost:55000/itinerary/${tripId}`, {
@@ -81,6 +104,28 @@ const ItineraryDetails = () => {
         return response.json();
       })
       .then((data) => {setTrip(data);})
+      .catch((error) => {
+        console.error("Error fetching itinerary details:", error);
+        setError(error.message); // Set the error message
+      });
+  }, [tripId]);
+
+  useEffect(() => {
+    fetch(`http://localhost:55000/restaurants/${tripId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Itinerary not found");
+        }
+        return response.json();
+      })
+      .then((data) => {console.log("Restaurants: ", data); setRestaurantsData(data);})
       .catch((error) => {
         console.error("Error fetching itinerary details:", error);
         setError(error.message); // Set the error message
@@ -173,6 +218,33 @@ const ItineraryDetails = () => {
   .catch(error => console.error("Error:", error));
     handleClose();
   };
+
+  function handleSelectRestaurant(tripId, activity) {
+    fetch(`http://localhost:55000/move_restaurant_activity/${tripId}/${activity.activityID}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.message === "Activity moved successfully") {
+        setTrip((prevTrip) => ({
+          ...prevTrip,
+          activities: {
+            ...prevTrip.activities,
+            top_preferences: [...prevTrip.activities.top_preferences, activity],
+          },
+        }));
+      }
+  })
+  .catch(error => console.error("Error:", error));
+  setShowSearch(false);
+  setSearchTerm("");
+  };
+  
   
   const saveActivityOrder = (tripId, newOrder) => {
     fetch(`http://localhost:55000/update_activity_order/${tripId}`, {
@@ -196,6 +268,15 @@ const ItineraryDetails = () => {
       })
       .catch(error => console.error("Error saving activity order:", error));
   };
+
+  const addSearch = () => {
+    setShowSearch(!showSearch);
+    setSearchTerm("");
+  };
+
+  const filteredRestaurants = (restaurantsData?.restaurants || []).filter((restaurant) =>
+  restaurant.title.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
 const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -439,7 +520,7 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
         setOpenDialog(false);}} color="error">Delete</Button>
           </DialogActions>
         </Dialog>
-        <div style={{display: "flex", justifyContent: "center", alignItems: "center", gap: "500px", marginTop: "20px"}}>
+        <div style={{display: "flex", justifyContent: "center", alignItems: "center", gap: "200px", marginTop: "20px"}}>
         <button
           onClick={() => navigate("/")}
           style={{
@@ -461,6 +542,53 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
         >
           Back to Home
         </button>
+        <div style={{ display: "flex", alignItems: "center", cursor: "pointer", flexDirection: "column", position: "relative" }}>
+  {showSearch && (
+    <div //ref={dropdownRef} 
+    style={{ 
+      position: "absolute", 
+      bottom: "80px", 
+      backgroundColor: "white", 
+      padding: "10px", 
+      borderRadius: "8px", 
+      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
+      width: "280px",
+      textAlign: "center",
+      zIndex: 1000
+    }}>
+      <input
+        type="text"
+        placeholder="Search restaurants..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{ padding: "8px", width: "90%", borderRadius: "5px", border: "1px solid #ccc" }}
+      />
+      <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
+        {filteredRestaurants.slice(0, 5).map((restaurant) => (
+          <li key={restaurant._id} onClick={() => handleSelectRestaurant(trip._id, restaurant)} style={{ padding: "5px", fontSize: "16px", cursor: "pointer", 
+          transition: "background 0.3s", 
+          borderRadius: "5px"  }}
+          onMouseEnter={(e) => e.target.style.background = "#f0f0f0"}
+            onMouseLeave={(e) => e.target.style.background = "white"}>
+            {restaurant.title}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  <AddCircleIcon
+    style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
+    onClick={addSearch}
+  />
+  <span 
+    onClick={addSearch} 
+    style={{ fontSize: "18px", marginLeft: "2px", color: "#007bff", fontWeight: "bold", cursor: "pointer" }}
+  >
+    {showSearch ? "Close Search" : "Add Restaurant"}
+  </span>
+</div>
+      
         <div
       style={{
         display: "flex",
