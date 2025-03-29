@@ -25,6 +25,8 @@ Installed everything with
 ### `npm install react-beautiful-dnd`
 ### `npm install react-sortable-hoc --legacy-peer-deps`
 ### `npm install array-move --legacy-peer-deps`
+### `npm install @shadcn/ui --legacy-peer-deps`
+### `npm install tailwindcss postcss autoprefixer --legacy-peer-deps`
 
 
 Added these scripts to the package.json file

@@ -16,6 +16,20 @@ from email.message import EmailMessage
 import requests
 import json
 
+from chains.travel_chain import get_langchain_agent
+
+import logging
+logging.basicConfig(level=logging.ERROR)
+
+from dotenv import load_dotenv
+import os
+
+
+
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+
 app = Flask(__name__)
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'main.db')
@@ -51,6 +65,7 @@ trip_collection = db["trips"]
 place_collection = db["places"]
 activity_collection = db["activities"]
 itinerary_collection = db["itineraries"]
+restaurant_collection = db["restaurants"]
 
 @app.route('/')
 def hello():
@@ -161,9 +176,29 @@ def trips():
             # print('generating itinerary?')
             # print("Data received:", data)
             # print("UserId:", data.get("userId", "No userId in data"))
-            # print("Location:", data.get("location", "No location in data"))
+            print("Location:", data.get("location", "No location in data"))
             print(data["userId"], data["location"], trip_id)
-            generate_itinerary(data["userId"], data["location"], trip_id)
+            print("Start date:", data.get("startDate", "No start date in data"))
+            print("End date:", data.get("endDate", "No end date in data"))
+            # Step 1: Use LangChain to fetch only relevant real-time data
+            #user_query = "What is the weather like, and what are some top tourist attractions and hotels in the city " + data["location"] + "?"
+            user_query_2 = """What is the weather like and what are hotels in the city """ + data["location"] + """?
+            Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions.
+            Also, specifically provide the name, rating, and price of hotels in the city."""
+            user_query = """For the city, """ + data["location"] + """ describe the following information:\n
+            Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions
+            for every day from the start date """ + data["startDate"] + """ to the end date """ + data["endDate"] + """.
+            Also, specifically provide the name, rating, and price of hotels in the city."""
+            agent = get_langchain_agent(OPENAI_API_KEY)
+            try:
+                city_data = agent.run(user_query)
+            except Exception as e:
+                print("Error while running agent:", str(e))
+                city_data = "Error: Too much input data or agent failed."
+            print("\n\nCity data:", city_data)
+            # Step 2: Use Gemini Flash to generate a personalized itinerary
+            generate_itinerary(data["userId"], data["location"], trip_id, city_data)
+            generate_restaurant_recommendations(data["userId"], data["location"], trip_id)
             return jsonify({"message": "Trip data saved successfully"}), 201
 
         except Exception as e:
@@ -224,6 +259,19 @@ def get_itinerary(trip_id):
             print('itinerary not found')
             return jsonify({"error": "Itinerary not found"}), 404
     except Exception as e:            
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/restaurants/<trip_id>', methods=['GET'])
+def get_restaurants(trip_id):
+    try:
+        restaurants = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
+        if restaurants:
+            restaurants["_id"] = str(restaurants["_id"])
+            return jsonify(restaurants), 200
+        else:
+            print('restaurants not found')
+            return jsonify({"error": "Restaurants not found"}), 404
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
     
 @app.route("/places", methods=['GET', 'OPTIONS'])
@@ -471,7 +519,8 @@ def generate_activity_id():
     return next(activity_id_counter)
 
 #@app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
-def generate_itinerary(user_id, location, trip_id):
+#add this parameter later: city_data
+def generate_itinerary(user_id, location, trip_id, city_data):
     print('generating itinerary')
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
     preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
@@ -482,48 +531,54 @@ def generate_itinerary(user_id, location, trip_id):
         "Content-Type": "application/json"
     }
 
-    # \"images\": [
-                    #     \"...VALID URL to a .jpg photo of the activity...\",
-                    #     \"...another one...\",
-                    #     \"...another one...\"
-                    # ], 
+    prompt = """I am building a travel itinerary recommendation app.
+    Here is the real-time city data for weather and hotels in that city: """ + city_data + """\n
+    Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
+    Use this information to make smart activity choices (e.g., recommend indoor activities on rainy days, outdoor ones on sunny days).
+    Also consider hotel data for location or quality-based recommendations.
 
+    Do NOT repeat hotel data in your output — just use it behind the scenes for better suggestions.
+    If you do make a decision based on some weather condition, mention that weather in the "context" attribute in top preferences and next best preferences of the JSON below. 
 
-    prompt = """I am building a travel itinerary recommendation app. Given a user's travel preferences and destination, generate an itinerary with 10 activities: 5 as top preferences and 5 as next best preferences. Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination. Format it as the following JSON STRICTLY, NO OTHER WORDS:
-        
+    Given a user's travel preferences, destination, and the real-time city data provided, generate an itinerary with 10 activities: 5 as top preferences and 5 as next best preferences.
+    Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination.
+    Format it as the following JSON STRICTLY, NO OTHER WORDS:
         \"top_preferences\": [
             {
-                \"title\": ...title...,
-                \"context\": ...Because you liked (and then list something specific in the preferences JSON that explains the choice)...,
-                \"details\": {
-                    \"name\": ...same as title...,
-                    \"description\": ...description...,
-                    \"number\": ...official phone number as (xxx) xxx-xxxx...,
-                    \"address\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
-                    \"email\": ...official email address...,
-                    \"hours\": {
-                        \"sunday\": ...open times on this day. example format: {\"open\":\"10:00 AM\",\"close\":\"6:00 PM\"}...,
-                        \"friday\": ...same format...,
-                        \"monday\": ...same format...,
-                        \"saturday\": ...same format...,
-                        \"thursday\": ...same format...,
-                        \"tuesday\": ...same format...,
-                        \"wednesday\": ...same format...
-                    },
-                    \"rating\": ...rating out of 5 with 1 decimal place...,
-                    \"experience\": ...description of how guests spend their time here...,
-                    \"city\": ...(city), (country)...,
-                    \"website\": ...link to the official website...
-                }
+            \"title\": ...title...,
+            \"context\": ...Because you liked (and then list something specific in the preferences JSON and the weather that explains the choice)...,
+            \"weather\": ...weather conditions for every day on the trip...
+            \"details\": {
+                \"name\": ...same as title...,
+                \"description\": ...description...,
+                \"number\": ...official phone number as (xxx) xxx-xxxx...,
+                \"address\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
+                \"email\": ...official email address...,
+                \"hours\": {
+                    \"sunday\": ...open times on this day. example format: {\"open\":\"10:00 AM\",\"close\":\"6:00 PM\"}...,
+                    \"friday\": ...same format...,
+                    \"monday\": ...same format...,
+                    \"saturday\": ...same format...,
+                    \"thursday\": ...same format...,
+                    \"tuesday\": ...same format...,
+                    \"wednesday\": ...same format...
+                },
+                \"rating\": ...rating out of 5 with 1 decimal place...,
+                \"experience\": ...description of how guests spend their time here...,
+                \"city\": ...(city), (country)...,
+                \"website\": ...link to the official website...
+            }
             }
             ...
             4 more
             ...
             ],
         \"next_best_preferences\": exact same format as top_preferences\n
+        
         The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
 
     #print(prompt)
+    #Here is the real-time data for weather, activities, and/or hotels in that city: {city_data}
 
     data = {
         "contents": [{
@@ -573,16 +628,65 @@ def generate_itinerary(user_id, location, trip_id):
 
     #return jsonify({"response": parsed_json}), 200
 
+def generate_restaurant_recommendations(user_id, location, trip_id):
+    print('Generating restaurant recommendations')
+    preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
+    preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
+    
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+    
+    headers = {
+        "Content-Type": "application/json"
+    }
+    
+    prompt = f"""I am building a travel itinerary recommendation app. Given a user's preferences, generate 20 restaurant recommendations for the location {location}. Format it as the following JSON STRICTLY:
+    "restaurants": [
+        {{
+            "title": ...title...,
+            "rating": ...rating out of 5...,
+            "description": ...very short description...,
+            "location": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
+            "context": ...Because you liked (list something specific from preferences JSON that explains the choice)...
+        }},
+        ... 19 more ...
+    ]
+    Here are the user preferences: {preferences_str_format}
+    """
+    
+    data = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+    
+    response = requests.post(url, headers=headers, json=data)
+    response_json = response.json()
+    
+    text_content = extract_json(response_json["candidates"][0]["content"]["parts"][0]["text"])
+    parsed_json = json.loads(text_content)
+    
+    for restaurant in parsed_json["restaurants"]:
+        restaurant["activityID"] = generate_activity_id()
+        restaurant['image'] = get_image(restaurant['title'])
+    
+    print(parsed_json)
+    
+    itinerary_data = {
+        "_id": trip_id,
+        "restaurants": parsed_json["restaurants"]
+    }
+    
+    restaurant_collection.insert_one(itinerary_data)
+    
+
 #@app.route('/get_image/<query>')
 def get_image(query):
     # Replace these with your actual API key and Custom Search Engine (CX) ID
         # Praveer
-    API_KEY = "AIzaSyClHKoSP7fOjxrCB2Dx94szQs5fOMjJsx4"
-    CX = "750536663af024901"
+    #API_KEY = "AIzaSyClHKoSP7fOjxrCB2Dx94szQs5fOMjJsx4"
+    #CX = "750536663af024901"
     
     # Ed
-    # API_KEY = "AIzaSyBEKQ5QQXSMGXSyVQ3UmvqgrvxjKq__g_0"
-    # CX = "564958a336c094aae"
+    API_KEY = "AIzaSyBEKQ5QQXSMGXSyVQ3UmvqgrvxjKq__g_0"
+    CX = "564958a336c094aae"
 
 
     # Search query
@@ -671,6 +775,41 @@ def move_itinerary_activity(trip_id, activityID):
             "$set": {
                 "activities.top_preferences": itinerary["activities"]["top_preferences"],
                 "activities.next_best_preferences": updated_next_best
+            }
+        }
+    )
+
+    response = jsonify({
+        "message": "Activity moved successfully",
+        "updated_itinerary": convert_objectid(itinerary)
+    })
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@app.route("/move_restaurant_activity/<trip_id>/<int:activityID>", methods=["GET", "POST", "OPTIONS"])
+def move_restaurant_activity(trip_id, activityID):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+    
+    itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
+    if not itinerary:
+        return jsonify({"error": "Itinerary not found"}), 404
+    restaurant = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
+    if not restaurant:
+        return jsonify({"error": "Restaurant not found"}), 404
+    
+    next_best = restaurant.get("restaurants", [])
+    activity = next((act for act in next_best if act.get("activityID") == activityID), None)
+    if not activity:
+        return jsonify({"error": "Activity not found in next_best_preferences"}), 404
+    
+    itinerary["activities"]["top_preferences"].append(activity)
+
+    itinerary_collection.update_one(
+        {"_id": ObjectId(trip_id)},
+        {
+            "$set": {
+                "activities.top_preferences": itinerary["activities"]["top_preferences"],
             }
         }
     )
