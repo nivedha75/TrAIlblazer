@@ -18,9 +18,13 @@ import json
 
 from chains.travel_chain import get_langchain_agent
 
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
 
 from dotenv import load_dotenv
 import os
+
+
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -176,10 +180,16 @@ def trips():
             print(data["userId"], data["location"], trip_id)
             # Step 1: Use LangChain to fetch only relevant real-time data
             #user_query = "What is the weather like, and what are some top tourist attractions and hotels in the city " + data["location"] + "?"
-            user_query = "What is the weather like and what are hotels in the city " + data["location"] + "?"
+            user_query = """What is the weather like and what are hotels in the city """ + data["location"] + """?
+            Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions.
+            Also, specifically provide the name, rating, and price of hotels in the city."""
             agent = get_langchain_agent(OPENAI_API_KEY)
-            city_data = agent.run(user_query)
-            print(f"\n\nCity data:", city_data)
+            try:
+                city_data = agent.run(user_query)
+            except Exception as e:
+                print("Error while running agent:", str(e))
+                city_data = "Error: Too much input data or agent failed."
+            print("\n\nCity data:", city_data)
             # Step 2: Use Gemini Flash to generate a personalized itinerary
             generate_itinerary(data["userId"], data["location"], trip_id, city_data)
             generate_restaurant_recommendations(data["userId"], data["location"], trip_id)
