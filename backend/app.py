@@ -18,8 +18,8 @@ import json
 
 from chains.travel_chain import get_langchain_agent
 
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.ERROR)
 
 from dotenv import load_dotenv
 import os
@@ -178,10 +178,16 @@ def trips():
             # print("UserId:", data.get("userId", "No userId in data"))
             print("Location:", data.get("location", "No location in data"))
             print(data["userId"], data["location"], trip_id)
+            print("Start date:", data.get("startDate", "No start date in data"))
+            print("End date:", data.get("endDate", "No end date in data"))
             # Step 1: Use LangChain to fetch only relevant real-time data
             #user_query = "What is the weather like, and what are some top tourist attractions and hotels in the city " + data["location"] + "?"
-            user_query = """What is the weather like and what are hotels in the city """ + data["location"] + """?
+            user_query_2 = """What is the weather like and what are hotels in the city """ + data["location"] + """?
             Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions.
+            Also, specifically provide the name, rating, and price of hotels in the city."""
+            user_query = """For the city, """ + data["location"] + """ describe the following information:\n
+            Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions
+            for every day from the start date """ + data["startDate"] + """ to the end date """ + data["endDate"] + """.
             Also, specifically provide the name, rating, and price of hotels in the city."""
             agent = get_langchain_agent(OPENAI_API_KEY)
             try:
@@ -519,7 +525,15 @@ def generate_itinerary(user_id, location, trip_id, city_data):
     }
 
     prompt = """I am building a travel itinerary recommendation app.
-    Given a user's travel preferences and destination, generate an itinerary with 10 activities: 5 as top preferences and 5 as next best preferences.
+    Here is the real-time city data for weather and hotels in that city: """ + city_data + """\n
+    Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
+    Use this information to make smart activity choices (e.g., recommend indoor activities on rainy days, outdoor ones on sunny days).
+    Also consider hotel data for location or quality-based recommendations.
+
+    Do NOT repeat hotel data in your output — just use it behind the scenes for better suggestions.
+    If you do make a decision based on some weather condition, mention that weather in the "context" attribute in top preferences and next best preferences of the JSON below. 
+
+    Given a user's travel preferences, destination, and the real-time city data provided, generate an itinerary with 10 activities: 5 as top preferences and 5 as next best preferences.
     Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination.
     Format it as the following JSON STRICTLY, NO OTHER WORDS:
         \"top_preferences\": [
@@ -528,14 +542,15 @@ def generate_itinerary(user_id, location, trip_id, city_data):
             \"rating\": ...rating out of 5...,
             \"description\": ...very short description...,
             \"location\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
-            \"context\": ...Because you liked (and then list something specific in the preferences JSON that explains the choice)...
+            \"context\": ...Because you liked (and then list something specific in the preferences JSON and the weather that explains the choice)...,
+            \"weather\": ...weather conditions for every day on the trip...
             }
             ...
             4 more
             ...
             ],
         \"next_best_preferences\": exact same format as top_preferences\n
-        Here is the real-time data for weather, activities, and/or hotels in that city: {city_data}\n
+        
         The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
     
     #print(prompt)

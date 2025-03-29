@@ -1,4 +1,5 @@
 import requests
+from datetime import datetime
 import os
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -31,12 +32,56 @@ HEADERS = {
     "X-RapidAPI-Host": "tripadvisor16.p.rapidapi.com"
 }
 
-def get_weather(city):
+def get_current_weather(city):
     print("in get_weather(), value of city: ", city)
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPENWEATHER_API_KEY}&units=imperial"
     weather_json = requests.get(url).json()
     # print("weather_json: ", weather_json)
     return weather_json
+
+def get_city_coordinates(city):
+    geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={OPENWEATHER_API_KEY}"
+    response = requests.get(geo_url)
+    data = response.json()
+    if not data:
+        raise ValueError(f"City '{city}' not found.")
+    return data[0]["lat"], data[0]["lon"]
+
+def get_forecast_for_trip(city, start_date_str, end_date_str):
+    """Get daily forecasts for a city between start_date and end_date (inclusive)"""
+    start_date = datetime.fromisoformat(start_date_str).date()
+    end_date = datetime.fromisoformat(end_date_str).date()
+
+    try:
+        lat, lon = get_city_coordinates(city)
+    except Exception as e:
+        print(f"Error getting coordinates: {e}")
+        return []
+
+    onecall_url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,current,alerts&units=imperial&appid={OPENWEATHER_API_KEY}"
+    response = requests.get(onecall_url)
+
+    if response.status_code != 200:
+        print("Error calling One Call API:", response.status_code, response.text)
+        return []
+
+    data = response.json()
+    forecast_data = []
+
+    for day in data.get("daily", []):
+        date_obj = datetime.fromtimestamp(day["dt"]).date()
+
+        if start_date <= date_obj <= end_date:
+            forecast_data.append({
+                "date": date_obj.strftime("%Y-%m-%d"),
+                "temp_day": day["temp"]["day"],
+                "feels_like": day["feels_like"]["day"],
+                "humidity": day["humidity"],
+                "wind_speed": day["wind_speed"],
+                "description": day["weather"][0]["description"]
+            })
+
+    return forecast_data
 
 def get_attractions(city):
     query = f"top tourist attractions in {city}"
