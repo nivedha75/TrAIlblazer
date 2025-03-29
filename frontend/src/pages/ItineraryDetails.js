@@ -153,12 +153,13 @@ const ItineraryDetails = () => {
 
   function confirmDelete(tripId, activityId) {
     fetch(`http://localhost:55000/delete_itinerary_activity/${tripId}/${activityId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://localhost:3000",
-        "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
+      method: "DELETE",
+      // headers: {
+      //   "Content-Type": "application/json",
+        // "Access-Control-Allow-Origin": "http://localhost:3000",
+        // "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
+        // "Access-Control-Allow-Headers": "Content-Type"
+      // }
     })
     .then(response => {
         if (response.ok) {
@@ -409,12 +410,12 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           justifyContent: "space-between",
           overflowY: "auto",
           position: "fixed", // Keeps the chat fixed even while scrolling
-    top: "0", // Adjust the vertical position as needed
-    left: "0",
-    height: "calc(100vh - 40px)", //
-    zIndex: 9999
+          top: "0", // Adjust the vertical position as needed
+          left: "0",
+          height: "calc(100vh - 40px)", //
+          zIndex: 9999
         }}
-      >
+        >
        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "10px" }}>
           <h2 style={{ margin: 0, display: "flex", alignItems: "center" }}>Chat
           <img src={Bot} alt="Bot" style={{ width: "40px", height: "40px", marginLeft: "10px" }} />
@@ -432,7 +433,7 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
             borderRadius: "5px",
             boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
           }}
-        >
+          >
           {chatMessages.length > 0 ? (
             chatMessages.map((msg, index) => (
               <p key={index} style={{ textAlign: "left", margin: "5px 0" }}>
@@ -475,7 +476,8 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
       </div>
       <div
         style={{
-          width: "70%",
+       //   width: "70%",
+          width: "65%",
           padding: "20px",
           textAlign: "center",
           backgroundColor: "#f9f9f9",

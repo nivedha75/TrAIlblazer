@@ -251,9 +251,9 @@ def get_itinerary(trip_id):
             # print(str(itinerary["_id"]))
             # print(itinerary)
             itinerary["_id"] = str(itinerary["_id"])
-            for i in range(5):
-                itinerary["activities"]["top_preferences"][i]["details"]["tripId"] = str(itinerary["activities"]["top_preferences"][i]["details"]["tripId"])
-                itinerary["activities"]["top_preferences"][i]["details"]["_id"] = str(itinerary["activities"]["top_preferences"][i]["details"]["_id"])
+            for act in itinerary["activities"]["top_preferences"]:
+                act["details"]["tripId"] = str(act["details"]["tripId"])
+                act["details"]["_id"] = str(act["details"]["_id"])
             return jsonify(itinerary), 200
         else:
             print('itinerary not found')
@@ -723,23 +723,28 @@ def get_image(query):
     
     #return jsonify({"response": first_image_url}), 200
 
-@app.route("/delete_itinerary_activity/<trip_id>/<int:activityID>", methods=["GET", "DELETE"])
+@app.route("/delete_itinerary_activity/<trip_id>/<activityID>", methods=['GET', 'DELETE', 'POST', 'OPTIONS'])
 def delete_itinerary_activity(trip_id, activityID):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
     
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
 
-    updated_top = [act for act in itinerary["activities"]["top_preferences"] if act["details"]["_id"] != activityID]
-    updated_next_best = [act for act in itinerary["activities"]["next_best_preferences"] if act["details"]["_id"] != activityID]
+    # updated_top = [act for act in itinerary["activities"]["top_preferences"] if act["details"]["_id"] != activityID]
+    # updated_next_best = [act for act in itinerary["activities"]["next_best_preferences"] if act["details"]["_id"] != activityID]
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
-        {"$set": {
-            "activities.top_preferences": updated_top,
-            "activities.next_best_preferences": updated_next_best
+        {"$pull": {
+            "activities.top_preferences": {"details._id": ObjectId(activityID)}
+            #"activities.next_best_preferences": {"details._id": ObjectId(activityID)}
         }}
     )
-    return jsonify({"message": "Activity deleted successfully"}), 200
+    response = jsonify({"message": "Activity deleted successfully"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response, 200
 
 def convert_objectid(itinerary):
     if isinstance(itinerary, dict):
