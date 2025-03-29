@@ -142,39 +142,39 @@ const HomePage = () => {
   }, []);
 
 
-useEffect(() => {
-  // Check if the 'user_id' cookie is set
-  const userId = Cookies.get("user_id");
-  //alert(document.cookie);
-  //'user_id=1;username=praveer'
-  //alert(userId);
+  useEffect(() => {
+    // Check if the 'user_id' cookie is set
+    const userId = Cookies.get("user_id");
+    //alert(document.cookie);
+    //'user_id=1;username=praveer'
+    //alert(userId);
 
-  // If 'user_id' cookie exists, the user is authenticated
-  if (userId) {
-    setIsAuthenticated(true);
-    fetch(`http://localhost:55000/trips/user/${userId}`, {
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "http://localhost:3000",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
-    }
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Fetched user trips: ", data);
-      setTrips(data);
+    // If 'user_id' cookie exists, the user is authenticated
+    if (userId) {
+      setIsAuthenticated(true);
+      fetch(`http://localhost:55000/trips/user/${userId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
     })
-    .catch((error) => {console.error("Error fetching trips:", error);
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Fetched user trips: ", data);
+        setTrips(data);
+      })
+      .catch((error) => {console.error("Error fetching trips:", error);
+        setTrips([]);
+      });
+    } else {
+      setIsAuthenticated(false);
       setTrips([]);
-    });
-  } else {
-    setIsAuthenticated(false);
-    setTrips([]);
-  }
-  //const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
-  //setTrips(savedTrips);
-}, []);
+    }
+    //const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
+    //setTrips(savedTrips);
+  }, []);
   const navigate = useNavigate();
 
   const navigateToCreate = () => {
@@ -463,7 +463,7 @@ useEffect(() => {
 
   const deleteTrip = (tripId) => {
     setTrips((prevTrips) => prevTrips.filter((trip) => trip._id !== tripId));
-};
+  };
 
   return (
     <div>
@@ -607,7 +607,7 @@ useEffect(() => {
     alt="ChatBot"
     style={{ width: "80px", height: "80px"}}
   />
-</div>
+  </div>
   </div>
   <div style={{ marginTop: "40px" }}>
   <h1 style={{marginLeft: "20px"}}>Past Trips:</h1>

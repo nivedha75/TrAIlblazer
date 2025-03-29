@@ -7,6 +7,7 @@ import Bot from "../assets/Bot.avif";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import {arrayMoveImmutable} from "array-move";
+import theme from "../theme";
 
 const ItineraryDetails = () => {
   const { tripId } = useParams();
@@ -21,6 +22,10 @@ const ItineraryDetails = () => {
   const [anchorEl, setAnchorEl] = useState(null);
 
   const navigate = useNavigate();
+
+  const activityDetails = (activityId) => {
+    navigate(`/activity-details/${encodeURIComponent(activityId)}`);
+  };
 
   useEffect(() => {
     fetch(`http://localhost:55000/itinerary/${tripId}`, {
@@ -72,8 +77,8 @@ const ItineraryDetails = () => {
             setTrip(prevItinerary => ({
                 ...prevItinerary,
                 activities: {
-                    top_preferences: prevItinerary.activities.top_preferences.filter(activity => activity.activityID !== activityId),
-                    next_best_preferences: prevItinerary.activities.next_best_preferences.filter(activity => activity.activityID !== activityId)
+                    top_preferences: prevItinerary.activities.top_preferences.filter(activity => activity.details._id !== activityId),
+                    next_best_preferences: prevItinerary.activities.next_best_preferences.filter(activity => activity.details._id !== activityId)
                 }
             }));
         } else {
@@ -104,7 +109,7 @@ const ItineraryDetails = () => {
   };
   
   function handleSelectActivity(tripId, activity) {
-    fetch(`http://localhost:55000/move_itinerary_activity/${tripId}/${activity.activityID}`, {
+    fetch(`http://localhost:55000/move_itinerary_activity/${tripId}/${activity.details._id}`, {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "http://localhost:3000",
@@ -120,7 +125,7 @@ const ItineraryDetails = () => {
           activities: {
             ...prevTrip.activities,
             next_best_preferences: prevTrip.activities.next_best_preferences.filter(
-              (a) => a.activityID !== activity.activityID
+              (a) => a.details._id !== activity.details._id
             ),
             top_preferences: [...prevTrip.activities.top_preferences, activity],
           },
@@ -173,15 +178,9 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
     onMouseEnter={() => setIsHovered(true)}
     onMouseLeave={() => setIsHovered(false)}
 
+
   >
-    <div style={{ textAlign: "left", flex: 1 }}>
-      <h4 style={{ fontSize: "20px", color: "#444" }}>{activity.title}</h4>
-      <span> ({activity.context})</span>
-      <p>Rating: {activity.rating}</p>
-      <p style={{ fontSize: "18px", margin: "5px 0" }}>
-        <strong>Location:</strong> {activity?.location || ""}
-      </p>
-      <p style={{ fontSize: "18px", margin: "5px 0" }}>
+              {/* <p style={{ fontSize: "18px", margin: "5px 0" }}>
         <strong>Description:</strong> {activity.description}
       </p>
       <img src={activity.image} width="500" height="500" alt={activity.title} />
@@ -189,8 +188,21 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
         <p style={{ fontSize: "18px", margin: "5px 0", fontStyle: "italic" }}>
           <strong>Notes:</strong> {activity.notes}
         </p>
-      )}
+      )} */}
+    <div style={{ textAlign: "left", flex: 1 }}>
+      <h4 style={{ fontSize: "20px", color: "#444" }}>{activity.title}</h4>
+      <span> ({activity.context})</span>
+      <p>Rating: {activity.details.rating}</p>
+      <p style={{ fontSize: "18px", margin: "5px 0" }}>
+        <strong>Location:</strong> {activity.details?.city || ""}
+      </p>
     </div>
+    <Button variant="contained" onClick={() => activityDetails(activity.details._id)}
+        sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
+        "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem",
+        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
+        More Details
+    </Button>
     {deleteMode && (
       <DeleteIcon
         style={{ cursor: "pointer", color: "red", fontSize: "35px", marginLeft: "20px" }}
@@ -205,7 +217,7 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
     {activities.length > 0 ? (
       activities.map((activity, index) => (
         <SortableItem
-          key={activity.activityID}
+          key={activity.details._id}
           index={index}
           activity={activity}
           deleteMode={deleteMode}
@@ -383,7 +395,7 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-            <Button onClick={() => {confirmDelete(trip._id, selectedActivity.activityID);
+            <Button onClick={() => {confirmDelete(trip._id, selectedActivity.details._id);
         setOpenDialog(false);}} color="error">Delete</Button>
           </DialogActions>
         </Dialog>
@@ -425,7 +437,7 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
       </span>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
         {trip.activities.next_best_preferences.map((activity) => (
-          <MenuItem key={activity.activityID} onClick={() => handleSelectActivity(trip._id, activity)}>
+          <MenuItem key={activity.details._id} onClick={() => handleSelectActivity(trip._id, activity)}>
             {activity.title}
           </MenuItem>
         ))}

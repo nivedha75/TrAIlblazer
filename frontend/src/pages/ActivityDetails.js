@@ -1,6 +1,6 @@
 
 import {useEffect, useState} from "react";
-import {useParams, useNavigate} from "react-router-dom";
+import {useParams, useNavigate, data} from "react-router-dom";
 import Rating from '@mui/material/Rating';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -23,44 +23,44 @@ import Link from '@mui/material/Link';
 import React from "react";
 import theme from "../theme";
 import AddIcon from "@mui/icons-material/Add";
-
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import ChihulyGarden from "../assets/Activities/ChihulyGarden.jpg";
-import ChihulyGarden2 from "../assets/Activities/ChihulyGarden2.jpg";
-import ChihulyGarden3 from "../assets/Activities/ChihulyGarden3.jpg";
-import SpaceNeedle from "../assets/Activities/SpaceNeedle.jpg";
-import SpaceNeedle2 from "../assets/Activities/SpaceNeedle2.jpg";
-import SpaceNeedle3 from "../assets/Activities/SpaceNeedle3.jpg";
-import PikePlaceMarket from "../assets/Activities/PikePlaceMarket.jpg";
-import PikePlaceMarket2 from "../assets/Activities/PikePlaceMarket2.jpg";
-import PikePlaceMarket3 from "../assets/Activities/PikePlaceMarket3.jpg";
-import MuseumOfFlight from "../assets/Activities/MuseumOfFlight.jpg";
-import MuseumOfFlight2 from "../assets/Activities/MuseumOfFlight2.jpg";
-import MuseumOfFlight3 from "../assets/Activities/MuseumOfFlight3.jpg";
-import WhalePudgetSound from "../assets/Activities/WhalePudgetSound.jpg";
-import WhalePudgetSound2 from "../assets/Activities/WhalePudgetSound2.jpg";
-import WhalePudgetSound3 from "../assets/Activities/WhalePudgetSound3.jpg";
+
+// import ChihulyGarden from "../assets/Activities/ChihulyGarden.jpg";
+// import ChihulyGarden2 from "../assets/Activities/ChihulyGarden2.jpg";
+// import ChihulyGarden3 from "../assets/Activities/ChihulyGarden3.jpg";
+// import SpaceNeedle from "../assets/Activities/SpaceNeedle.jpg";
+// import SpaceNeedle2 from "../assets/Activities/SpaceNeedle2.jpg";
+// import SpaceNeedle3 from "../assets/Activities/SpaceNeedle3.jpg";
+// import PikePlaceMarket from "../assets/Activities/PikePlaceMarket.jpg";
+// import PikePlaceMarket2 from "../assets/Activities/PikePlaceMarket2.jpg";
+// import PikePlaceMarket3 from "../assets/Activities/PikePlaceMarket3.jpg";
+// import MuseumOfFlight from "../assets/Activities/MuseumOfFlight.jpg";
+// import MuseumOfFlight2 from "../assets/Activities/MuseumOfFlight2.jpg";
+// import MuseumOfFlight3 from "../assets/Activities/MuseumOfFlight3.jpg";
+// import WhalePudgetSound from "../assets/Activities/WhalePudgetSound.jpg";
+// import WhalePudgetSound2 from "../assets/Activities/WhalePudgetSound2.jpg";
+// import WhalePudgetSound3 from "../assets/Activities/WhalePudgetSound3.jpg";
 
 
 
-const imageMap = {
-  "../assets/Activities/ChihulyGarden.jpg": ChihulyGarden,
-  "../assets/Activities/ChihulyGarden2.jpg": ChihulyGarden2,
-  "../assets/Activities/ChihulyGarden3.jpg": ChihulyGarden3,
-  "../assets/Activities/SpaceNeedle.jpg": SpaceNeedle,
-  "../assets/Activities/SpaceNeedle2.jpg": SpaceNeedle2,
-  "../assets/Activities/SpaceNeedle3.jpg": SpaceNeedle3,
-  "../assets/Activities/PikePlaceMarket.jpg": PikePlaceMarket,
-  "../assets/Activities/PikePlaceMarket2.jpg": PikePlaceMarket2,
-  "../assets/Activities/PikePlaceMarket3.jpg": PikePlaceMarket3,
-  "../assets/Activities/MuseumOfFlight.jpg": MuseumOfFlight,
-  "../assets/Activities/MuseumOfFlight2.jpg": MuseumOfFlight2,
-  "../assets/Activities/MuseumOfFlight3.jpg": MuseumOfFlight3,
-  "../assets/Activities/WhalePudgetSound.jpg": WhalePudgetSound,
-  "../assets/Activities/WhalePudgetSound2.jpg": WhalePudgetSound2,
-  "../assets/Activities/WhalePudgetSound3.jpg": WhalePudgetSound3,
-};
+// const imageMap = {
+//   "../assets/Activities/ChihulyGarden.jpg": ChihulyGarden,
+//   "../assets/Activities/ChihulyGarden2.jpg": ChihulyGarden2,
+//   "../assets/Activities/ChihulyGarden3.jpg": ChihulyGarden3,
+//   "../assets/Activities/SpaceNeedle.jpg": SpaceNeedle,
+//   "../assets/Activities/SpaceNeedle2.jpg": SpaceNeedle2,
+//   "../assets/Activities/SpaceNeedle3.jpg": SpaceNeedle3,
+//   "../assets/Activities/PikePlaceMarket.jpg": PikePlaceMarket,
+//   "../assets/Activities/PikePlaceMarket2.jpg": PikePlaceMarket2,
+//   "../assets/Activities/PikePlaceMarket3.jpg": PikePlaceMarket3,
+//   "../assets/Activities/MuseumOfFlight.jpg": MuseumOfFlight,
+//   "../assets/Activities/MuseumOfFlight2.jpg": MuseumOfFlight2,
+//   "../assets/Activities/MuseumOfFlight3.jpg": MuseumOfFlight3,
+//   "../assets/Activities/WhalePudgetSound.jpg": WhalePudgetSound,
+//   "../assets/Activities/WhalePudgetSound2.jpg": WhalePudgetSound2,
+//   "../assets/Activities/WhalePudgetSound3.jpg": WhalePudgetSound3,
+// };
 
 
 const NextArrow = ({ onClick }) => (
@@ -122,6 +122,10 @@ const ActivityDetails = () => {
     const navigate = useNavigate();
     const [images, setImages] = useState([]);
 
+    const itineraryDetails = (tripId) => {
+      navigate(`/itinerary-details/${encodeURIComponent(tripId)}`);
+    };
+
   
     useEffect(() => {
       fetch(`http://localhost:55000/activities/${activityId}`, {
@@ -148,7 +152,9 @@ const ActivityDetails = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Paper elevation={3} sx={{ p: 4, borderRadius: 2, backgroundColor: "#f9f9f9" }}>
           <Typography variant="h3" align="center" gutterBottom>
+          {activity.website ? (
             <Link href={activity.website} sx={{ color: theme.palette.purple.main, "&:hover": { color: theme.palette.apple.main}}}>{activity.name}</Link>
+          ) : (activity.name)}
           </Typography>
           <Typography variant="h4" align="center" gutterBottom>
             {activity.city}
@@ -173,7 +179,7 @@ const ActivityDetails = () => {
                     margin: "0 auto",
                 }}
                 >
-                <CardMedia component="img" image={imageMap[image]} alt={image} sx={{ height: "100%", width: "100%", objectFit: "cover" }} />
+                <CardMedia component="img" src={images[index]} sx={{ height: "100%", width: "100%", objectFit: "cover" }} />
                 
                 </Card>
             </Box>
@@ -215,7 +221,7 @@ const ActivityDetails = () => {
                   </Typography>
                   {Object.entries(activity.hours).map(([day, times]) => (
                     <Typography key={day} variant="body2">
-                      <strong>{day.charAt(0).toUpperCase() + day.slice(1)}:</strong> {times.open} – {times.close}
+                      <strong>{day.charAt(0).toUpperCase() + day.slice(1)}:</strong> {times.open} - {times.close}
                     </Typography>
                   ))}
                 </CardContent>
@@ -224,18 +230,26 @@ const ActivityDetails = () => {
             <Grid2 item xs={12} md={6}>
               <Card sx={{ p: 2, backgroundColor: "#ffffff" }}>
               <CardContent>
-                <Typography variant="h5" gutterBottom>
-                  Contact Information
-                </Typography>
-                <Typography variant="body1">
-                  <strong>Address:</strong> {activity.address}
-                </Typography>
-                <Typography variant="body1">
-                  <strong>Phone:</strong> {activity.number}
-                </Typography>
-                <Typography variant="body1">
-                  <strong>Email:</strong> {activity.email}
-                </Typography>
+                {(activity.address || activity.number || activity.email) && (
+                  <Typography variant="h5" gutterBottom>
+                    Contact Information
+                  </Typography>
+                )}
+                {activity.address && (
+                  <Typography variant="body1">
+                    <strong>Address:</strong> {activity.address}
+                  </Typography>
+                )}
+                {activity.number && (
+                  <Typography variant="body1">
+                    <strong>Phone:</strong> {activity.number}
+                  </Typography>
+                )}
+                {activity.email && (
+                  <Typography variant="body1">
+                    <strong>Email:</strong> {activity.email}                  
+                  </Typography>
+                )}
               </CardContent>
               </Card>
             </Grid2>
@@ -259,8 +273,8 @@ const ActivityDetails = () => {
           <Box display="flex" justifyContent="center" sx={{ mt: 4 }}>
             <Button variant="contained" sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
                             "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}
-                             onClick={() => navigate("/activities")}>
-              Back to Activities
+                             onClick={() => itineraryDetails(activity.tripId)}>
+              Back to Itinerary
             </Button>
           </Box>
         </Paper>

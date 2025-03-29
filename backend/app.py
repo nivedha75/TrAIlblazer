@@ -213,12 +213,17 @@ def get_itinerary(trip_id):
     try:
         itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
         if itinerary:
+            # print(str(itinerary["_id"]))
+            # print(itinerary)
             itinerary["_id"] = str(itinerary["_id"])
+            for i in range(5):
+                itinerary["activities"]["top_preferences"][i]["details"]["tripId"] = str(itinerary["activities"]["top_preferences"][i]["details"]["tripId"])
+                itinerary["activities"]["top_preferences"][i]["details"]["_id"] = str(itinerary["activities"]["top_preferences"][i]["details"]["_id"])
             return jsonify(itinerary), 200
         else:
             print('itinerary not found')
             return jsonify({"error": "Itinerary not found"}), 404
-    except Exception as e:
+    except Exception as e:            
         return jsonify({"error": str(e)}), 500
     
 @app.route("/places", methods=['GET', 'OPTIONS'])
@@ -258,6 +263,7 @@ def activities():
             activities = list(activity_collection.find({}))
             for activity in activities:
                 activity["_id"] = str(activity["_id"])
+                activity["tripId"] = str(activity["tripId"])
             return jsonify(activities), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -274,6 +280,7 @@ def get_activity(activity_id):
         activity = activity_collection.find_one({"_id": ObjectId(activity_id)})
         if activity:
             activity["_id"] = str(activity["_id"])
+            activity["tripId"] = str(activity["tripId"])
             return jsonify(activity), 200
         else:
             return jsonify({"error": "Activity not found"}), 404
@@ -425,31 +432,31 @@ def login():
 #     return jsonify({'message': 'Logged out'})
 
 # Sample activities data (In a real application, this would be retrieved from an external API)
-top_preferences = [
-    {"id": 1, "title": "Scenic Hike", "rating": 4.9, "location": "Portland", "image": "https://www.rei.com/dam/parrish_091412_0679_main_lg.jpg"},
-    {"id": 2, "title": "City Tour", "rating": 4.8, "location": "Portland", "image": "https://upload.wikimedia.org/wikipedia/commons/9/90/City_Sightseeing_Gozo_Hop-On_Hop-Off_open_top_bus_FPY_004.jpg"},
-    {"id": 3, "title": "Wine Tasting", "rating": 4.7, "location": "Portland", "image": "https://www.wienscellars.com/wp-content/uploads/2024/06/960x0-1.jpg"},
-    {"id": 4, "title": "Boat Cruise", "rating": 4.7, "location": "Portland", "image": "https://media.architecturaldigest.com/photos/5654e91c587d37cb3479de02/16:9/w_2560%2Cc_limit/regent-seven-seas-lede.jpg"},
-    {"id": 5, "title": "Hot Air Balloon Ride", "rating": 4.9, "location": "Portland", "image": "https://nvaloft.com/wp-content/uploads/2015/04/balloon-family-web.jpg"},
-    {"id": 6, "title": "Mountain Biking", "rating": 4.6, "location": "Portland", "image": "https://images.squarespace-cdn.com/content/v1/6020d1ea9c6bdd6741edae39/1712933910425-AZOHP7LDYF41WFO0CRNU/types-of-mtb-trails.jpg?format=500w"},
-    {"id": 7, "title": "Scuba Diving", "rating": 4.8, "location": "Portland", "image": "https://upload.wikimedia.org/wikipedia/commons/2/29/Underwater_photograph_of_a_recreational_scuba_diver_in_Playa_del_Carmen_2006.jpg"},
-    {"id": 8, "title": "Cultural Show", "rating": 4.5, "location": "Portland", "image": "https://dnwp63qf32y8i.cloudfront.net/49c23488bc70e81faf2ef936a95e6c6589dbcac9"},
-    {"id": 9, "title": "Cooking Class", "rating": 4.6, "location": "Portland", "image": "https://spartanspeaks.com/wp-content/uploads/2023/03/9uw2wfTT5X9SVohUw7E7KJzZ41yyDkSv5c3UXqnc.jpg"},
-    {"id": 10, "title": "Wildlife Safari", "rating": 4.7, "location": "Portland", "image": "https://sdzsafaripark.org/sites/default/files/2024-07/6242_wildlife-safari-thumb_668x540.jpg"}
-]
+# top_preferences = [
+#     {"id": 1, "title": "Scenic Hike", "rating": 4.9, "location": "Portland", "image": "https://www.rei.com/dam/parrish_091412_0679_main_lg.jpg"},
+#     {"id": 2, "title": "City Tour", "rating": 4.8, "location": "Portland", "image": "https://upload.wikimedia.org/wikipedia/commons/9/90/City_Sightseeing_Gozo_Hop-On_Hop-Off_open_top_bus_FPY_004.jpg"},
+#     {"id": 3, "title": "Wine Tasting", "rating": 4.7, "location": "Portland", "image": "https://www.wienscellars.com/wp-content/uploads/2024/06/960x0-1.jpg"},
+#     {"id": 4, "title": "Boat Cruise", "rating": 4.7, "location": "Portland", "image": "https://media.architecturaldigest.com/photos/5654e91c587d37cb3479de02/16:9/w_2560%2Cc_limit/regent-seven-seas-lede.jpg"},
+#     {"id": 5, "title": "Hot Air Balloon Ride", "rating": 4.9, "location": "Portland", "image": "https://nvaloft.com/wp-content/uploads/2015/04/balloon-family-web.jpg"},
+#     {"id": 6, "title": "Mountain Biking", "rating": 4.6, "location": "Portland", "image": "https://images.squarespace-cdn.com/content/v1/6020d1ea9c6bdd6741edae39/1712933910425-AZOHP7LDYF41WFO0CRNU/types-of-mtb-trails.jpg?format=500w"},
+#     {"id": 7, "title": "Scuba Diving", "rating": 4.8, "location": "Portland", "image": "https://upload.wikimedia.org/wikipedia/commons/2/29/Underwater_photograph_of_a_recreational_scuba_diver_in_Playa_del_Carmen_2006.jpg"},
+#     {"id": 8, "title": "Cultural Show", "rating": 4.5, "location": "Portland", "image": "https://dnwp63qf32y8i.cloudfront.net/49c23488bc70e81faf2ef936a95e6c6589dbcac9"},
+#     {"id": 9, "title": "Cooking Class", "rating": 4.6, "location": "Portland", "image": "https://spartanspeaks.com/wp-content/uploads/2023/03/9uw2wfTT5X9SVohUw7E7KJzZ41yyDkSv5c3UXqnc.jpg"},
+#     {"id": 10, "title": "Wildlife Safari", "rating": 4.7, "location": "Portland", "image": "https://sdzsafaripark.org/sites/default/files/2024-07/6242_wildlife-safari-thumb_668x540.jpg"}
+# ]
 
-next_best_preferences = [
-    {"id": 11, "title": "Kayaking", "rating": 4.5, "location": "Portland", "image": "https://res.cloudinary.com/gofjords-com/images/c_scale,w_448,h_299,dpr_2/f_auto,q_auto:eco/v1683890721/Experiences/XXLofoten/Kayaking/Evening%20kayaking%202020/Evening-kayaking-Svolvaer-Lofoten-XXlofoten-1/Evening-kayaking-Svolvaer-Lofoten-XXlofoten-1.jpg?_i=AA"},
-    {"id": 12, "title": "Zip Lining", "rating": 4.4, "location": "Portland", "image": "https://www.begripped.com/media/uqxptd5d/istock-1157735556.jpg?rxy=0.5369316873186236,0.4318488529014845&width=1000&height=1000&rnd=132996903195930000"},
-    {"id": 13, "title": "Rock Climbing", "rating": 4.3, "location": "Portland", "image": "https://alpineairadventures.com/wp-content/uploads/2019/03/rock-climbing-Banff.jpg"},
-    {"id": 14, "title": "Fishing Trip", "rating": 4.2, "location": "Portland", "image": "https://assets.simpleviewinc.com/simpleview/image/upload/c_fill,f_jpg,h_358,q_65,w_639/v1/clients/southshore/Big_Lake_Equals_Big_Fish_Charter_Fishing_fc285f5f-300c-4a49-8e33-e931dd7a814c.jpg"},
-    {"id": 15, "title": "Amusement Park", "rating": 4.1, "location": "Portland", "image": "https://s3-media0.fl.yelpcdn.com/bphoto/6v_1shpFJrAUOde4ZifKUw/1000s.jpg"},
-    {"id": 16, "title": "Museum Visit", "rating": 4.0, "location": "Portland", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyYrLtBFpiv7QpzyMKf3A4YHjJxHYdm0Xu4Q&s"},
-    {"id": 17, "title": "Botanical Garden Tour", "rating": 4.2, "location": "Portland", "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/10/a3/0a/4e/beautiful-botanical-garden.jpg?w=800&h=500&s=1"},
-    {"id": 18, "title": "Horseback Riding", "rating": 4.3, "location": "Portland", "image": "https://rjclassics.com/cdn/shop/articles/English-riding-dressage-rider.jpg?v=1715610957"},
-    {"id": 19, "title": "ATV Adventure", "rating": 4.4, "location": "Portland", "image": "https://aceraft.com/wp-content/uploads/2019/05/new-river-gorge-atv-tour-ace-adventure-resort-3-scaled.jpg"},
-    {"id": 20, "title": "Escape Room", "rating": 4.1, "location": "Portland", "image": "https://m.media-amazon.com/images/I/91CVLmjQVJL.jpg"}
-]
+# next_best_preferences = [
+#     {"id": 11, "title": "Kayaking", "rating": 4.5, "location": "Portland", "image": "https://res.cloudinary.com/gofjords-com/images/c_scale,w_448,h_299,dpr_2/f_auto,q_auto:eco/v1683890721/Experiences/XXLofoten/Kayaking/Evening%20kayaking%202020/Evening-kayaking-Svolvaer-Lofoten-XXlofoten-1/Evening-kayaking-Svolvaer-Lofoten-XXlofoten-1.jpg?_i=AA"},
+#     {"id": 12, "title": "Zip Lining", "rating": 4.4, "location": "Portland", "image": "https://www.begripped.com/media/uqxptd5d/istock-1157735556.jpg?rxy=0.5369316873186236,0.4318488529014845&width=1000&height=1000&rnd=132996903195930000"},
+#     {"id": 13, "title": "Rock Climbing", "rating": 4.3, "location": "Portland", "image": "https://alpineairadventures.com/wp-content/uploads/2019/03/rock-climbing-Banff.jpg"},
+#     {"id": 14, "title": "Fishing Trip", "rating": 4.2, "location": "Portland", "image": "https://assets.simpleviewinc.com/simpleview/image/upload/c_fill,f_jpg,h_358,q_65,w_639/v1/clients/southshore/Big_Lake_Equals_Big_Fish_Charter_Fishing_fc285f5f-300c-4a49-8e33-e931dd7a814c.jpg"},
+#     {"id": 15, "title": "Amusement Park", "rating": 4.1, "location": "Portland", "image": "https://s3-media0.fl.yelpcdn.com/bphoto/6v_1shpFJrAUOde4ZifKUw/1000s.jpg"},
+#     {"id": 16, "title": "Museum Visit", "rating": 4.0, "location": "Portland", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyYrLtBFpiv7QpzyMKf3A4YHjJxHYdm0Xu4Q&s"},
+#     {"id": 17, "title": "Botanical Garden Tour", "rating": 4.2, "location": "Portland", "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/10/a3/0a/4e/beautiful-botanical-garden.jpg?w=800&h=500&s=1"},
+#     {"id": 18, "title": "Horseback Riding", "rating": 4.3, "location": "Portland", "image": "https://rjclassics.com/cdn/shop/articles/English-riding-dressage-rider.jpg?v=1715610957"},
+#     {"id": 19, "title": "ATV Adventure", "rating": 4.4, "location": "Portland", "image": "https://aceraft.com/wp-content/uploads/2019/05/new-river-gorge-atv-tour-ace-adventure-resort-3-scaled.jpg"},
+#     {"id": 20, "title": "Escape Room", "rating": 4.1, "location": "Portland", "image": "https://m.media-amazon.com/images/I/91CVLmjQVJL.jpg"}
+# ]
 
 def extract_json(text):
     start = text.find('{')
@@ -475,14 +482,39 @@ def generate_itinerary(user_id, location, trip_id):
         "Content-Type": "application/json"
     }
 
+    # \"images\": [
+                    #     \"...VALID URL to a .jpg photo of the activity...\",
+                    #     \"...another one...\",
+                    #     \"...another one...\"
+                    # ], 
+
+
     prompt = """I am building a travel itinerary recommendation app. Given a user's travel preferences and destination, generate an itinerary with 10 activities: 5 as top preferences and 5 as next best preferences. Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination. Format it as the following JSON STRICTLY, NO OTHER WORDS:
+        
         \"top_preferences\": [
             {
-            \"title\": ...title...,
-            \"rating\": ...rating out of 5...,
-            \"description\": ...very short description...,
-            \"location\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
-            \"context\": ...Because you liked (and then list something specific in the preferences JSON that explains the choice)...
+                \"title\": ...title...,
+                \"context\": ...Because you liked (and then list something specific in the preferences JSON that explains the choice)...,
+                \"details\": {
+                    \"name\": ...same as title...,
+                    \"description\": ...description...,
+                    \"number\": ...official phone number as (xxx) xxx-xxxx...,
+                    \"address\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
+                    \"email\": ...official email address...,
+                    \"hours\": {
+                        \"sunday\": ...open times on this day. example format: {\"open\":\"10:00 AM\",\"close\":\"6:00 PM\"}...,
+                        \"friday\": ...same format...,
+                        \"monday\": ...same format...,
+                        \"saturday\": ...same format...,
+                        \"thursday\": ...same format...,
+                        \"tuesday\": ...same format...,
+                        \"wednesday\": ...same format...
+                    },
+                    \"rating\": ...rating out of 5 with 1 decimal place...,
+                    \"experience\": ...description of how guests spend their time here...,
+                    \"city\": ...(city), (country)...,
+                    \"website\": ...link to the official website...
+                }
             }
             ...
             4 more
@@ -490,7 +522,7 @@ def generate_itinerary(user_id, location, trip_id):
             ],
         \"next_best_preferences\": exact same format as top_preferences\n
         The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
-    
+
     #print(prompt)
 
     data = {
@@ -515,14 +547,20 @@ def generate_itinerary(user_id, location, trip_id):
     # Parse the text as JSON
     parsed_json = json.loads(text_content)
     for activity in parsed_json["top_preferences"]:
-        activity["activityID"] = generate_activity_id()
-        activity['image'] = get_image(activity['title'])
+        activity["details"]["images"] = get_image(activity['title'])
+        activity["details"]["tripId"] = trip_id
+        # print(activity)
+        activity_collection.insert_one(activity["details"]).inserted_id
+        # print(activity["details"])
 
-    for activity in parsed_json["next_best_preferences"]:
-        activity["activityID"] = generate_activity_id()
-        activity['image'] = get_image(activity['title'])
+    # for activity in parsed_json["next_best_preferences"]:
+    #     activity["activityID"] = ObjectId(generate_activity_id())
+    #     activity["details"]["_id"] = activity["activityID"]
+    #     activity_collection.insert_one(activity["details"])
+    #     print(activity)
+    # print(parsed_json)
+
     
-    print(parsed_json)
 
     itinerary_data = {
         "_id": trip_id,  # Same _id as the trip document
@@ -555,7 +593,7 @@ def get_image(query):
 
     # Make the request
     response = requests.get(url)
-    first_image_url = ""
+    output = ["", "", ""]
 
     # Check if request was successful
     if response.status_code == 200:
@@ -563,15 +601,21 @@ def get_image(query):
         
         # Extract first image result
         if "items" in data and len(data["items"]) > 0:
-            first_image_url = data["items"][0]["link"]
-            print("First Image URL:", first_image_url)
+            output[0] = data["items"][0]["link"]
+            print("First Image URL:", output[0])
+            if "items" in data and len(data["items"]) > 1:
+                output[1] = data["items"][1]["link"]
+                print("Second Image URL:", output[1])
+                if "items" in data and len(data["items"]) > 2:
+                    output[2] = data["items"][2]["link"]
+                    print("Third Image URL:", output[2])
         else:
             print("No images found for the search query.")
     else:
         print(f'Ran over quota')
         #print(f"Error: {response.status_code}, {response.text}")
     
-    return first_image_url
+    return output
     
     #return jsonify({"response": first_image_url}), 200
 
@@ -582,8 +626,8 @@ def delete_itinerary_activity(trip_id, activityID):
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
 
-    updated_top = [act for act in itinerary["activities"]["top_preferences"] if act["activityID"] != activityID]
-    updated_next_best = [act for act in itinerary["activities"]["next_best_preferences"] if act["activityID"] != activityID]
+    updated_top = [act for act in itinerary["activities"]["top_preferences"] if act["details"]["_id"] != activityID]
+    updated_next_best = [act for act in itinerary["activities"]["next_best_preferences"] if act["details"]["_id"] != activityID]
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
         {"$set": {
@@ -613,11 +657,11 @@ def move_itinerary_activity(trip_id, activityID):
         return jsonify({"error": "Itinerary not found"}), 404
 
     next_best = itinerary.get("activities", {}).get("next_best_preferences", [])
-    activity = next((act for act in next_best if act.get("activityID") == activityID), None)
+    activity = next((act for act in next_best if act["details"]["_id"] == activityID), None)
     if not activity:
         return jsonify({"error": "Activity not found in next_best_preferences"}), 404
 
-    updated_next_best = [act for act in next_best if act.get("activityID") != activityID]
+    updated_next_best = [act for act in next_best if act["details"]["_id"] != activityID]
     
     itinerary["activities"]["top_preferences"].append(activity)
 
@@ -659,40 +703,42 @@ def update_activity_order(trip_id):
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
-@app.route("/get_activities", methods=["POST"])
-def get_activities():
-    #data = request.get_json()
-    #trip_id = data.get("trip_id")
-    
-    #if not trip_id:
-    #    return jsonify({"error": "Missing trip_id"}), 400
-    
-    activities = {
-        "top_preferences": [
-            {
-                "id": activity["id"],
-                "title": activity["title"],
-                "rating": activity["rating"],
-                "image": activity["image"],
-                "location": activity["location"]
-            }
-            for activity in top_preferences
-        ],
-        "next_best_preferences": [
-            {
-                "id": activity["id"],
-                "title": activity["title"],
-                "rating": activity["rating"],
-                "image": activity["image"],
-                "location": activity["location"]
-            }
-            for activity in next_best_preferences
-        ]
-    }
+# WARNING I think this is unnecessary but not sure
 
-    trip_id = str(uuid.uuid4())
+# @app.route("/get_activities", methods=["POST"])
+# def get_activities():
+#     #data = request.get_json()
+#     #trip_id = data.get("trip_id")
+    
+#     #if not trip_id:
+#     #    return jsonify({"error": "Missing trip_id"}), 400
+    
+#     activities = {
+#         "top_preferences": [
+#             {
+#                 "id": activity["id"],
+#                 "title": activity["title"],
+#                 "rating": activity["rating"],
+#                 "image": activity["image"],
+#                 "location": activity["location"]
+#             }
+#             for activity in top_preferences
+#         ],
+#         "next_best_preferences": [
+#             {
+#                 "id": activity["id"],
+#                 "title": activity["title"],
+#                 "rating": activity["rating"],
+#                 "image": activity["image"],
+#                 "location": activity["location"]
+#             }
+#             for activity in next_best_preferences
+#         ]
+#     }
 
-    return jsonify({"trip_id": trip_id, "activities": activities})
+#     trip_id = str(uuid.uuid4())
+
+#     return jsonify({"trip_id": trip_id, "activities": activities})
 
 if __name__ == '__main__':
     app.run(port=PORT, debug=True)
