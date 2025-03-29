@@ -681,12 +681,12 @@ def generate_restaurant_recommendations(user_id, location, trip_id):
 def get_image(query):
     # Replace these with your actual API key and Custom Search Engine (CX) ID
         # Praveer
-    #API_KEY = "AIzaSyClHKoSP7fOjxrCB2Dx94szQs5fOMjJsx4"
-    #CX = "750536663af024901"
+    API_KEY = "AIzaSyClHKoSP7fOjxrCB2Dx94szQs5fOMjJsx4"
+    CX = "750536663af024901"
     
     # Ed
-    API_KEY = "AIzaSyBEKQ5QQXSMGXSyVQ3UmvqgrvxjKq__g_0"
-    CX = "564958a336c094aae"
+    #API_KEY = "AIzaSyBEKQ5QQXSMGXSyVQ3UmvqgrvxjKq__g_0"
+    #CX = "564958a336c094aae"
 
 
     # Search query
