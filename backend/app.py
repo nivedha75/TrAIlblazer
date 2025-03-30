@@ -18,8 +18,8 @@ import json
 
 from chains.travel_chain import get_langchain_agent
 
-import logging
-logging.basicConfig(level=logging.ERROR)
+# import logging
+# logging.basicConfig(level=logging.ERROR)
 
 from dotenv import load_dotenv
 import os
@@ -28,6 +28,8 @@ import os
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+IMAGE_API_KEY = os.getenv("IMAGE_API_KEY")
+IMAGE_CX = os.getenv("IMAGE_CX")
 
 
 app = Flask(__name__)
@@ -762,21 +764,11 @@ def get_messages(user_id):
 
 #@app.route('/get_image/<query>')
 def get_image(query):
-    # Replace these with your actual API key and Custom Search Engine (CX) ID
-        # Praveer
-    API_KEY = "AIzaSyClHKoSP7fOjxrCB2Dx94szQs5fOMjJsx4"
-    CX = "750536663af024901"
-    
-    # Ed
-    #API_KEY = "AIzaSyBEKQ5QQXSMGXSyVQ3UmvqgrvxjKq__g_0"
-    #CX = "564958a336c094aae"
-
-
     # Search query
     #query = "Sushi"
 
     # Define the API URL
-    url = f"https://www.googleapis.com/customsearch/v1?q={query}&key={API_KEY}&cx={CX}&searchType=image"
+    url = f"https://www.googleapis.com/customsearch/v1?q={query}&key={IMAGE_API_KEY}&cx={IMAGE_CX}&searchType=image"
 
     # Make the request
     response = requests.get(url)
