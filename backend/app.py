@@ -18,8 +18,8 @@ import json
 
 from chains.travel_chain import get_langchain_agent
 
-import logging
-logging.basicConfig(level=logging.ERROR)
+# import logging
+# logging.basicConfig(level=logging.ERROR)
 
 from dotenv import load_dotenv
 import os
