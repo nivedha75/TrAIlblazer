@@ -66,6 +66,7 @@ place_collection = db["places"]
 activity_collection = db["activities"]
 itinerary_collection = db["itineraries"]
 restaurant_collection = db["restaurants"]
+messages_collection = db["messages"]
 
 @app.route('/')
 def hello():
@@ -675,7 +676,89 @@ def generate_restaurant_recommendations(user_id, location, trip_id):
     }
     
     restaurant_collection.insert_one(itinerary_data)
+
+def send_to_gemini(user_id, username, user_message):
+    preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
+    preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+    prompt = f"""
+    You are a helpful AI chatbot assisting users in a chat interface. Respond to the following user message from the user {username} in a friendly and informative manner.
+    Also use their preferences to come up with an answer. Here are the user's preferences: {preferences_str_format}
+
+    User: {user_message}
     
+    Guidelines:
+    - Keep the response under 100 words.
+    - Use a conversational and engaging tone.
+    - Provide useful and relevant information.
+    - Avoid excessive formalities.
+    
+    Chatbot:
+    """
+    data = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+    response_json = response.json()
+
+    chatbot_reply = response_json["candidates"][0]["content"]["parts"][0]["text"]
+    return chatbot_reply
+    
+@app.route("/send_message", methods=["POST", "OPTIONS"])
+def send_message():
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+     
+    data = request.json
+    print(f"Data: {data}")
+    user_id = data.get("user_id")
+    username = data.get("sender")
+    user_message = data.get("message")
+
+    if not user_id or not user_message:
+        return jsonify({"error": "Missing user_id or message"}), 404
+
+    # Save user message
+    user_msg_entry = {
+        "user_id": user_id,
+        "sender": username,
+        "receiver": "chatbot",
+        "message": user_message,
+        "timestamp": datetime.now()
+    }
+    messages_collection.insert_one(user_msg_entry)
+
+    # Get chatbot response
+    chatbot_response = send_to_gemini(user_id, username, user_message)
+
+    # Save chatbot response
+    chatbot_msg_entry = {
+        "user_id": user_id,
+        "sender": "chatbot",
+        "receiver": username,
+        "message": chatbot_response,
+        "timestamp": datetime.now()
+    }
+    messages_collection.insert_one(chatbot_msg_entry)
+    response = jsonify({"response": chatbot_response}) 
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response, 200
+
+@app.route("/get_messages/<user_id>", methods=["GET", "OPTIONS"])
+def get_messages(user_id):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+    messages = list(messages_collection.find({"user_id": user_id}, {"_id": 0}))
+    if not messages:
+        return jsonify({"error": "Error getting messages"}), 404
+    response = jsonify(messages)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response, 200
 
 #@app.route('/get_image/<query>')
 def get_image(query):

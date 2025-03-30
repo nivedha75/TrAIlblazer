@@ -27,6 +27,8 @@ Installed everything with
 ### `npm install array-move --legacy-peer-deps`
 ### `npm install @shadcn/ui --legacy-peer-deps`
 ### `npm install tailwindcss postcss autoprefixer --legacy-peer-deps`
+### `npm install framer-motion --legacy-peer-deps`
+### `npm install react-icons --legacy-peer-deps`
 
 
 Added these scripts to the package.json file
