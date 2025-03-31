@@ -320,7 +320,7 @@ const ItineraryDetails = () => {
   };
   
   function handleSelectActivity(tripId, activity) {
-    fetch(`http://localhost:55000/move_itinerary_activity/${tripId}/${activity.activityID}`, {
+    fetch(`http://localhost:55000/move_itinerary_activity/${tripId}/${activity.activityNumber}`, {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "http://localhost:3000",
@@ -341,7 +341,7 @@ const ItineraryDetails = () => {
               next_best_preferences: prevTrip.activities.next_best_preferences.map(
                 (day, index) =>
                   index === dayIndex
-                    ? day.filter((a) => a.activityID !== activity.activityID) 
+                    ? day.filter((a) => a.activityNumber !== activity.activityNumber) 
                     : day
               ),
               top_preferences: prevTrip.activities.top_preferences.map(
@@ -811,7 +811,7 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
         {trip.activities.next_best_preferences.map(function (day) {
             return day.map(function (activity) {
               return (
-                <MenuItem key={activity.activityID} onClick={() => handleSelectActivity(trip._id, activity)}>
+                <MenuItem key={activity.activityNumber} onClick={() => handleSelectActivity(trip._id, activity)}>
                   {activity.title}
                 </MenuItem>
               )});
