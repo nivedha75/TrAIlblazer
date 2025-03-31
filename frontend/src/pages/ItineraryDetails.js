@@ -282,35 +282,29 @@ const ItineraryDetails = () => {
   };
 
 
-  function confirmDelete(tripId, activityId) {
-    fetch(`http://localhost:55000/delete_itinerary_activity/${tripId}/${activityId}`, {
-      method: "DELETE",
-      // headers: {
-      //   "Content-Type": "application/json",
-        // "Access-Control-Allow-Origin": "http://localhost:3000",
-        // "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
-        // "Access-Control-Allow-Headers": "Content-Type"
-      // }
-    })
-    .then(response => {
-        if (response.ok) {
-            setTrip(prevItinerary => ({
-                ...prevItinerary,
-                activities: {
-                    top_preferences: prevItinerary.activities.top_preferences.map(day =>
-                      day.filter(activity => activity.details._id !== activityId)
-                    ),
-                    next_best_preferences: prevItinerary.activities.next_best_preferences.map(day =>
-                      day.filter(activity => activity.details._id !== activityId)
-                    )
-                }
-            }));
-        } else {
-            console.error("Failed to delete activity");
-        }
-    })
-    .catch(error => console.error("Error:", error));
-}
+//   function confirmDelete(tripId, activityId) {
+//     fetch(`http://localhost:55000/delete_itinerary_activity/${tripId}/${activityId}`, {
+//       method: "DELETE",
+//     })
+//     .then(response => {
+//         if (response.ok) {
+//             setTrip(prevItinerary => ({
+//                 ...prevItinerary,
+//                 activities: {
+//                     top_preferences: prevItinerary.activities.top_preferences.map(day =>
+//                       day.filter(activity => activity.details._id !== activityId)
+//                     ),
+//                     next_best_preferences: prevItinerary.activities.next_best_preferences.map(day =>
+//                       day.filter(activity => activity.details._id !== activityId)
+//                     )
+//                 }
+//             }));
+//         } else {
+//             console.error("Failed to delete activity");
+//         }
+//     })
+//     .catch(error => console.error("Error:", error));
+// }
 
 
   const handleDeleteClick = (activity) => {
@@ -739,8 +733,23 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-            <Button onClick={() => {confirmDelete(trip._id, selectedActivity.details._id);
-        setOpenDialog(false);}} color="error">Delete</Button>
+            <Button onClick={() => {
+                setTrip((prevTrip) => {
+                  const dayIndex = selectedActivity?.day;
+                  const newOrder = prevTrip.activities.top_preferences[dayIndex].filter((act) => act.details._id !== selectedActivity?.details._id);
+                  saveActivityOrder(selectedActivity?.details.tripId, newOrder, selectedActivity?.day);
+                  return {
+                  ...prevTrip,
+                  activities: {
+                    ...prevTrip.activities,
+                    top_preferences: prevTrip.activities.top_preferences.map((day, i) =>
+                      i === dayIndex ? newOrder : day
+                    ),
+                  },
+                };
+              });
+              setOpenDialog(false);
+        }} color="error">Delete</Button>
           </DialogActions>
         </Dialog>
         <div style={{display: "flex", justifyContent: "center", alignItems: "center", gap: "200px", marginTop: "20px"}}>
