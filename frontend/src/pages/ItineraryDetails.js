@@ -9,6 +9,9 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import {arrayMoveImmutable} from "array-move";
 import theme from "../theme";
+import Cookies from "js-cookie";
+import { motion } from "framer-motion";
+import { FaPaperPlane } from "react-icons/fa";
 // import { Input } from "@/components/ui/input";
 // import { Button as ChatButton} from "@/components/ui/button";
 
@@ -67,6 +70,7 @@ const ItineraryDetails = () => {
   const [restaurantsData, setRestaurantsData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [username, setUsername] = useState("");
   const dropdownRef = useRef(null);
 
   const navigate = useNavigate();
@@ -152,6 +156,126 @@ const ItineraryDetails = () => {
       .catch((error) => console.error("Error fetching trip details:", error));
   }, [tripId]);
 
+  useEffect(() => {
+    // Fetch chat messages from the backend
+    const userId = Cookies.get("user_id");
+    const storedUsername = Cookies.get("username");
+    setUsername(storedUsername);
+    if (userId && storedUsername) {
+      fetch(`http://localhost:55000/get_messages/${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type"
+        }
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch messages");
+          }
+          return response.json();
+        })
+        .then((data) => {console.log(data); setChatMessages(data)})
+        .catch((error) => console.error("Error fetching messages:", error));
+    }
+  }, []);
+
+  // const handleSendMessage = () => {
+  //   if (inputMessage.trim() === "" || !username) return;
+  //   if (inputMessage.trim() !== "") {
+  //     const userId = Cookies.get("user_id");
+  //     console.log("id: ", userId);
+  //     console.log("username: ", username);
+  //     if (userId) {
+  //     const userMessage = {
+  //       user_id: userId,
+  //       sender: username,
+  //       receiver: "chatbot",
+  //       message: inputMessage,
+  //     };
+
+  //     // Save user message and get chatbot response from backend
+  //     fetch("http://localhost:55000/send_message", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         "Access-Control-Allow-Origin": "http://localhost:3000",
+  //         "Access-Control-Allow-Methods": "POST, OPTIONS",
+  //         "Access-Control-Allow-Headers": "Content-Type"
+  //       },
+  //       body: JSON.stringify(userMessage),
+  //     })
+  //       .then((response) => response.json())
+  //       .then((data) => {
+  //         setChatMessages((prev) => [...prev, data.userMessage, data.botResponse]);
+  //       })
+  //       .catch((error) => console.error("Error sending message:", error));
+  //     }
+  //     setInputMessage("");
+  //   }
+  // };
+  const handleSendMessage = async () => {
+    if (inputMessage.trim() === "" || !username) return;
+
+    const userId = Cookies.get("user_id");
+    console.log("userId: ", userId);
+    console.log("username: ", username);
+    if (!userId) return;
+
+    // Create user message object
+    const userMessage = {
+      user_id: userId,
+      sender: username,
+      receiver: "chatbot",
+      message: inputMessage,
+    };
+
+    // Create placeholder chatbot response
+    const tempBotResponse = {
+      sender: "chatbot",
+      message: "Thinking...",
+    };
+
+    // Immediately update UI with user message and placeholder chatbot response
+    setChatMessages((prev) => [...prev, userMessage, tempBotResponse]);
+
+    setInputMessage(""); // Clear input field
+
+    try {
+      const response = await fetch("http://localhost:55000/send_message", {
+        method: "POST",
+        headers: {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "http://localhost:3000",
+                  "Access-Control-Allow-Methods": "POST, OPTIONS",
+                  "Access-Control-Allow-Headers": "Content-Type"
+                },
+        body: JSON.stringify(userMessage),
+      });
+
+      const data = await response.json();
+      console.log("Backend response:", data);
+      if (!data.response) {
+        throw new Error("Chatbot response is null");
+      }
+  
+
+      // Update the "Thinking..." message with actual chatbot response
+      //console.log("Msg: ", data.botResponse?.message);
+      setChatMessages((prev) =>
+      prev.map((msg, index) =>
+        index === prev.length - 1 // Only replace the latest chatbot message
+          ? { sender: "chatbot", message: data.response}
+          : msg
+      )
+    );
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
+
+
   function confirmDelete(tripId, activityId) {
     fetch(`http://localhost:55000/delete_itinerary_activity/${tripId}/${activityId}`, {
       method: "DELETE",
@@ -182,12 +306,6 @@ const ItineraryDetails = () => {
     .catch(error => console.error("Error:", error));
 }
 
-  const handleSendMessage = () => {
-    if (inputMessage.trim() !== "") {
-      setChatMessages([...chatMessages, { text: inputMessage, sender: "user" }]);
-      setInputMessage("");
-    }
-  };
 
   const handleDeleteClick = (activity) => {
     setSelectedActivity(activity);
@@ -433,9 +551,6 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           <img src={Bot} alt="Bot" style={{ width: "40px", height: "40px", marginLeft: "10px" }} />
           </h2>
         </div>
-        {/* <div className="tailwind">
-        <ChatComponent sendMessage={sendMessage} messages={chatMessages} />
-        </div> */}
         <div
           style={{
             flexGrow: 1,
@@ -448,9 +563,28 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           >
           {chatMessages.length > 0 ? (
             chatMessages.map((msg, index) => (
-              <p key={index} style={{ textAlign: "left", margin: "5px 0" }}>
-                <strong>{msg.sender}:</strong> {msg.text}
-              </p>
+              <div
+            key={index}
+            style={{
+              display: "flex",
+              justifyContent: msg?.sender === "chatbot" ? "flex-start" : "flex-end",
+              marginBottom: "8px"
+            }}
+          >
+            <p
+              style={{
+                padding: "8px 12px",
+                borderRadius: "10px",
+                maxWidth: "70%",
+                wordWrap: "break-word",
+                textAlign: msg?.sender === "chatbot" ? "left" : "right",
+                backgroundColor: msg?.sender === "chatbot" ? "#e0e0e0" : "#007bff",
+                color: msg?.sender === "chatbot" ? "#000": "#fff",
+              }}
+            >
+              <strong>{msg?.sender === "chatbot" ? "chatbot" : "Me"}:</strong> {msg?.message}
+            </p>
+          </div>
             ))
           ) : (
             <p style={{ textAlign: "center", color: "#888" }}>No messages yet</p>
@@ -482,7 +616,7 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
               cursor: "pointer",
             }}
           >
-            Send
+            Send  <FaPaperPlane />
           </button>
         </div>
       </div>
