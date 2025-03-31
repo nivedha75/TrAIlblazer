@@ -872,7 +872,7 @@ def send_to_gemini(user_id, username, user_message, city_data):
     Also use their preferences to come up with an answer. Here are the user's preferences: {preferences_str_format}
     Here is the real-time city data: {city_data}
 
-    Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
+    Use the provided structured `city_data` above — it contains real time data such as current weather, weather forecasts, and/or hotel listings for the city.
     If the user asks for activities to do on some day, make smart activity choices based on the weather
     (e.g., recommend indoor activities on rainy days, outdoor ones on sunny days).
     If the user asks for hotels, use the top hotels information provided in the `city_data` above.
@@ -880,7 +880,7 @@ def send_to_gemini(user_id, username, user_message, city_data):
     User: {user_message}
     
     Guidelines:
-    - Keep the response under 150 words.
+    - Keep the response under 250 words.
     - Use a conversational and engaging tone.
     - Provide useful and relevant information.
     - Avoid excessive formalities.
@@ -917,7 +917,19 @@ def send_to_gemini(user_id, username, user_message, city_data):
 
     Suggest a minimum of 3 hotels. If there are more, you can suggest up to 5 hotels.
     
-    
+
+
+    When listing different types of data (ie. weather, hotels, restaurants), always group them with a heading or introductory sentence *before* each group of bullet points.
+    For example:
+
+    * Start with a sentence introducing the weather for the trip.
+    * Then use bullets for each day’s forecast.
+    * Then include a short sentence like: “Here are a few hotel options that might suit your preferences:”
+    * Then use bullets for hotel information.
+
+    This improves readability and avoids combining unrelated bullet points in the same list without a sentence separating them.
+
+    If you cannot find real time hotel data in the specific data I gave that matches conditions the user provided, you can confidently provide generic hotel data alternatives you can find on your own that matches the condition instead
     Chatbot:
     """
     data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -939,10 +951,36 @@ def send_to_gemini(user_id, username, user_message, city_data):
     return chatbot_response
 
 
+# def clean_response_markdown(text):
+#     import re
+
+#     # Normalize bullets
+#     text = re.sub(r"\n\s*\*\s", r"\n* ", text)
+
+#     # Collapse extra newlines
+#     text = re.sub(r"\n{3,}", "\n\n", text)
+
+#     # Insert newline between last bullet and next paragraph
+#     text = re.sub(r"(\*\*.*?\*\:.*?\n)(?=[^\*\n])", r"\1\n", text)
+
+#     return text.strip()
+
+
 def clean_response_markdown(text):
-    # Normalize bullets and remove double line breaks
-    text = re.sub(r"\n\s*\*\s", r"\n* ", text)  # Normalize asterisks for bullet points
-    text = re.sub(r"\n{2,}", r"\n", text)  # Remove multiple consecutive newlines
+    import re
+
+    # Normalize bullets
+    text = re.sub(r"\n\s*\*\s", r"\n* ", text)
+
+    # Add a newline between two sentences if they're separated by only one and both are NOT bullets
+    text = re.sub(r"([^\n*])\n([^\n*])", r"\1\n\n\2", text)
+
+    # Collapse 3+ newlines to just 2
+    text = re.sub(r"\n{3,}", "\n\n", text)
+
+    # Add a newline after a bullet block before non-bullet text if needed
+    text = re.sub(r"(\*\*.*?\*\:.*?\n)(?=[^\*\n])", r"\1\n", text)
+
     return text.strip()
 
 
@@ -973,18 +1011,25 @@ def send_message():
     messages_collection.insert_one(user_msg_entry)
 
     # Get chatbot response
-    user_query = (
-        """For the city, """
-        + data.get("location")
-        + """ describe the following information:\n
+    user_query = f"""
+        You are helping a traveler with a trip to {data.get("location")} from {data.get("startDate")} to {data.get("endDate")}.
+        Use tools to answer the question as needed — for example:
+        
+        - Use the fetch_weather_for_trip_tool if they ask about weather forecasts for every day on that trip.
         Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions
-        for every day from the start date """
-        + data.get("startDate")
-        + """ to the end date """
-        + data.get("endDate")
-        + """.
-        Also, specifically provide the name, rating, and price of hotels in the city."""
-    )
+        for every day from the start date till the end date.
+        
+        - Use the fetch_hotels_tool if they ask about the hotels in a city.
+        Specifically describe the name, rating, and price of hotels in the city.
+
+        - Use the fetch_current_weather_tool if they ask about the current weather.
+        Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions for the current weather.
+
+        - You can use mulitple tools if the user asks about multiple types of data.
+        For example, if they ask about both the weather and hotels, you can use both tools.
+
+        User query: "{data.get("message")}"
+        """
     agent = get_langchain_agent(OPENAI_API_KEY)
     try:
         city_data = agent.run(user_query)
