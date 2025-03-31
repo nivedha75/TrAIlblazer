@@ -965,26 +965,22 @@ def get_image(query):
 
     # Make the request
     response = requests.get(url)
-    output = ["", "", ""]
+    output = []
 
     # Check if request was successful
     if response.status_code == 200:
         data = response.json()
 
-        # Extract first image result
         if "items" in data and len(data["items"]) > 0:
-            output[0] = data["items"][0]["link"]
-            print("First Image URL:", output[0])
-            if "items" in data and len(data["items"]) > 1:
-                output[1] = data["items"][1]["link"]
-                print("Second Image URL:", output[1])
-                if "items" in data and len(data["items"]) > 2:
-                    output[2] = data["items"][2]["link"]
-                    print("Third Image URL:", output[2])
+            output = [item["link"] for item in data["items"][:6]]   # Limit to 6 images
+            
+            for i, link in enumerate(output):
+                print(f"Image {i+1} URL:", link)
         else:
             print("No images found for the search query.")
     else:
         print(f"Ran over quota")
+        print(url)
         # print(f"Error: {response.status_code}, {response.text}")
 
     return output
