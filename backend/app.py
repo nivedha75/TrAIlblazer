@@ -302,11 +302,13 @@ def get_itinerary(trip_id):
                 for act in day:
                     act["details"]["tripId"] = str(act["details"]["tripId"])
                     act["details"]["_id"] = str(act["details"]["_id"])
+                    act["activityID"] = str(act["activityID"])
 
             for day in itinerary["activities"]["next_best_preferences"]:
                 for act in day:
                     act["details"]["tripId"] = str(act["details"]["tripId"])
                     act["details"]["_id"] = str(act["details"]["_id"])
+                    act["activityID"] = str(act["activityID"])
             return jsonify(itinerary), 200
         else:
             print("itinerary not found")
@@ -1178,11 +1180,6 @@ def update_activity_order(trip_id):
     new_order = data.get("activities", [])
     index = data.get("index")
 
-    # groupedActivities = trip.activities.top_preferences.reduce((acc, activity) => {
-    # if (!acc[activity.day]) acc[activity.day] = [];
-    # acc[activity.day].push(activity);
-    # return acc;
-
     if not isinstance(new_order, list) or not isinstance(index, int):
         return jsonify({"error": "Invalid data format"}), 400
 
@@ -1200,8 +1197,6 @@ def update_activity_order(trip_id):
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
         {"$set": {"activities.top_preferences": top_preferences}},
-        {"_id": ObjectId(trip_id)},
-        {"$set": {"activities.top_preferences": new_order}},
     )
 
     response = jsonify({"message": "Activity order updated successfully"})
