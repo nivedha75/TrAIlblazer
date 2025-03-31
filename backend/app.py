@@ -621,6 +621,11 @@ def extract_json(text):
 
 activity_id_counter = count(1)
 
+#DO NOT DELETE. THIS IS NEEDED FOR ADDING ACTIVITY TO ITINERARY
+def generate_activity_number():
+    return next(activity_id_counter)
+
+
 
 # @app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
 # add this parameter later: city_data
@@ -725,6 +730,8 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
     parsed_json = json.loads(text_content)
     for day in parsed_json["top_preferences"]:
         for activity in day:
+            #KEEP THIS
+            activity["activityNumber"] = generate_activity_number()
             activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
             # print(activity)
@@ -733,6 +740,8 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     for day in parsed_json["next_best_preferences"]:
         for activity in day:
+            #KEEP THIS
+            activity["activityNumber"] = generate_activity_number()
             activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
             activity["activityID"] = activity_collection.insert_one(activity["details"]).inserted_id
@@ -831,6 +840,7 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
         #print(parsed_json)
 
         for restaurant in parsed_json["restaurants"]:
+            restaurant["activityNumber"] = generate_activity_number()
             restaurant["details"]["images"] = get_image(restaurant["title"])
             restaurant["details"]["tripId"] = trip_id
             restaurant["activityID"] = activity_collection.insert_one(restaurant["details"]).inserted_id
@@ -1031,7 +1041,7 @@ def convert_objectid(itinerary):
     else:
         return itinerary
 
-
+#USED TO ADD ACTIVITY. DO NOT CHANGE
 @app.route(
     "/move_itinerary_activity/<trip_id>/<int:activityID>",
     methods=["GET", "POST", "OPTIONS"],
@@ -1050,25 +1060,23 @@ def move_itinerary_activity(trip_id, activityID):
     found_activity = None
     updated_next_best = []
 
-    # Iterate through nested arrays to find and remove the activity
     for day_activities in next_best_preferences:
         filtered_activities = []
         for act in day_activities:
-            if act["activityID"] == activityID:
-                found_activity = act  # Capture the activity to move
+            if act["activityNumber"] == activityID:
+                found_activity = act  
             else:
                 filtered_activities.append(act)
         
         if filtered_activities:
-            updated_next_best.append(filtered_activities)  # Preserve non-empty lists
+            updated_next_best.append(filtered_activities)  
 
     if not found_activity:
         return jsonify({"error": "Activity not found in next_best_preferences"}), 404
 
-    # Append to top_preferences (ensuring correct day structure)
     day_index = found_activity["day"]
     while len(top_preferences) <= day_index:
-        top_preferences.append([])  # Ensure the day index exists
+        top_preferences.append([]) 
 
     top_preferences[day_index].append(found_activity)
 
