@@ -663,7 +663,10 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     Given a user's travel preferences, destination, and the real-time city data provided, generate an itinerary with, for each day of the trip, 3 activities: 2 as top preferences and 1 as a next best preference.
     Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination.
-    Format it as the following JSON STRICTLY, NO OTHER WORDS:
+
+    Note: Do not use the ISO format for the date. Instead, use the format "Month Day, Year" (e.g., "April 2, 2025").
+
+    Format the itinerary as the following JSON STRICTLY, NO OTHER WORDS:
         \"top_preferences\": [
             [
                 {
