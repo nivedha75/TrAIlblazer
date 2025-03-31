@@ -1,5 +1,2 @@
 #venv/
 .env
-chains/__pycache__/travel_chain.cpython-312.pyc
-utils/__pycache__/api_clients.cpython-312.pyc
-utils/__pycache__/cache.cpython-312.pyc
