@@ -137,7 +137,7 @@ const ItineraryDetails = () => {
       })
       .then((data) => {console.log("Restaurants: ", data); setRestaurantsData(data);})
       .catch((error) => {
-        console.error("Error fetching itinerary details:", error);
+        console.error("Error fetching restaurant details:", error);
         setError(error.message); // Set the error message
       });
   }, [tripId]);

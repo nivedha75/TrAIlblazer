@@ -233,10 +233,6 @@ def trips():
             generate_restaurant_recommendations(
                 data["userId"], data["location"], trip_id, city_data
             )
-            generate_itinerary(data["userId"], data["location"], trip_id, city_data)
-            generate_restaurant_recommendations(
-                data["userId"], data["location"], trip_id
-            )
             return jsonify({"message": "Trip data saved successfully"}), 201
 
         except Exception as e:
@@ -834,24 +830,6 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
 
     data = {"contents": [{"parts": [{"text": prompt}]}]}
 
-    headers = {"Content-Type": "application/json"}
-
-    prompt = f"""I am building a travel itinerary recommendation app. Given a user's preferences, generate 20 restaurant recommendations for the location {location}. Format it as the following JSON STRICTLY:
-    "restaurants": [
-        {{
-            "title": ...title...,
-            "rating": ...rating out of 5...,
-            "description": ...very short description...,
-            "location": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
-            "context": ...Because you liked (list something specific from preferences JSON that explains the choice)...
-        }},
-        ... 19 more ...
-    ]
-    Here are the user preferences: {preferences_str_format}
-    """
-
-    data = {"contents": [{"parts": [{"text": prompt}]}]}
-
     response = requests.post(url, headers=headers, json=data)
     response_json = response.json()
     # print(response_json)
@@ -862,9 +840,6 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
 
     # print(text_content)
 
-    text_content = extract_json(
-        response_json["candidates"][0]["content"]["parts"][0]["text"]
-    )
     parsed_json = json.loads(text_content)
 
     # print(parsed_json)
@@ -878,15 +853,8 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
             restaurant["details"]
         ).inserted_id
 
-        restaurant["activityID"] = generate_activity_id()
-        restaurant["image"] = get_image(restaurant["title"])
-
     print(parsed_json)
-
     itinerary_data = {"_id": trip_id, "restaurants": parsed_json["restaurants"]}
-
-    itinerary_data = {"_id": trip_id, "restaurants": parsed_json["restaurants"]}
-
     restaurant_collection.insert_one(itinerary_data)
 
 
