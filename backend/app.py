@@ -228,13 +228,17 @@ def trips():
             print("\n\nCity data for generating itinerary:", city_data)
             # Step 2: Use Gemini Flash to generate a personalized itinerary
             try:
-                generate_itinerary(data["userId"], data["location"], data["days"], trip_id, city_data)
+                generate_itinerary(
+                    data["userId"], data["location"], data["days"], trip_id, city_data
+                )
             except Exception as e:
                 print(f"Error in generate_itinerary: {e}")
 
             print("Calling generate_restaurant_recommendations...")  # Debugging
-            generate_restaurant_recommendations(data["userId"], data["location"], trip_id, city_data)
-            
+            generate_restaurant_recommendations(
+                data["userId"], data["location"], trip_id, city_data
+            )
+
             return jsonify({"message": "Trip data saved successfully"}), 201
 
         except Exception as e:
@@ -763,10 +767,14 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 #WORKS: DO NOT MODIFY
 def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     try:
-        print('Generating restaurant recommendations')
-        preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
-        preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
-    
+        print("Generating restaurant recommendations")
+        preferences = collection.find_one(
+            {"user_id": user_id}, {"_id": 0, "user_id": 0}
+        )
+        preferences_str_format = json.dumps(
+            preferences, indent=4, sort_keys=True, default=str
+        )
+
         url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
     
         headers = {
@@ -819,10 +827,8 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     
         # print(prompt)
 
-        data = {
-            "contents": [{"parts": [{"text": prompt}]}]
-        }
-    
+        data = {"contents": [{"parts": [{"text": prompt}]}]}
+
         response = requests.post(url, headers=headers, json=data)
         response_json = response.json()
         # print("Raw AI response:", response_json)
@@ -837,7 +843,7 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
         #parsed_json = text_content
         # print("Parsed json: ", parsed_json)
 
-        #print(parsed_json)
+        # print(parsed_json)
 
         for restaurant in parsed_json["restaurants"]:
             #KEEP THIS
@@ -847,12 +853,9 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
             restaurant["activityID"] = activity_collection.insert_one(restaurant["details"]).inserted_id
     
         print(parsed_json)
-    
-        itinerary_data = {
-            "_id": trip_id,
-            "restaurants": parsed_json["restaurants"]
-        }
-    
+
+        itinerary_data = {"_id": trip_id, "restaurants": parsed_json["restaurants"]}
+
         restaurant_collection.insert_one(itinerary_data)
     except Exception as e:
         print(f"Error in generate_restaurant_recommendations: {e}")
@@ -881,19 +884,58 @@ def send_to_gemini(user_id, username, user_message, city_data):
     - Use a conversational and engaging tone.
     - Provide useful and relevant information.
     - Avoid excessive formalities.
+
+    Overall, do not just output a bunch of text, but make it readable.
+    If there are multiple items listed, please format them as a multiple paragraphs.
+    Format with a single Markdown bullet per paragraph, with no extra blank lines in between.
+
+    Use this format for any response with a list of items:
+    * **Item 1:** Explanation of this item goes here.
+    * **Item 2:** Explanation of this item goes here.
+    * **Item 3:** Explanation of this item goes here.
+
+    Example — Weather Format:
+
+    * **April 1st:** [Your forecast here]
+    * **April 2nd:** [Your forecast here]
+    * **April 3rd:** [Your forecast here]
+
+    Example — Hotel Format:
+
+    * **Ballard Inn:** [Hotel description here]
+    * **Embassy Suites by Hilton:** [Hotel description here]
+    * **Mediterranean Inn:** [Hotel description here]
+
+    Then replace [Your forecast here] with sub bullet points for weather condition, temperature, feels like temperature, humidity, wind speed, etc.
+    Replace [Hotel description here] with sub bullet points for hotel name, rating, price, etc.
+    
     
     Chatbot:
     """
     data = {"contents": [{"parts": [{"text": prompt}]}]}
-    print(f"Gemini chatbot response: {data}\n\n")
 
     headers = {"Content-Type": "application/json"}
 
     response = requests.post(url, headers=headers, json=data)
-    response_json = response.json()
 
-    chatbot_reply = response_json["candidates"][0]["content"]["parts"][0]["text"]
-    return chatbot_reply
+    # Extract raw response text
+    raw_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+
+    # print(f"Gemini chatbot response: {chatbot_response}\n\n")
+    print(f"Gemini chatbot response before cleaning: {raw_text}\n\n")
+    # Clean markdown formatting
+    chatbot_response = clean_response_markdown(raw_text)
+    print(f"Gemini chatbot response after cleaning: {chatbot_response}\n\n")
+
+    # Return the cleaned chatbot response
+    return chatbot_response
+
+
+def clean_response_markdown(text):
+    # Normalize bullets and remove double line breaks
+    text = re.sub(r"\n\s*\*\s", r"\n* ", text)  # Normalize asterisks for bullet points
+    text = re.sub(r"\n{2,}", r"\n", text)  # Remove multiple consecutive newlines
+    return text.strip()
 
 
 @app.route("/send_message", methods=["POST", "OPTIONS"])
@@ -945,6 +987,7 @@ def send_message():
     print("\n\nCity data for chatbot:", city_data)
 
     chatbot_response = send_to_gemini(user_id, username, user_message, city_data)
+    # print(f"Gemini chatbot response: {chatbot_response}\n\n")
 
     # Save chatbot response
     chatbot_msg_entry = {
