@@ -18,12 +18,12 @@ import json
 
 from chains.travel_chain import get_langchain_agent
 
-# import logging
-# logging.basicConfig(level=logging.ERROR)
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 from dotenv import load_dotenv
 import os
-
 
 
 load_dotenv()
@@ -34,7 +34,7 @@ IMAGE_CX = os.getenv("IMAGE_CX")
 
 app = Flask(__name__)
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'main.db')
+DB_PATH = os.path.join(os.path.dirname(__file__), "main.db")
 print(">>> Using database at:", DB_PATH)
 
 # app.config['SESSION_COOKIE_NAME'] = 'session'
@@ -44,12 +44,16 @@ print(">>> Using database at:", DB_PATH)
 # app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 # app.config['SECRET_KEY'] = 'your_secret_key'  # This is critical for session encryption
 
-#CORS(app, supports_credentials=True)
+# CORS(app, supports_credentials=True)
 
-#CORS(app)
-#CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
-#CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
+# CORS(app)
+# CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(
+    app,
+    resources={r"/*": {"origins": "http://localhost:3000"}},
+    supports_credentials=True,
+)
+# CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
 
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
@@ -70,34 +74,40 @@ itinerary_collection = db["itineraries"]
 restaurant_collection = db["restaurants"]
 messages_collection = db["messages"]
 
-@app.route('/')
+
+@app.route("/")
 def hello():
     return "Hello from Flask"
 
-@app.route('/api/trailblazer')
-def api_trailblazer():
-    return jsonify({'message': 'TrAIlblazer'})
 
-@app.route('/load_progress/<user_id>', methods=['GET', 'OPTIONS'])
+@app.route("/api/trailblazer")
+def api_trailblazer():
+    return jsonify({"message": "TrAIlblazer"})
+
+
+@app.route("/load_progress/<user_id>", methods=["GET", "OPTIONS"])
 def load_progress(user_id):
     print("Received user_id:", user_id)
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    
-    # Find the document but exclude `_id` and `user_id` from the response
-    #result = collection.find_one({"user_id": ObjectId(user_id)}, {"_id": 0, "user_id": 0})
-    result = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
 
+    # Find the document but exclude `_id` and `user_id` from the response
+    # result = collection.find_one({"user_id": ObjectId(user_id)}, {"_id": 0, "user_id": 0})
+    result = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
 
     if result:
         print("Survey data found:", result)  # Debugging log
-        return jsonify({"exists": True, "surveyData": result}), 200  # Return only survey data
+        return (
+            jsonify({"exists": True, "surveyData": result}),
+            200,
+        )  # Return only survey data
     return jsonify({"exists": False, "message": "No saved progress"}), 200
 
-@app.route('/save_progress', methods=['POST'])
+
+@app.route("/save_progress", methods=["POST"])
 def save_progress():
     data = request.json  # Get JSON from frontend
-    #user_id = ObjectId(data["userId"])  # Convert userId to ObjectId
+    # user_id = ObjectId(data["userId"])  # Convert userId to ObjectId
     user_id = data["userId"]
     # Extract survey responses
     survey_data = data["surveyData"]  # Only survey responses
@@ -110,14 +120,13 @@ def save_progress():
     collection.update_one(
         {"user_id": user_id},  # Match by user ID
         {"$set": survey_data},  # Update survey fields
-        upsert=True  # Insert new document if none exists
+        upsert=True,  # Insert new document if none exists
     )
 
     return jsonify({"message": "Survey progress saved"}), 200
 
 
-
-@app.route('/submit_preferences', methods=['POST', 'OPTIONS'])
+@app.route("/submit_preferences", methods=["POST", "OPTIONS"])
 def submit_preferences():
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
@@ -129,27 +138,30 @@ def submit_preferences():
         print("Received submissionDateTime:", data["submissionDateTime"])
         print("Received user_id:", data["user_id"])
         if "submissionDateTime" in data:
-            data["submissionDateTime"] = datetime.fromisoformat(data["submissionDateTime"])
+            data["submissionDateTime"] = datetime.fromisoformat(
+                data["submissionDateTime"]
+            )
             print("Converted submissionDateTime:", data["submissionDateTime"])
-        
+
         data["lastUpdated"] = datetime.now(timezone.utc)
 
         print("Received and Modified Data:", data)
-        
+
         # Update existing document or insert a new one
         collection.update_one(
             {"user_id": data["user_id"]},  # Match user_id
             {"$set": data},  # Update document
-            upsert=True  # Insert if not exists
+            upsert=True,  # Insert if not exists
         )
         return jsonify({"message": "Survey data saved successfully"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-@app.route("/trips", methods=['GET', 'POST', 'OPTIONS'])
+
+
+@app.route("/trips", methods=["GET", "POST", "OPTIONS"])
 def trips():
-    if request.method == 'GET':
+    if request.method == "GET":
         try:
             trips = list(trip_collection.find({}))
             for trip in trips:
@@ -158,23 +170,25 @@ def trips():
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-    elif request.method == 'POST':
+    elif request.method == "POST":
         try:
             data = request.json
             if not data:
                 return jsonify({"error": "No data provided"}), 400
-            print("Received timeRanges:", data.get("timeRanges")) 
+            print("Received timeRanges:", data.get("timeRanges"))
             print(data)
-            trip_result = trip_collection.insert_one({
-                "userId": data["userId"], 
-                "location": data["location"],
-                "days": data["days"],
-                "startDate": data["startDate"],
-                "endDate": data["endDate"],
-                "timeRanges": data["timeRanges"],
-                "people": data["people"],
-                "images": data["images"]
-            })
+            trip_result = trip_collection.insert_one(
+                {
+                    "userId": data["userId"],
+                    "location": data["location"],
+                    "days": data["days"],
+                    "startDate": data["startDate"],
+                    "endDate": data["endDate"],
+                    "timeRanges": data["timeRanges"],
+                    "people": data["people"],
+                    "images": data["images"],
+                }
+            )
             trip_id = trip_result.inserted_id
             # print('generating itinerary?')
             # print("Data received:", data)
@@ -184,21 +198,34 @@ def trips():
             print("Start date:", data.get("startDate", "No start date in data"))
             print("End date:", data.get("endDate", "No end date in data"))
             # Step 1: Use LangChain to fetch only relevant real-time data
-            #user_query = "What is the weather like, and what are some top tourist attractions and hotels in the city " + data["location"] + "?"
-            user_query_2 = """What is the weather like and what are hotels in the city """ + data["location"] + """?
+            # user_query = "What is the weather like, and what are some top tourist attractions and hotels in the city " + data["location"] + "?"
+            user_query_2 = (
+                """What is the weather like and what are hotels in the city """
+                + data["location"]
+                + """?
             Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions.
             Also, specifically provide the name, rating, and price of hotels in the city."""
-            user_query = """For the city, """ + data["location"] + """ describe the following information:\n
+            )
+            user_query = (
+                """For the city, """
+                + data["location"]
+                + """ describe the following information:\n
             Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions
-            for every day from the start date """ + data["startDate"] + """ to the end date """ + data["endDate"] + """.
+            for every day from the start date """
+                + data["startDate"]
+                + """ to the end date """
+                + data["endDate"]
+                + """.
             Also, specifically provide the name, rating, and price of hotels in the city."""
+            )
             agent = get_langchain_agent(OPENAI_API_KEY)
             try:
                 city_data = agent.run(user_query)
             except Exception as e:
                 print("Error while running agent:", str(e))
                 city_data = "Error: Too much input data or agent failed."
-            print("\n\nCity data:", city_data)
+
+            print("\n\nCity data for generating itinerary:", city_data)
             # Step 2: Use Gemini Flash to generate a personalized itinerary
             try:
                 generate_itinerary(data["userId"], data["location"], data["days"], trip_id, city_data)
@@ -211,11 +238,12 @@ def trips():
             return jsonify({"message": "Trip data saved successfully"}), 201
 
         except Exception as e:
-            return jsonify({"error": str(e)}), 500 
-    elif request.method == 'OPTIONS':
-        return '', 200
+            return jsonify({"error": str(e)}), 500
+    elif request.method == "OPTIONS":
+        return "", 200
 
-@app.route('/trips/<trip_id>', methods=['GET', 'DELETE', 'OPTIONS'])
+
+@app.route("/trips/<trip_id>", methods=["GET", "DELETE", "OPTIONS"])
 def get_trip(trip_id):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
@@ -237,7 +265,10 @@ def get_trip(trip_id):
                 result = itinerary_collection.delete_one({"_id": ObjectId(trip_id)})
                 print(f"Itinerary: {trip_id}")
                 if result.deleted_count > 0:
-                    return jsonify({"message": "Trip and Itinerary deleted successfully"}), 200
+                    return (
+                        jsonify({"message": "Trip and Itinerary deleted successfully"}),
+                        200,
+                    )
                 else:
                     return jsonify({"error": "Itinerary not found"}), 404
             else:
@@ -245,10 +276,11 @@ def get_trip(trip_id):
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-@app.route('/trips/user/<user_id>', methods=['GET'])
+
+@app.route("/trips/user/<user_id>", methods=["GET"])
 def get_trips_by_user(user_id):
     try:
-        trips = trip_collection.find({"userId": user_id}) 
+        trips = trip_collection.find({"userId": user_id})
         trip_list = []
         for trip in trips:
             trip["_id"] = str(trip["_id"])
@@ -257,7 +289,8 @@ def get_trips_by_user(user_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/itinerary/<trip_id>', methods=['GET'])
+
+@app.route("/itinerary/<trip_id>", methods=["GET"])
 def get_itinerary(trip_id):
     try:
         itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
@@ -271,12 +304,13 @@ def get_itinerary(trip_id):
                     act["details"]["_id"] = str(act["details"]["_id"])
             return jsonify(itinerary), 200
         else:
-            print('itinerary not found')
+            print("itinerary not found")
             return jsonify({"error": "Itinerary not found"}), 404
-    except Exception as e:            
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/restaurants/<trip_id>', methods=['GET'])
+
+@app.route("/restaurants/<trip_id>", methods=["GET"])
 def get_restaurants(trip_id):
     try:
         restaurants = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
@@ -288,14 +322,15 @@ def get_restaurants(trip_id):
                 # r["details"]["tripId"] = str(r["details"]["tripId"])
             return jsonify(restaurants), 200
         else:
-            print('restaurants not found')
+            print("restaurants not found")
             return jsonify({"error": "Restaurants not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-@app.route("/places", methods=['GET', 'OPTIONS'])
+
+
+@app.route("/places", methods=["GET", "OPTIONS"])
 def places():
-    if request.method == 'GET':
+    if request.method == "GET":
         try:
             places = list(place_collection.find({}))
             for place in places:
@@ -304,10 +339,11 @@ def places():
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-    elif request.method == 'OPTIONS':
-        return '', 200
+    elif request.method == "OPTIONS":
+        return "", 200
 
-@app.route('/places/<place_id>', methods=['GET', 'OPTIONS'])
+
+@app.route("/places/<place_id>", methods=["GET", "OPTIONS"])
 def get_place(place_id):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
@@ -321,11 +357,11 @@ def get_place(place_id):
             return jsonify({"error": "Place not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
 
-@app.route("/activities", methods=['GET', 'OPTIONS'])
+
+@app.route("/activities", methods=["GET", "OPTIONS"])
 def activities():
-    if request.method == 'GET':
+    if request.method == "GET":
         try:
             activities = list(activity_collection.find({}))
             for activity in activities:
@@ -335,10 +371,11 @@ def activities():
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-    elif request.method == 'OPTIONS':
-        return '', 200
+    elif request.method == "OPTIONS":
+        return "", 200
 
-@app.route('/activities/<activity_id>', methods=['GET', 'OPTIONS'])
+
+@app.route("/activities/<activity_id>", methods=["GET", "OPTIONS"])
 def get_activity(activity_id):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
@@ -353,7 +390,7 @@ def get_activity(activity_id):
             return jsonify({"error": "Activity not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 
 # @app.route('/is_authenticated', methods=['GET'])
 # def is_authenticated():
@@ -365,46 +402,63 @@ def get_activity(activity_id):
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+
 def is_valid_email(email):
     return re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email)
 
+
 def is_strong_password(password):
-    return len(password) >= 8 and any(c.isdigit() for c in password) and any(c.isupper() for c in password)
+    return (
+        len(password) >= 8
+        and any(c.isdigit() for c in password)
+        and any(c.isupper() for c in password)
+    )
+
 
 def send_verification_email(email, token):
     msg = EmailMessage()
-    msg.set_content(f"Click the link to verify your email: http://localhost:{PORT}/verify?token={token}")
+    msg.set_content(
+        f"Click the link to verify your email: http://localhost:{PORT}/verify?token={token}"
+    )
     msg["Subject"] = "Verify Your Email"
     msg["From"] = EMAIL_SENDER
     msg["To"] = email
-    
+
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
         server.starttls()
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
         server.send_message(msg)
 
-@app.route('/register', methods=['POST'])
+
+@app.route("/register", methods=["POST"])
 def register():
     print("In register function in app.py")
     data = request.json
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
-    
+    username = data.get("username")
+    email = data.get("email")
+    password = data.get("password")
+
     if not username or not email or not password:
-        return jsonify({'error': 'All fields are required'}), 400
-    
+        return jsonify({"error": "All fields are required"}), 400
+
     if not is_valid_email(email):
-        return jsonify({'error': 'Invalid email format'}), 400
-    
+        return jsonify({"error": "Invalid email format"}), 400
+
     if not is_strong_password(password):
-        return jsonify({'error': 'Password must be at least 8 characters long, contain a digit and an uppercase letter'}), 400
-    
+        return (
+            jsonify(
+                {
+                    "error": "Password must be at least 8 characters long, contain a digit and an uppercase letter"
+                }
+            ),
+            400,
+        )
+
     hashed_pw = hash_password(password)
     verification_token = str(uuid.uuid4())
-    
+
     # conn = sqlite3.connect("main.db") does not work if the current working directory is NOT the backend folder
-    DB_PATH = os.path.join(os.path.dirname(__file__), 'main.db') # working version
+    DB_PATH = os.path.join(os.path.dirname(__file__), "main.db")  # working version
     print("Using database at: ", DB_PATH)
     conn = sqlite3.connect(DB_PATH)
 
@@ -412,13 +466,16 @@ def register():
     cursor.execute("SELECT * FROM UserTable WHERE email = ?", (email,))
     if cursor.fetchone():
         conn.close()
-        return jsonify({'error': 'Email already registered'}), 400
+        return jsonify({"error": "Email already registered"}), 400
     cursor.execute("SELECT * FROM UserTable WHERE username = ?", (username,))
     if cursor.fetchone():
         conn.close()
-        return jsonify({'error': 'Username is already taken'}), 400
-    
-    cursor.execute("INSERT INTO UserTable (username, email, hashed_pw, verified, verification_token) VALUES (?, ?, ?, ?, ?)", (username, email, hashed_pw, 1, verification_token))
+        return jsonify({"error": "Username is already taken"}), 400
+
+    cursor.execute(
+        "INSERT INTO UserTable (username, email, hashed_pw, verified, verification_token) VALUES (?, ?, ?, ?, ?)",
+        (username, email, hashed_pw, 1, verification_token),
+    )
     user_id = cursor.lastrowid
     conn.commit()
     conn.close()
@@ -426,63 +483,78 @@ def register():
     # session["user_id"] = user_id
     # session.permanent = True  # Ensure the session lasts longer
 
-    
-    #send_verification_email(email, verification_token)
-    
-    return jsonify({'message': 'Registration successful. Try logging in.', 'user_id': user_id, 'username': username}), 201
+    # send_verification_email(email, verification_token)
 
-@app.route('/verify', methods=['GET'])
+    return (
+        jsonify(
+            {
+                "message": "Registration successful. Try logging in.",
+                "user_id": user_id,
+                "username": username,
+            }
+        ),
+        201,
+    )
+
+
+@app.route("/verify", methods=["GET"])
 def verify():
-    token = request.args.get('token')
-    
+    token = request.args.get("token")
+
     if not token:
-        return jsonify({'error': 'Invalid token'}), 400
-    
+        return jsonify({"error": "Invalid token"}), 400
+
     conn = sqlite3.connect("main.db")
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM UserTable WHERE verification_token = ?", (token,))
     user = cursor.fetchone()
-    
+
     if not user:
         conn.close()
-        return jsonify({'error': 'Invalid or expired token'}), 400
-    
-    cursor.execute("UPDATE UserTable SET verified = 1, verification_token = NULL WHERE verification_token = ?", (token,))
+        return jsonify({"error": "Invalid or expired token"}), 400
+
+    cursor.execute(
+        "UPDATE UserTable SET verified = 1, verification_token = NULL WHERE verification_token = ?",
+        (token,),
+    )
     conn.commit()
     conn.close()
 
     # session["user"] = user[0]
-    
-    return jsonify({'message': 'Email verified successfully. You can now log in.'}), 200
 
-@app.route('/login', methods=['POST'])
+    return jsonify({"message": "Email verified successfully. You can now log in."}), 200
+
+
+@app.route("/login", methods=["POST"])
 def login():
     data = request.json
-    email = data.get('email')
-    password = data.get('password')
-    
+    email = data.get("email")
+    password = data.get("password")
+
     if not email or not password:
-        return jsonify({'error': 'Email and password are required'}), 400
-    
+        return jsonify({"error": "Email and password are required"}), 400
+
     # conn = sqlite3.connect("main.db") does not work if the current working directory is NOT the backend folder
 
-    DB_PATH = os.path.join(os.path.dirname(__file__), 'main.db')
+    DB_PATH = os.path.join(os.path.dirname(__file__), "main.db")
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    
-    cursor.execute("SELECT user_id, username, hashed_pw, verified FROM UserTable WHERE email = ?", (email,))
+    cursor.execute(
+        "SELECT user_id, username, hashed_pw, verified FROM UserTable WHERE email = ?",
+        (email,),
+    )
     user = cursor.fetchone()
     conn.close()
 
     if not user:
-        return jsonify({'error': 'Invalid credentials'}), 401 
+        return jsonify({"error": "Invalid credentials"}), 401
     elif user[2] != hash_password(password):
-        return jsonify({'error': 'Incorrect password'}), 401
-    
+        return jsonify({"error": "Incorrect password"}), 401
+
     if user[3] == 0:
-        return jsonify({'error': 'Please verify your email before logging in'}), 403
-    
+        return jsonify({"error": "Please verify your email before logging in"}), 403
+
     # session["user_id"] = user[0]
     # session.permanent = True  # Ensure the session lasts longer
     # print(session)
@@ -490,9 +562,15 @@ def login():
     # print('user_id' in session)
 
     print(user[0])
-    
-    return jsonify({'message': 'Login successful', 'user_id': user[0], 'username': user[1]}), 200
-    
+
+    return (
+        jsonify(
+            {"message": "Login successful", "user_id": user[0], "username": user[1]}
+        ),
+        200,
+    )
+
+
 # @app.route('/logout', methods=['POST'])
 # def logout():
 #     session.clear()
@@ -525,34 +603,45 @@ def login():
 #     {"id": 20, "title": "Escape Room", "rating": 4.1, "location": "Portland", "image": "https://m.media-amazon.com/images/I/91CVLmjQVJL.jpg"}
 # ]
 
+
 def extract_json(text):
-    start = text.find('{')
-    end = text.rfind('}')
+    start = text.find("{")
+    end = text.rfind("}")
     if start != -1 and end != -1:
-        return text[start:end+1]  # Extract JSON portion
+        return text[start : end + 1]  # Extract JSON portion
     return None
 
+
 activity_id_counter = count(1)
+
 
 def generate_activity_id():
     return next(activity_id_counter)
 
-#@app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
-#add this parameter later: city_data
+
+# @app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
+# add this parameter later: city_data
 def generate_itinerary(user_id, location, days, trip_id, city_data):
-    print('generating itinerary')
+    print("generating itinerary")
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
-    preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
+    preferences_str_format = json.dumps(
+        preferences, indent=4, sort_keys=True, default=str
+    )
+    # print(preferences_str_format)
+    preferences_str_format = json.dumps(
+        preferences, indent=4, sort_keys=True, default=str
+    )
     # print(preferences_str_format)
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
 
-    headers = {
-        "Content-Type": "application/json"
-    }
-#             \"time_frame\": ...the time the user will start the activity and the time they will end it. example format: {\"start\":\"9:00 AM\",\"end\":\"1:00 PM\"}...,
-#     The time frames for the activities may not overlap, unless it is ONLY the next best preference overlapping with ONLY one top preference.
-    prompt = """I am building a travel itinerary recommendation app.
-    Here is the real-time city data for weather and hotels in that city: """ + city_data + """\n
+    headers = {"Content-Type": "application/json"}
+    #             \"time_frame\": ...the time the user will start the activity and the time they will end it. example format: {\"start\":\"9:00 AM\",\"end\":\"1:00 PM\"}...,
+    #     The time frames for the activities may not overlap, unless it is ONLY the next best preference overlapping with ONLY one top preference.
+    prompt = (
+        """I am building a travel itinerary recommendation app.
+    Here is the real-time city data for weather and hotels in that city: """
+        + city_data
+        + """\n
     Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
     Use this information to make smart activity choices (e.g., recommend indoor activities on rainy days, outdoor ones on sunny days).
     Also consider hotel data for location or quality-based recommendations.
@@ -601,27 +690,31 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
             ],
         \"next_best_preferences\": exact same format as top_preferences\n
         
-        The location is: """ + location + """. The trip is """ + str(days) + """ days long. Here are the user preferences:""" + preferences_str_format
+        The location is: """
+        + location
+        + """. The trip is """
+        + str(days)
+        + """ days long. Here are the user preferences:"""
+        + preferences_str_format
+    )
 
-    #print(prompt)
-    #Here is the real-time data for weather, activities, and/or hotels in that city: {city_data}
+    # print(prompt)
+    # Here is the real-time data for weather, activities, and/or hotels in that city: {city_data}
 
-    data = {
-        "contents": [{
-            "parts": [{"text": prompt}]
-        }]
-    }
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
 
     response = requests.post(url, headers=headers, json=data)
 
     print(response.json())  # Print the response as JSON
 
     response_json = response.json()  # Your provided JSON response
-    #print(json.dumps(response_json, indent=4))
-    #print(response_json.keys())
+    # print(json.dumps(response_json, indent=4))
+    # print(response_json.keys())
 
     # Extract the text content
-    text_content = extract_json(response_json["candidates"][0]["content"]["parts"][0]["text"])
+    text_content = extract_json(
+        response_json["candidates"][0]["content"]["parts"][0]["text"]
+    )
 
     print(text_content)
 
@@ -629,7 +722,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
     parsed_json = json.loads(text_content)
     for day in parsed_json["top_preferences"]:
         for activity in day:
-            activity["details"]["images"] = get_image(activity['title'])
+            activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
             # print(activity)
             activity_collection.insert_one(activity["details"])
@@ -643,17 +736,17 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     # print(parsed_json)
 
-
     itinerary_data = {
         "_id": trip_id,  # Same _id as the trip document
-        "activities": parsed_json  # Ensure activities are passed in the request
+        "activities": parsed_json,  # Ensure activities are passed in the request
     }
 
     itinerary_collection.insert_one(itinerary_data)
 
-    #return jsonify({"response": {}}), 200
+    # return jsonify({"response": {}}), 200
 
-    #return jsonify({"response": parsed_json}), 200
+    # return jsonify({"response": parsed_json}), 200
+
 
 def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     try:
@@ -765,13 +858,22 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     except Exception as e:
         print(f"Error in generate_restaurant_recommendations: {e}")
 
-def send_to_gemini(user_id, username, user_message):
+
+def send_to_gemini(user_id, username, user_message, city_data):
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
-    preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
+    preferences_str_format = json.dumps(
+        preferences, indent=4, sort_keys=True, default=str
+    )
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
     prompt = f"""
     You are a helpful AI chatbot assisting users in a chat interface. Respond to the following user message from the user {username} in a friendly and informative manner.
     Also use their preferences to come up with an answer. Here are the user's preferences: {preferences_str_format}
+    Here is the real-time city data: {city_data}
+
+    Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
+    If the user asks for activities to do on some day, make smart activity choices based on the weather
+    (e.g., recommend indoor activities on rainy days, outdoor ones on sunny days).
+    If the user asks for hotels, use the top hotels information provided in the `city_data` above.
 
     User: {user_message}
     
@@ -783,25 +885,23 @@ def send_to_gemini(user_id, username, user_message):
     
     Chatbot:
     """
-    data = {
-        "contents": [{"parts": [{"text": prompt}]}]
-    }
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
+    print(f"Gemini chatbot response: {data}\n\n")
 
-    headers = {
-        "Content-Type": "application/json"
-    }
+    headers = {"Content-Type": "application/json"}
 
     response = requests.post(url, headers=headers, json=data)
     response_json = response.json()
 
     chatbot_reply = response_json["candidates"][0]["content"]["parts"][0]["text"]
     return chatbot_reply
-    
+
+
 @app.route("/send_message", methods=["POST", "OPTIONS"])
 def send_message():
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-     
+
     data = request.json
     print(f"Data: {data}")
     user_id = data.get("user_id")
@@ -817,12 +917,33 @@ def send_message():
         "sender": username,
         "receiver": "chatbot",
         "message": user_message,
-        "timestamp": datetime.now()
+        "timestamp": datetime.now(),
     }
     messages_collection.insert_one(user_msg_entry)
 
     # Get chatbot response
-    chatbot_response = send_to_gemini(user_id, username, user_message)
+    user_query = (
+        """For the city, """
+        + data.get("location")
+        + """ describe the following information:\n
+        Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions
+        for every day from the start date """
+        + data.get("startDate")
+        + """ to the end date """
+        + data.get("endDate")
+        + """.
+        Also, specifically provide the name, rating, and price of hotels in the city."""
+    )
+    agent = get_langchain_agent(OPENAI_API_KEY)
+    try:
+        city_data = agent.run(user_query)
+    except Exception as e:
+        print("Error while running agent:", str(e))
+        city_data = "Error: Too much input data or agent failed."
+
+    print("\n\nCity data for chatbot:", city_data)
+
+    chatbot_response = send_to_gemini(user_id, username, user_message, city_data)
 
     # Save chatbot response
     chatbot_msg_entry = {
@@ -830,12 +951,13 @@ def send_message():
         "sender": "chatbot",
         "receiver": username,
         "message": chatbot_response,
-        "timestamp": datetime.now()
+        "timestamp": datetime.now(),
     }
     messages_collection.insert_one(chatbot_msg_entry)
-    response = jsonify({"response": chatbot_response}) 
+    response = jsonify({"response": chatbot_response})
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response, 200
+
 
 @app.route("/get_messages/<user_id>", methods=["GET", "OPTIONS"])
 def get_messages(user_id):
@@ -848,10 +970,11 @@ def get_messages(user_id):
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response, 200
 
-#@app.route('/get_image/<query>')
+
+# @app.route('/get_image/<query>')
 def get_image(query):
     # Search query
-    #query = "Sushi"
+    # query = "Sushi"
 
     # Define the API URL
     url = f"https://www.googleapis.com/customsearch/v1?q={query}&key={IMAGE_API_KEY}&cx={IMAGE_CX}&searchType=image"
@@ -863,7 +986,7 @@ def get_image(query):
     # Check if request was successful
     if response.status_code == 200:
         data = response.json()
-        
+
         # Extract first image result
         if "items" in data and len(data["items"]) > 0:
             output[0] = data["items"][0]["link"]
@@ -877,20 +1000,24 @@ def get_image(query):
         else:
             print("No images found for the search query.")
     else:
-        print(f'Ran over quota')
-        #print(f"Error: {response.status_code}, {response.text}")
-    
-    return output
-    
-    #return jsonify({"response": first_image_url}), 200
+        print(f"Ran over quota")
+        # print(f"Error: {response.status_code}, {response.text}")
 
-@app.route("/delete_itinerary_activity/<trip_id>/<activityID>", methods=['GET', 'DELETE', 'POST', 'OPTIONS'])
+    return output
+
+    # return jsonify({"response": first_image_url}), 200
+
+
+@app.route(
+    "/delete_itinerary_activity/<trip_id>/<activityID>",
+    methods=["GET", "DELETE", "POST", "OPTIONS"],
+)
 def delete_itinerary_activity(trip_id, activityID):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
 
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
-    
+
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
 
@@ -898,14 +1025,17 @@ def delete_itinerary_activity(trip_id, activityID):
     # updated_next_best = [act for act in itinerary["activities"]["next_best_preferences"] if act["details"]["_id"] != activityID]
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
-        {"$pull": {
-            "activities.top_preferences": {"details._id": ObjectId(activityID)}
-            #"activities.next_best_preferences": {"details._id": ObjectId(activityID)}
-        }}
+        {
+            "$pull": {
+                "activities.top_preferences": {"details._id": ObjectId(activityID)}
+                # "activities.next_best_preferences": {"details._id": ObjectId(activityID)}
+            }
+        },
     )
     response = jsonify({"message": "Activity deleted successfully"})
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response, 200
+
 
 def convert_objectid(itinerary):
     if isinstance(itinerary, dict):
@@ -916,76 +1046,99 @@ def convert_objectid(itinerary):
         return str(itinerary)
     else:
         return itinerary
-    
-@app.route("/move_itinerary_activity/<trip_id>/<int:activityID>", methods=["GET", "POST", "OPTIONS"])
+
+
+@app.route(
+    "/move_itinerary_activity/<trip_id>/<int:activityID>",
+    methods=["GET", "POST", "OPTIONS"],
+)
 def move_itinerary_activity(trip_id, activityID):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    
+
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
 
     next_best = itinerary.get("activities", {}).get("next_best_preferences", [])
-    activity = next((act for act in next_best if act["details"]["_id"] == activityID), None)
+    activity = next(
+        (act for act in next_best if act["details"]["_id"] == activityID), None
+    )
     if not activity:
         return jsonify({"error": "Activity not found in next_best_preferences"}), 404
 
-    updated_next_best = [act for act in next_best if act["details"]["_id"] != activityID]
-    
+    updated_next_best = [
+        act for act in next_best if act["details"]["_id"] != activityID
+    ]
+
     itinerary["activities"]["top_preferences"].append(activity)
 
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
         {
             "$set": {
-                "activities.top_preferences": itinerary["activities"]["top_preferences"],
-                "activities.next_best_preferences": updated_next_best
+                "activities.top_preferences": itinerary["activities"][
+                    "top_preferences"
+                ],
+                "activities.next_best_preferences": updated_next_best,
             }
-        }
+        },
     )
 
-    response = jsonify({
-        "message": "Activity moved successfully",
-        "updated_itinerary": convert_objectid(itinerary)
-    })
+    response = jsonify(
+        {
+            "message": "Activity moved successfully",
+            "updated_itinerary": convert_objectid(itinerary),
+        }
+    )
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
-@app.route("/move_restaurant_activity/<trip_id>/<int:activityID>", methods=["GET", "POST", "OPTIONS"])
+
+@app.route(
+    "/move_restaurant_activity/<trip_id>/<int:activityID>",
+    methods=["GET", "POST", "OPTIONS"],
+)
 def move_restaurant_activity(trip_id, activityID):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    
+
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
     restaurant = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
     if not restaurant:
         return jsonify({"error": "Restaurant not found"}), 404
-    
+
     next_best = restaurant.get("restaurants", [])
-    activity = next((act for act in next_best if act.get("activityID") == activityID), None)
+    activity = next(
+        (act for act in next_best if act.get("activityID") == activityID), None
+    )
     if not activity:
         return jsonify({"error": "Activity not found in next_best_preferences"}), 404
-    
+
     itinerary["activities"]["top_preferences"].append(activity)
 
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
         {
             "$set": {
-                "activities.top_preferences": itinerary["activities"]["top_preferences"],
+                "activities.top_preferences": itinerary["activities"][
+                    "top_preferences"
+                ],
             }
-        }
+        },
     )
 
-    response = jsonify({
-        "message": "Activity moved successfully",
-        "updated_itinerary": convert_objectid(itinerary)
-    })
+    response = jsonify(
+        {
+            "message": "Activity moved successfully",
+            "updated_itinerary": convert_objectid(itinerary),
+        }
+    )
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
+
 
 @app.route("/update_activity_order/<trip_id>", methods=["GET", "POST", "OPTIONS"])
 def update_activity_order(trip_id):
@@ -1004,27 +1157,28 @@ def update_activity_order(trip_id):
     if not isinstance(new_order, list) or not isinstance(index, int):
         return jsonify({"error": "Invalid data format"}), 400
 
-
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
 
     top_preferences = itinerary.get("activities", {}).get("top_preferences", [])
-    
+
     if index >= len(top_preferences):
         return jsonify({"error": "Invalid day index"}), 400
 
     top_preferences[index] = new_order
 
-
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
-        {"$set": {"activities.top_preferences": top_preferences}}
+        {"$set": {"activities.top_preferences": top_preferences}},
+        {"_id": ObjectId(trip_id)},
+        {"$set": {"activities.top_preferences": new_order}},
     )
 
     response = jsonify({"message": "Activity order updated successfully"})
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
+
 
 # WARNING I think this is unnecessary but not sure
 
@@ -1032,10 +1186,10 @@ def update_activity_order(trip_id):
 # def get_activities():
 #     #data = request.get_json()
 #     #trip_id = data.get("trip_id")
-    
+
 #     #if not trip_id:
 #     #    return jsonify({"error": "Missing trip_id"}), 400
-    
+
 #     activities = {
 #         "top_preferences": [
 #             {
@@ -1063,5 +1217,5 @@ def update_activity_order(trip_id):
 
 #     return jsonify({"trip_id": trip_id, "activities": activities})
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(port=PORT, debug=True)
