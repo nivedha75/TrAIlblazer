@@ -324,43 +324,48 @@ const ItineraryDetails = () => {
   };
   
   function handleSelectActivity(tripId, activity) {
-    fetch(`http://localhost:55000/move_itinerary_activity/${tripId}/${activity.details._id}`, {
+    fetch(`http://localhost:55000/move_itinerary_activity/${tripId}/${activity.activityID}`, {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "http://localhost:3000",
         "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
         "Access-Control-Allow-Headers": "Content-Type"
       }
-  })
-  .then(response => response.json())
-  .then(data => {
+    })
+    .then(response => response.json())
+    .then(data => {
       if (data.message === "Activity moved successfully") {
-        setTrip((prevTrip) => ({
-          ...prevTrip,
-          activities: {
-            ...prevTrip.activities,
-            next_best_preferences: prevTrip.activities.next_best_preferences.map(
-              (day, index) =>
-                index === activity.details.day
-                  ? day.filter((a) => a.details._id !== activity.details._id)
-                  : day
-            ),
-            top_preferences: prevTrip.activities.top_preferences.map(
-              (day, index) =>
-                index === activity.details.day
-                  ? [...day, activity]
-                  : day
-            ),
-          },
-        }));
+        setTrip((prevTrip) => {
+          const dayIndex = activity.day;
+  
+          return {
+            ...prevTrip,
+            activities: {
+              ...prevTrip.activities,
+              next_best_preferences: prevTrip.activities.next_best_preferences.map(
+                (day, index) =>
+                  index === dayIndex
+                    ? day.filter((a) => a.activityID !== activity.activityID) 
+                    : day
+              ),
+              top_preferences: prevTrip.activities.top_preferences.map(
+                (day, index) =>
+                  index === dayIndex
+                    ? [...day, { ...activity }]
+                    : [...day]
+              ),
+            },
+          };
+        });
       }
-  })
-  .catch(error => console.error("Error:", error));
+    })
+    .catch(error => console.error("Error:", error));
+  
     handleClose();
-  };
+  }
 
   function handleSelectRestaurant(tripId, activity) {
-    fetch(`http://localhost:55000/move_restaurant_activity/${tripId}/${activity.details._id}`, {
+    fetch(`http://localhost:55000/move_restaurant_activity/${tripId}/${activity.activityID}`, {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "http://localhost:3000",
@@ -789,7 +794,7 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
         {trip.activities.next_best_preferences.map(function (day) {
             return day.map(function (activity) {
               return (
-                <MenuItem key={activity.details._id} onClick={() => handleSelectActivity(trip._id, activity)}>
+                <MenuItem key={activity.activityID} onClick={() => handleSelectActivity(trip._id, activity)}>
                   {activity.title}
                 </MenuItem>
               )});
