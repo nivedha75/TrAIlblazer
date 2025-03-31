@@ -362,16 +362,22 @@ const ItineraryDetails = () => {
   }
 
   function handleSelectRestaurant(tripId, activity) {
-    const daysInTrip = trip.activities.top_preferences.length; // Number of days
-    let day = selectedDay;
-    if (day === null) {
-        const userInput = prompt(`Select a day (1 to ${daysInTrip}):`);
-        if (!userInput || isNaN(userInput) || userInput < 1 || userInput > daysInTrip) return;
-        day = parseInt(userInput, 10) - 1; // Convert input to zero-based index
-        setSelectedDay(day);
+    const daysInTrip = trip.activities.top_preferences.length;
+    setShowSearch(false);
+    setTimeout(() => {
+    let day = null;
+    //if (day === null) {
+    while (day === null) {
+      const userInput = prompt(`Select a day that you would like to go to this restaurant. (Since you are planning on going on a ${daysInTrip} day trip, input a number between 1 to ${daysInTrip}):`);
+      if (userInput === null) return;
+      if (!userInput || isNaN(userInput) || userInput < 1 || userInput > daysInTrip) {
+        alert("Invalid input. Try again.");
+        continue; 
+      }
+      day = parseInt(userInput, 10) - 1;
     }
 
-    // Ensure we are not sending 'null' in the URL
+    
     if (day === null) {
         console.error("Invalid day selected.");
         return;
@@ -415,8 +421,8 @@ const ItineraryDetails = () => {
       }
   })
   .catch(error => console.error("Error:", error));
-  setShowSearch(false);
   setSearchTerm("");
+  }, 0);
   };
   
   
