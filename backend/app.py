@@ -302,6 +302,11 @@ def get_itinerary(trip_id):
                 for act in day:
                     act["details"]["tripId"] = str(act["details"]["tripId"])
                     act["details"]["_id"] = str(act["details"]["_id"])
+
+            for day in itinerary["activities"]["next_best_preferences"]:
+                for act in day:
+                    act["details"]["tripId"] = str(act["details"]["tripId"])
+                    act["details"]["_id"] = str(act["details"]["_id"])
             return jsonify(itinerary), 200
         else:
             print("itinerary not found")
@@ -722,16 +727,19 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
     parsed_json = json.loads(text_content)
     for day in parsed_json["top_preferences"]:
         for activity in day:
+            activity["activityID"] = generate_activity_id()
             activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
             # print(activity)
             activity_collection.insert_one(activity["details"])
             # print(activity["details"])
 
-    # for activity in parsed_json["next_best_preferences"]:
-    #     activity["details"]["images"] = get_image(activity['title'])
-    #     activity["details"]["tripId"] = trip_id
-    #     activity_collection.insert_one(activity["details"])
+    for day in parsed_json["next_best_preferences"]:
+        for activity in day:
+            activity["activityID"] = generate_activity_id() 
+            activity["details"]["images"] = get_image(activity["title"])
+            activity["details"]["tripId"] = trip_id
+            activity_collection.insert_one(activity["details"])
     #     print(activity)
 
     # print(parsed_json)
@@ -1059,27 +1067,40 @@ def move_itinerary_activity(trip_id, activityID):
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
+    
+    next_best_preferences = itinerary.get("activities", {}).get("next_best_preferences", [])
+    top_preferences = itinerary.get("activities", {}).get("top_preferences", [])
 
-    next_best = itinerary.get("activities", {}).get("next_best_preferences", [])
-    activity = next(
-        (act for act in next_best if act["details"]["_id"] == activityID), None
-    )
-    if not activity:
+    found_activity = None
+    updated_next_best = []
+
+    # Iterate through nested arrays to find and remove the activity
+    for day_activities in next_best_preferences:
+        filtered_activities = []
+        for act in day_activities:
+            if act["activityID"] == activityID:
+                found_activity = act  # Capture the activity to move
+            else:
+                filtered_activities.append(act)
+        
+        if filtered_activities:
+            updated_next_best.append(filtered_activities)  # Preserve non-empty lists
+
+    if not found_activity:
         return jsonify({"error": "Activity not found in next_best_preferences"}), 404
 
-    updated_next_best = [
-        act for act in next_best if act["details"]["_id"] != activityID
-    ]
+    # Append to top_preferences (ensuring correct day structure)
+    day_index = found_activity["day"]
+    while len(top_preferences) <= day_index:
+        top_preferences.append([])  # Ensure the day index exists
 
-    itinerary["activities"]["top_preferences"].append(activity)
+    top_preferences[day_index].append(found_activity)
 
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
         {
             "$set": {
-                "activities.top_preferences": itinerary["activities"][
-                    "top_preferences"
-                ],
+                "activities.top_preferences": top_preferences,
                 "activities.next_best_preferences": updated_next_best,
             }
         },
@@ -1093,6 +1114,40 @@ def move_itinerary_activity(trip_id, activityID):
     )
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
+
+    # next_best = itinerary.get("activities", {}).get("next_best_preferences", [])
+    # activity = next(
+    #     (act for act in next_best if act["details"]["_id"] == activityID), None
+    # )
+    # if not activity:
+    #     return jsonify({"error": "Activity not found in next_best_preferences"}), 404
+
+    # updated_next_best = [
+    #     act for act in next_best if act["details"]["_id"] != activityID
+    # ]
+
+    # itinerary["activities"]["top_preferences"].append(activity)
+
+    # itinerary_collection.update_one(
+    #     {"_id": ObjectId(trip_id)},
+    #     {
+    #         "$set": {
+    #             "activities.top_preferences": itinerary["activities"][
+    #                 "top_preferences"
+    #             ],
+    #             "activities.next_best_preferences": updated_next_best,
+    #         }
+    #     },
+    # )
+
+    # response = jsonify(
+    #     {
+    #         "message": "Activity moved successfully",
+    #         "updated_itinerary": convert_objectid(itinerary),
+    #     }
+    # )
+    # response.headers.add("Access-Control-Allow-Origin", "*")
+    # return response
 
 
 @app.route(
