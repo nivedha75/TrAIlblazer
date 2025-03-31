@@ -620,10 +620,6 @@ def extract_json(text):
 activity_id_counter = count(1)
 
 
-def generate_activity_id():
-    return next(activity_id_counter)
-
-
 # @app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
 # add this parameter later: city_data
 def generate_itinerary(user_id, location, days, trip_id, city_data):
@@ -727,19 +723,17 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
     parsed_json = json.loads(text_content)
     for day in parsed_json["top_preferences"]:
         for activity in day:
-            activity["activityID"] = generate_activity_id()
             activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
             # print(activity)
-            activity_collection.insert_one(activity["details"])
+            activity["activityID"] = activity_collection.insert_one(activity["details"]).inserted_id
             # print(activity["details"])
 
     for day in parsed_json["next_best_preferences"]:
         for activity in day:
-            activity["activityID"] = generate_activity_id() 
             activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
-            activity_collection.insert_one(activity["details"])
+            activity["activityID"] = activity_collection.insert_one(activity["details"]).inserted_id
     #     print(activity)
 
     # print(parsed_json)
