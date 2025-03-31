@@ -16,7 +16,7 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import {IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Button} from "@mui/material";
+import {IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Button, Tooltip} from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import { isPast, parseISO, format, isBefore, startOfDay, parse } from 'date-fns';
 import AddIcon from "@mui/icons-material/Add"; 
@@ -253,6 +253,8 @@ const HomePage = () => {
     const [open, setOpen] = useState(false);
     const handleDeleteClick = () => setOpen(true);
     const [shr, setShare] = useState(false);
+    const [tooltipText_T, setTooltipText_T] = useState("Copy link");
+    const [tooltipText_I, setTooltipText_I] = useState("Copy link");
     const handleShareClick = () => setShare(true);
     const handleConfirmDelete = (tripId) => {
       setOpen(false);
@@ -278,29 +280,25 @@ const HomePage = () => {
         });
     };
 
-    const handleShareTrip = (tripId) => {
-      if (navigator.share) {
-        navigator.share({
-          title: document.title,
-          url: `${window.location.origin}/trip-details/${encodeURIComponent(tripId)}`,
-        })
-        .then(() => console.log("Shared successfully"))
-        .catch((error) => console.error("Error sharing:", error));
-      } else {
-        alert("Sharing is not supported on this browser.");
+    const handleShareTrip = async (tripId) => {
+      try {
+        await navigator.clipboard.writeText(`${window.location.origin}/trip-details/${encodeURIComponent(tripId)}`);
+        setTooltipText_T("Copied!");
+        setTimeout(() => setTooltipText_T("Copy link"), 1000); // Reset tooltip text after 1s
+      } catch (error) {
+        console.error("Failed to copy:", error);
+        setTooltipText_T("Failed to copy");
       }
     };
 
-    const handleShareItinerary = (tripId) => {
-      if (navigator.share) {
-        navigator.share({
-          title: document.title,
-          url: `${window.location.origin}/itinerary-details/${encodeURIComponent(tripId)}`,
-        })
-        .then(() => console.log("Shared successfully"))
-        .catch((error) => console.error("Error sharing:", error));
-      } else {
-        alert("Sharing is not supported on this browser.");
+    const handleShareItinerary = async (tripId) => {
+      try {
+        await navigator.clipboard.writeText(`${window.location.origin}/itinerary-details/${encodeURIComponent(tripId)}`);
+        setTooltipText_I("Copied!");
+        setTimeout(() => setTooltipText_I("Copy link"), 1000); // Reset tooltip text after 1s
+      } catch (error) {
+        console.error("Failed to copy:", error);
+        setTooltipText_I("Failed to copy");
       }
     };
 
@@ -368,11 +366,15 @@ const HomePage = () => {
     style: { backgroundColor: "rgba(0, 0, 0, 0.5)" }
   }}>
         <DialogTitle>Share Trip</DialogTitle>
-        <DialogContent>Would you like to share the Trip Details or the Itinerary Details?</DialogContent>
+        <DialogContent>Would you like to copy a link to the Trip Details or Itinerary Details page?</DialogContent>
         <DialogActions>
           <Button onClick={() => setShare(false)} color="error">Cancel</Button>
-          <Button onClick={() => handleShareTrip(tripId)} color="secondary">Trip Details</Button>
-          <Button onClick={() => handleShareItinerary(tripId)} color="primary">Itinerary Details</Button>
+          <Tooltip title={tooltipText_T} arrow>
+            <Button onClick={() => handleShareTrip(tripId)} color="secondary">Trip Details</Button>
+          </Tooltip>
+          <Tooltip title={tooltipText_I} arrow>
+            <Button onClick={() => handleShareItinerary(tripId)} color="primary">Itinerary Details</Button>
+          </Tooltip>
         </DialogActions>
       </Dialog>
 
