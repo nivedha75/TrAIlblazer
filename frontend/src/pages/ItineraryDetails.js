@@ -79,6 +79,8 @@ const ItineraryDetails = () => {
     navigate(`/activity-details/${encodeURIComponent(activityId)}`);
   };
 
+  const bookActivity = (activityId) => { };
+
   useEffect(() => {
     if (!showSearch) return; 
 
@@ -445,7 +447,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
     onMouseLeave={() => setIsHovered(false)}
 
 
-  >
+    >
               {/* <p style={{ fontSize: "18px", margin: "5px 0" }}>
         <strong>Description:</strong> {activity.description}
       </p>
@@ -460,6 +462,12 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
       <p><strong>Rating:</strong> {activity.details.rating}</p>
       <span><i>{activity.context}</i></span>
     </div>
+    <Button variant="contained" onClick={() => bookActivity(activity.details._id)}
+        sx={{ textTransform: "none", backgroundColor: theme.palette.apple.main, color: "white",
+        "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem",
+        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
+        Book
+    </Button>
     <Button variant="contained" onClick={() => activityDetails(activity.details._id)}
         sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
         "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem",
