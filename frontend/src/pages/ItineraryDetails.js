@@ -1,3 +1,4 @@
+import React from "react";
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Menu, MenuItem  } from "@mui/material";
@@ -166,8 +167,12 @@ const ItineraryDetails = () => {
             setTrip(prevItinerary => ({
                 ...prevItinerary,
                 activities: {
-                    top_preferences: prevItinerary.activities.top_preferences.filter(activity => activity.details._id !== activityId),
-                    next_best_preferences: prevItinerary.activities.next_best_preferences.filter(activity => activity.details._id !== activityId)
+                    top_preferences: prevItinerary.activities.top_preferences.map(day =>
+                      day.filter(activity => activity.details._id !== activityId)
+                    ),
+                    next_best_preferences: prevItinerary.activities.next_best_preferences.map(day =>
+                      day.filter(activity => activity.details._id !== activityId)
+                    )
                 }
             }));
         } else {
@@ -213,10 +218,18 @@ const ItineraryDetails = () => {
           ...prevTrip,
           activities: {
             ...prevTrip.activities,
-            next_best_preferences: prevTrip.activities.next_best_preferences.filter(
-              (a) => a.details._id !== activity.details._id
+            next_best_preferences: prevTrip.activities.next_best_preferences.map(
+              (day, index) =>
+                index === activity.details.day
+                  ? day.filter((a) => a.details._id !== activity.details._id)
+                  : day
             ),
-            top_preferences: [...prevTrip.activities.top_preferences, activity],
+            top_preferences: prevTrip.activities.top_preferences.map(
+              (day, index) =>
+                index === activity.details.day
+                  ? [...day, activity]
+                  : day
+            ),
           },
         }));
       }
@@ -226,7 +239,7 @@ const ItineraryDetails = () => {
   };
 
   function handleSelectRestaurant(tripId, activity) {
-    fetch(`http://localhost:55000/move_restaurant_activity/${tripId}/${activity.activityID}`, {
+    fetch(`http://localhost:55000/move_restaurant_activity/${tripId}/${activity.details._id}`, {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "http://localhost:3000",
@@ -252,7 +265,7 @@ const ItineraryDetails = () => {
   };
   
   
-  const saveActivityOrder = (tripId, newOrder) => {
+  const saveActivityOrder = (tripId, newOrder, index) => {
     fetch(`http://localhost:55000/update_activity_order/${tripId}`, {
       method: "POST",
       headers: {
@@ -261,14 +274,16 @@ const ItineraryDetails = () => {
         "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
       },
-      body: JSON.stringify({ activities: newOrder }),
+      body: JSON.stringify({ activities: newOrder, index }),
     })
       .then(response => response.json())
       .then(data => {
         if (data.message === "Activity order updated successfully") {
           setTrip((prevTrip) => ({
             ...prevTrip,
-            activities: { ...prevTrip.activities, top_preferences: newOrder },
+            activities: { 
+              ...prevTrip.activities,
+              top_preferences: prevTrip.activities.top_preferences.map((d, i) => i === index ? newOrder : d )},
           }));
         }
       })
@@ -315,12 +330,9 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
         </p>
       )} */}
     <div style={{ textAlign: "left", flex: 1 }}>
-      <h4 style={{ fontSize: "20px", color: "#444" }}>{activity.title}</h4>
-      <span> ({activity.context})</span>
-      <p>Rating: {activity.details.rating}</p>
-      <p style={{ fontSize: "18px", margin: "5px 0" }}>
-        <strong>Location:</strong> {activity.details?.city || ""}
-      </p>
+      <h4 style={{ fontSize: "18px" }}><strong>{activity.title}</strong></h4>
+      <p><strong>Rating:</strong> {activity.details.rating}</p>
+      <span><i>{activity.context}</i></span>
     </div>
     <Button variant="contained" onClick={() => activityDetails(activity.details._id)}
         sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
@@ -506,22 +518,36 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           <strong>End Date:</strong> {tripDetails?.endDate}
         </p>
         <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
-          {trip.activities.top_preferences.length > 0 ? "Activities for the Trip" : "No Activities Found"}
+          {trip.activities.top_preferences.length > 0 && trip.activities.top_preferences[0].length > 0 ? "Activities for the Trip" : "No Activities Found"}
         </h3>
-      <SortableList
-        activities={trip.activities.top_preferences}
-        deleteMode={deleteMode}
-        handleDeleteClick={handleDeleteClick}
-        onSortEnd={({ oldIndex, newIndex }) => {
-          const newOrder = arrayMoveImmutable(trip.activities.top_preferences, oldIndex, newIndex);
-          setTrip((prevTrip) => ({
-            ...prevTrip,
-            activities: { ...prevTrip.activities, top_preferences: newOrder },
-          }));
-          saveActivityOrder(trip._id, newOrder);
-        }}
-        distance={10} 
-      />
+         {/* make length work */}
+        {trip.activities.top_preferences.length > 0 ? (
+          trip.activities.top_preferences.map((day, index) => (
+            <React.Fragment key={index}>
+              <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>Day {index+1}</h3>
+            <SortableList
+              key={index}
+              activities={day}
+              deleteMode={deleteMode}
+              handleDeleteClick={handleDeleteClick}
+              onSortEnd={({ oldIndex, newIndex }) => {
+                const newOrder = arrayMoveImmutable(day, oldIndex, newIndex);
+                setTrip((prevTrip) => ({
+                  ...prevTrip,
+                  activities: { 
+                    ...prevTrip.activities,
+                    top_preferences: prevTrip.activities.top_preferences.map((d, i) => i === index ? newOrder : d )},
+                }));
+                saveActivityOrder(trip._id, newOrder, index);
+              }}
+              distance={10} 
+            />
+            </React.Fragment>
+          ))
+        ) : (
+          <p>No days to display.</p>
+        )}
+        
 
          <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Confirm</DialogTitle>
@@ -618,11 +644,19 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
         Add Activity
       </span>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-        {trip.activities.next_best_preferences.map((activity) => (
+        {/* {trip.activities.next_best_preferences.map((activity) => (
           <MenuItem key={activity.details._id} onClick={() => handleSelectActivity(trip._id, activity)}>
             {activity.title}
           </MenuItem>
-        ))}
+        ))} */}
+        {trip.activities.next_best_preferences.map(function (day) {
+            return day.map(function (activity) {
+              return (
+                <MenuItem key={activity.details._id} onClick={() => handleSelectActivity(trip._id, activity)}>
+                  {activity.title}
+                </MenuItem>
+              )});
+        })}
       </Menu>
     </div> 
     </div>

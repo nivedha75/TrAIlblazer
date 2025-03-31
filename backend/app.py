@@ -199,7 +199,7 @@ def trips():
                 city_data = "Error: Too much input data or agent failed."
             print("\n\nCity data:", city_data)
             # Step 2: Use Gemini Flash to generate a personalized itinerary
-            generate_itinerary(data["userId"], data["location"], trip_id, city_data)
+            generate_itinerary(data["userId"], data["location"], data["days"], trip_id, city_data)
             generate_restaurant_recommendations(data["userId"], data["location"], trip_id)
             return jsonify({"message": "Trip data saved successfully"}), 201
 
@@ -227,7 +227,12 @@ def get_trip(trip_id):
             result = trip_collection.delete_one({"_id": ObjectId(trip_id)})
             print(f"Trip: {trip_id}")
             if result.deleted_count > 0:
-                return jsonify({"message": "Trip deleted successfully"}), 200
+                result = itinerary_collection.delete_one({"_id": ObjectId(trip_id)})
+                print(f"Itinerary: {trip_id}")
+                if result.deleted_count > 0:
+                    return jsonify({"message": "Trip and Itinerary deleted successfully"}), 200
+                else:
+                    return jsonify({"error": "Itinerary not found"}), 404
             else:
                 return jsonify({"error": "Trip not found"}), 404
         except Exception as e:
@@ -253,9 +258,10 @@ def get_itinerary(trip_id):
             # print(str(itinerary["_id"]))
             # print(itinerary)
             itinerary["_id"] = str(itinerary["_id"])
-            for act in itinerary["activities"]["top_preferences"]:
-                act["details"]["tripId"] = str(act["details"]["tripId"])
-                act["details"]["_id"] = str(act["details"]["_id"])
+            for day in itinerary["activities"]["top_preferences"]:
+                for act in day:
+                    act["details"]["tripId"] = str(act["details"]["tripId"])
+                    act["details"]["_id"] = str(act["details"]["_id"])
             return jsonify(itinerary), 200
         else:
             print('itinerary not found')
@@ -522,17 +528,18 @@ def generate_activity_id():
 
 #@app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
 #add this parameter later: city_data
-def generate_itinerary(user_id, location, trip_id, city_data):
+def generate_itinerary(user_id, location, days, trip_id, city_data):
     print('generating itinerary')
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
     preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
-    #print(preferences_str_format)
+    # print(preferences_str_format)
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
 
     headers = {
         "Content-Type": "application/json"
     }
-
+#             \"time_frame\": ...the time the user will start the activity and the time they will end it. example format: {\"start\":\"9:00 AM\",\"end\":\"1:00 PM\"}...,
+#     The time frames for the activities may not overlap, unless it is ONLY the next best preference overlapping with ONLY one top preference.
     prompt = """I am building a travel itinerary recommendation app.
     Here is the real-time city data for weather and hotels in that city: """ + city_data + """\n
     Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
@@ -542,42 +549,48 @@ def generate_itinerary(user_id, location, trip_id, city_data):
     Do NOT repeat hotel data in your output — just use it behind the scenes for better suggestions.
     If you do make a decision based on some weather condition, mention that weather in the "context" attribute in top preferences and next best preferences of the JSON below. 
 
-    Given a user's travel preferences, destination, and the real-time city data provided, generate an itinerary with 10 activities: 5 as top preferences and 5 as next best preferences.
+    Given a user's travel preferences, destination, and the real-time city data provided, generate an itinerary with, for each day of the trip, 3 activities: 2 as top preferences and 1 as a next best preference.
     Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination.
     Format it as the following JSON STRICTLY, NO OTHER WORDS:
         \"top_preferences\": [
-            {
-            \"title\": ...title...,
-            \"context\": ...Because you liked (and then list something specific in the preferences JSON and the weather that explains the choice)...,
-            \"weather\": ...weather conditions for every day on the trip...
-            \"details\": {
-                \"name\": ...same as title...,
-                \"description\": ...description...,
-                \"number\": ...official phone number as (xxx) xxx-xxxx...,
-                \"address\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
-                \"email\": ...official email address...,
-                \"hours\": {
-                    \"sunday\": ...open times on this day. example format: {\"open\":\"10:00 AM\",\"close\":\"6:00 PM\"}...,
-                    \"friday\": ...same format...,
-                    \"monday\": ...same format...,
-                    \"saturday\": ...same format...,
-                    \"thursday\": ...same format...,
-                    \"tuesday\": ...same format...,
-                    \"wednesday\": ...same format...
+            [
+                {
+                \"title\": ...title...,
+                \"context\": ...Because you liked (and then list something specific in the preferences JSON. Then state the weather that explains the choice. example format: "since 2025-04-02 will have light rain and heavy wind, this indoor activity is perfect.")...,
+                \"day\": ...the number of the itinerary day this activity takes place (starting at 0)...
+                \"weather\": ...ALL weather for this day on the trip...,
+                \"details\": {
+                    \"name\": ...same as title...,
+                    \"description\": ...description...,
+                    \"number\": ...official phone number as (xxx) xxx-xxxx...,
+                    \"address\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
+                    \"email\": ...official email address...,
+                    \"hours\": {
+                        \"sunday\": ...open times on this day. example format: {\"open\":\"10:00 AM\",\"close\":\"6:00 PM\"}...,
+                        \"friday\": ...same format...,
+                        \"monday\": ...same format...,
+                        \"saturday\": ...same format...,
+                        \"thursday\": ...same format...,
+                        \"tuesday\": ...same format...,
+                        \"wednesday\": ...same format...
+                    },
+                    \"rating\": ...rating out of 5 with 1 decimal place...,
+                    \"experience\": ...description of how guests spend their time here...,
+                    \"city\": ...(city), (country)...,
+                    \"website\": ...link to the official website...
+                }
                 },
-                \"rating\": ...rating out of 5 with 1 decimal place...,
-                \"experience\": ...description of how guests spend their time here...,
-                \"city\": ...(city), (country)...,
-                \"website\": ...link to the official website...
-            }
-            }
+                ...
+                for each other activity
+                ...
+            ],
             ...
-            4 more
+            for each other day
             ...
             ],
         \"next_best_preferences\": exact same format as top_preferences\n
         
-        The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
+        The location is: """ + location + """. The trip is """ + str(days) + """ days long. Here are the user preferences:""" + preferences_str_format
 
     #print(prompt)
     #Here is the real-time data for weather, activities, and/or hotels in that city: {city_data}
@@ -603,21 +616,22 @@ def generate_itinerary(user_id, location, trip_id, city_data):
 
     # Parse the text as JSON
     parsed_json = json.loads(text_content)
-    for activity in parsed_json["top_preferences"]:
-        activity["details"]["images"] = get_image(activity['title'])
-        activity["details"]["tripId"] = trip_id
-        # print(activity)
-        activity_collection.insert_one(activity["details"]).inserted_id
-        # print(activity["details"])
+    for day in parsed_json["top_preferences"]:
+        for activity in day:
+            activity["details"]["images"] = get_image(activity['title'])
+            activity["details"]["tripId"] = trip_id
+            # print(activity)
+            activity_collection.insert_one(activity["details"])
+            # print(activity["details"])
 
     # for activity in parsed_json["next_best_preferences"]:
-    #     activity["activityID"] = ObjectId(generate_activity_id())
-    #     activity["details"]["_id"] = activity["activityID"]
+    #     activity["details"]["images"] = get_image(activity['title'])
+    #     activity["details"]["tripId"] = trip_id
     #     activity_collection.insert_one(activity["details"])
     #     print(activity)
+
     # print(parsed_json)
 
-    
 
     itinerary_data = {
         "_id": trip_id,  # Same _id as the trip document
@@ -825,14 +839,32 @@ def update_activity_order(trip_id):
 
     data = request.get_json()
     new_order = data.get("activities", [])
+    index = data.get("index")
+
+    # groupedActivities = trip.activities.top_preferences.reduce((acc, activity) => {
+    # if (!acc[activity.day]) acc[activity.day] = [];
+    # acc[activity.day].push(activity);
+    # return acc;
+
+    if not isinstance(new_order, list) or not isinstance(index, int):
+        return jsonify({"error": "Invalid data format"}), 400
+
 
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
 
+    top_preferences = itinerary.get("activities", {}).get("top_preferences", [])
+    
+    if index >= len(top_preferences):
+        return jsonify({"error": "Invalid day index"}), 400
+
+    top_preferences[index] = new_order
+
+
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
-        {"$set": {"activities.top_preferences": new_order}}
+        {"$set": {"activities.top_preferences": top_preferences}}
     )
 
     response = jsonify({"message": "Activity order updated successfully"})

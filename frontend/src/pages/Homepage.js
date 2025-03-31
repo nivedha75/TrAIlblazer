@@ -193,6 +193,19 @@ const HomePage = () => {
     navigate(`/itinerary-details/${encodeURIComponent(tripId)}`);
   };
 
+  const shareDetails = (tripId) => {
+    if (navigator.share) {
+      navigator.share({
+        title: document.title,
+        url: window.location.href,
+      })
+      .then(() => console.log("Shared successfully"))
+      .catch((error) => console.error("Error sharing:", error));
+    } else {
+      alert("Sharing is not supported on this browser.");
+    }
+  };
+
   const placeDetails = (placeId) => {
     navigate(`/place-details/${encodeURIComponent(placeId)}`);
   };
@@ -226,6 +239,7 @@ const HomePage = () => {
     buttonText = "Trip Details", 
     button = () => alert("Trip Details"), 
     itineraryButton = null,
+    shareButton = null,
     start, 
     end, 
     people, 
@@ -238,6 +252,8 @@ const HomePage = () => {
   }) => {
     const [open, setOpen] = useState(false);
     const handleDeleteClick = () => setOpen(true);
+    const [shr, setShare] = useState(false);
+    const handleShareClick = () => setShare(true);
     const handleConfirmDelete = (tripId) => {
       setOpen(false);
       console.log("Trip ID being deleted:", tripId);
@@ -261,6 +277,35 @@ const HomePage = () => {
           console.error("Error deleting trip:", error);
         });
     };
+
+    const handleShareTrip = (tripId) => {
+      if (navigator.share) {
+        navigator.share({
+          title: document.title,
+          url: `${window.location.origin}/trip-details/${encodeURIComponent(tripId)}`,
+        })
+        .then(() => console.log("Shared successfully"))
+        .catch((error) => console.error("Error sharing:", error));
+      } else {
+        alert("Sharing is not supported on this browser.");
+      }
+    };
+
+    const handleShareItinerary = (tripId) => {
+      if (navigator.share) {
+        navigator.share({
+          title: document.title,
+          url: `${window.location.origin}/itinerary-details/${encodeURIComponent(tripId)}`,
+        })
+        .then(() => console.log("Shared successfully"))
+        .catch((error) => console.error("Error sharing:", error));
+      } else {
+        alert("Sharing is not supported on this browser.");
+      }
+    };
+
+
+
     return (
       <div style={{
         width: "270px",
@@ -305,6 +350,31 @@ const HomePage = () => {
           <Button onClick={() => handleConfirmDelete(tripId)} color="error">Delete</Button>
         </DialogActions>
       </Dialog>
+      <IconButton 
+        onClick={handleShareClick} 
+        sx={{
+          position: "absolute",
+          bottom: "10px",
+          left: "10px",
+          color: "gray",
+          backgroundColor: "rgba(255, 255, 255, 0.7)",
+          transition: "background-color 0.3s ease-in-out",
+          "&:hover": { backgroundColor: "rgba(255, 255, 255, 70)" }
+        }}
+      >
+        <Share />
+      </IconButton> 
+      <Dialog open={shr} onClose={() => setShare(false)}  BackdropProps={{
+    style: { backgroundColor: "rgba(0, 0, 0, 0.5)" }
+  }}>
+        <DialogTitle>Share Trip</DialogTitle>
+        <DialogContent>Would you like to share the Trip Details or the Itinerary Details?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShare(false)} color="error">Cancel</Button>
+          <Button onClick={() => handleShareTrip(tripId)} color="secondary">Trip Details</Button>
+          <Button onClick={() => handleShareItinerary(tripId)} color="primary">Itinerary Details</Button>
+        </DialogActions>
+      </Dialog>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
           {image && <img src={image} alt={title} style={{ width: "100%", height: "50%", borderRadius: "10px" }} />}
@@ -326,15 +396,15 @@ const HomePage = () => {
         <div style={{
           position: "absolute",
           bottom: "10px",
-          left: share ? "10px" : "50%",
+          left: share ? "60px" : "50%",
           transform: share ? "none" : "translateX(-50%)",       
           display: "flex",
           flexDirection: "row", /* Stack buttons vertically */
           alignItems: "center",
           gap: "8px"
         }}>
-         {share && (
-             <Share style={{ fontSize: 24, color: "#555" }} />
+         {/* {share && shareButton && (
+             <Share onClick={shareButton} style={{ fontSize: 24, color: "#555" }} />
           // {share && (
           //   <img 
           //     src={share} 
@@ -345,7 +415,7 @@ const HomePage = () => {
           //       cursor: "pointer" 
           //     }}
           //   />
-          )}
+          )} */}
           
           {/* Trip Details Button */}
           <button 
@@ -555,7 +625,7 @@ const HomePage = () => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
              return (
-    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="upcoming" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setUpcomingTrips} trips={upcomingTrips}/>
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} shareButton={() => shareDetails(trip._id)} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="upcoming" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setUpcomingTrips} trips={upcomingTrips}/>
   );})}
   </Slider>
         </div>
@@ -617,7 +687,7 @@ const HomePage = () => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
              return (
-    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="past" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setPastTrips} trips={pastTrips}/>
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} shareButton={() => shareDetails(trip._id)} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="past" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setPastTrips} trips={pastTrips}/>
   );})}
   </Slider>
         </div>
