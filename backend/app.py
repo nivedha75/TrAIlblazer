@@ -321,10 +321,10 @@ def get_restaurants(trip_id):
         restaurants = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
         if restaurants:
             restaurants["_id"] = str(restaurants["_id"])
-            # for r in restaurants["restaurants"]:
-            #     r["activityID"] = str(r["activityID"])
-            #     r["details"]["_id"] = str(r["details"]["_id"])
-                # r["details"]["tripId"] = str(r["details"]["tripId"])
+            for r in restaurants["restaurants"]:
+                r["activityID"] = str(r["activityID"])
+                r["details"]["_id"] = str(r["details"]["_id"])
+                r["details"]["tripId"] = str(r["details"]["tripId"])
             return jsonify(restaurants), 200
         else:
             print("restaurants not found")
@@ -768,65 +768,51 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
             "Content-Type": "application/json"
         }
     
-        # prompt = """I am building a travel itinerary recommendation app.
-        # Here is the real-time city data for weather and hotels in that city: """ + city_data + """\n
-        # Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
-        # Use this information to make smart restaurant choices.
+        prompt = """I am building a travel itinerary recommendation app.
+        Here is the real-time city data for weather and hotels in that city: """ + city_data + """\n
+        Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
+        Use this information to make smart restaurant choices.
 
-        # If you do make a decision based on some weather condition, mention that weather in the "context" attribute of the JSON below.
+        If you do make a decision based on some weather condition, mention that weather in the "context" attribute of the JSON below.
 
-        # Given a user's travel preferences, destination, and the real-time city data provided, generate a list of 20 restaurant recommendations.
-        # The recommendations should be personalized based on the user's food preferences and the best available options in the destination.
-        # Format it as the following JSON STRICTLY, NO OTHER WORDS:
+        Given a user's travel preferences, destination, and the real-time city data provided, generate a list of 10 restaurant recommendations.
+        The recommendations should be personalized based on the user's food preferences and the best available options in the destination.
+        Format it as the following JSON STRICTLY, NO OTHER WORDS:
     
-        # \"restaurants\": [
-        #     {
-        #         \"title\": ...restaurant name...,
-        #         \"context\": ...Because you liked (and then list something specific in the preferences JSON and the weather that explains the choice)...,
-        #         \"weather\": ...weather conditions for every day on the trip...,
-        #         \"details\": {
-        #             \"name\": ...same as title...,
-        #             \"description\": ...description of the restaurant and its cuisine...,
-        #             \"number\": ...official phone number as (xxx) xxx-xxxx...,
-        #             \"address\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
-        #             \"email\": ...official email address (if available)...,
-        #             \"hours\": {
-        #                 \"sunday\": {\"open\": \"10:00 AM\", \"close\": \"10:00 PM\"},
-        #                 \"friday\": ...same format...,
-        #                 \"monday\": ...same format...,
-        #                 \"saturday\": ...same format...,
-        #                 \"thursday\": ...same format...,
-        #                 \"tuesday\": ...same format...,
-        #                 \"wednesday\": ...same format...,
-        #             },
-        #             \"rating\": ...rating out of 5 with 1 decimal place...,
-        #             \"experience\": ...description of the dining experience (e.g., fine dining, casual, rooftop, family-friendly, etc.)...,
-        #             \"city\": ...(city), (country)...,
-        #             \"website\": ...link to the official website...,
-        #         },
-        #     },
-        #     ...
-        #     19 more
-        #     ...
-        # ]
-    
-        # The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
-    
-        prompt = f"""I am building a travel itinerary recommendation app. Given a user's preferences, generate 20 restaurant recommendations for the location {location}. Format it as the following JSON STRICTLY:
-        "restaurants": [
-            {{
-                "title": ...title...,
-                "rating": ...rating out of 5...,
-                "description": ...very short description...,
-                "location": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
-                "context": ...Because you liked (list something specific from preferences JSON that explains the choice)...
-            }},
-            ... 19 more ...
+        \"restaurants\": [
+            {
+                \"title\": ...restaurant name...,
+                \"context\": ...Because you liked (and then list something specific in the preferences JSON and the weather that explains the choice)...,
+                \"weather\": ...weather conditions for every day on the trip...,
+                \"details\": {
+                    \"name\": ...same as title...,
+                    \"description\": ...description of the restaurant and its cuisine...,
+                    \"number\": ...official phone number as (xxx) xxx-xxxx...,
+                    \"address\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
+                    \"email\": ...official email address (if available)...,
+                    \"hours\": {
+                        \"sunday\": {\"open\": \"10:00 AM\", \"close\": \"10:00 PM\"},
+                        \"friday\": ...same format...,
+                        \"monday\": ...same format...,
+                        \"saturday\": ...same format...,
+                        \"thursday\": ...same format...,
+                        \"tuesday\": ...same format...,
+                        \"wednesday\": ...same format...,
+                    },
+                    \"rating\": ...rating out of 5 with 1 decimal place...,
+                    \"experience\": ...description of the dining experience (e.g., fine dining, casual, rooftop, family-friendly, etc.)...,
+                    \"city\": ...(city), (country)...,
+                    \"website\": ...link to the official website...,
+                },
+            },
+            ...
+            9 more
+            ...
         ]
-        Here are the user preferences: {preferences_str_format}
-        """
     
-        print(prompt)
+        The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
+    
+        # print(prompt)
 
         data = {
             "contents": [{"parts": [{"text": prompt}]}]
@@ -834,26 +820,24 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     
         response = requests.post(url, headers=headers, json=data)
         response_json = response.json()
-        print("Raw AI response:", response_json)
+        # print("Raw AI response:", response_json)
         # print(response_json)
 
     
         text_content = extract_json(response_json["candidates"][0]["content"]["parts"][0]["text"])
 
-        print("Text context: ", text_content)
+        # print("Text context: ", text_content)
 
         parsed_json = json.loads(text_content)
         #parsed_json = text_content
-        print("Parsed json: ", parsed_json)
+        # print("Parsed json: ", parsed_json)
 
         #print(parsed_json)
 
         for restaurant in parsed_json["restaurants"]:
-            restaurant["activityID"] = generate_activity_id()
-            restaurant["images"] = get_image(restaurant['title'])
-            #restaurant["details"]["images"] = get_image(restaurant["title"])
-            #restaurant["details"]["tripId"] = trip_id
-            #restaurant["activityID"] = activity_collection.insert_one(restaurant["details"]).inserted_id
+            restaurant["details"]["images"] = get_image(restaurant["title"])
+            restaurant["details"]["tripId"] = trip_id
+            restaurant["activityID"] = activity_collection.insert_one(restaurant["details"]).inserted_id
     
         print(parsed_json)
     
@@ -989,26 +973,22 @@ def get_image(query):
 
     # Make the request
     response = requests.get(url)
-    output = ["", "", ""]
+    output = []
 
     # Check if request was successful
     if response.status_code == 200:
         data = response.json()
 
-        # Extract first image result
         if "items" in data and len(data["items"]) > 0:
-            output[0] = data["items"][0]["link"]
-            print("First Image URL:", output[0])
-            if "items" in data and len(data["items"]) > 1:
-                output[1] = data["items"][1]["link"]
-                print("Second Image URL:", output[1])
-                if "items" in data and len(data["items"]) > 2:
-                    output[2] = data["items"][2]["link"]
-                    print("Third Image URL:", output[2])
+            output = [item["link"] for item in data["items"][:6]]   # Limit to 6 images
+            
+            for i, link in enumerate(output):
+                print(f"Image {i+1} URL:", link)
         else:
             print("No images found for the search query.")
     else:
         print(f"Ran over quota")
+        print(url)
         # print(f"Error: {response.status_code}, {response.text}")
 
     return output
