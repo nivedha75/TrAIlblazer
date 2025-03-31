@@ -201,7 +201,7 @@ def trips():
             print("\n\nCity data:", city_data)
             # Step 2: Use Gemini Flash to generate a personalized itinerary
             generate_itinerary(data["userId"], data["location"], data["days"], trip_id, city_data)
-            generate_restaurant_recommendations(data["userId"], data["location"], trip_id)
+            generate_restaurant_recommendations(data["userId"], data["location"], trip_id, city_data)
             return jsonify({"message": "Trip data saved successfully"}), 201
 
         except Exception as e:
@@ -276,6 +276,10 @@ def get_restaurants(trip_id):
         restaurants = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
         if restaurants:
             restaurants["_id"] = str(restaurants["_id"])
+            for r in restaurants["restaurants"]:
+                r["activityID"] = str(r["activityID"])
+                r["details"]["_id"] = str(r["details"]["_id"])
+                r["details"]["tripId"] = str(r["details"]["tripId"])
             return jsonify(restaurants), 200
         else:
             print('restaurants not found')
@@ -645,52 +649,110 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     #return jsonify({"response": parsed_json}), 200
 
-def generate_restaurant_recommendations(user_id, location, trip_id):
+def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     print('Generating restaurant recommendations')
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
     preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
-    
+   
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
-    
+   
     headers = {
         "Content-Type": "application/json"
     }
-    
-    prompt = f"""I am building a travel itinerary recommendation app. Given a user's preferences, generate 20 restaurant recommendations for the location {location}. Format it as the following JSON STRICTLY:
-    "restaurants": [
-        {{
-            "title": ...title...,
-            "rating": ...rating out of 5...,
-            "description": ...very short description...,
-            "location": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
-            "context": ...Because you liked (list something specific from preferences JSON that explains the choice)...
-        }},
-        ... 19 more ...
+   
+    prompt = """I am building a travel itinerary recommendation app.
+    Here is the real-time city data for weather and hotels in that city: """ + city_data + """\n
+    Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
+    Use this information to make smart restaurant choices.
+
+    If you do make a decision based on some weather condition, mention that weather in the "context" attribute of the JSON below.
+
+    Given a user's travel preferences, destination, and the real-time city data provided, generate a list of 20 restaurant recommendations.
+    The recommendations should be personalized based on the user's food preferences and the best available options in the destination.
+    Format it as the following JSON STRICTLY, NO OTHER WORDS:
+   
+    \"restaurants\": [
+        {
+            \"title\": ...restaurant name...,
+            \"context\": ...Because you liked (and then list something specific in the preferences JSON and the weather that explains the choice)...,
+            \"weather\": ...weather conditions for every day on the trip...
+            \"details\": {
+                \"name\": ...same as title...,
+                \"description\": ...description of the restaurant and its cuisine...,
+                \"number\": ...official phone number as (xxx) xxx-xxxx...,
+                \"address\": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
+                \"email\": ...official email address (if available)...,
+                \"hours\": {
+                    \"sunday\": {\"open\": \"10:00 AM\", \"close\": \"10:00 PM\"},
+                    \"friday\": ...same format...,
+                    \"monday\": ...same format...,
+                    \"saturday\": ...same format...,
+                    \"thursday\": ...same format...,
+                    \"tuesday\": ...same format...,
+                    \"wednesday\": ...same format...
+                },
+                \"rating\": ...rating out of 5 with 1 decimal place...,
+                \"experience\": ...description of the dining experience (e.g., fine dining, casual, rooftop, family-friendly, etc.)...,
+                \"city\": ...(city), (country)...,
+                \"website\": ...link to the official website...
+            }
+        },
+        ...
+        19 more
+        ...
     ]
-    Here are the user preferences: {preferences_str_format}
-    """
-    
+   
+    The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
+   
+    # prompt = f"""I am building a travel itinerary recommendation app. Given a user's preferences, generate 20 restaurant recommendations for the location {location}. Format it as the following JSON STRICTLY:
+    # "restaurants": [
+    #     {{
+    #         "title": ...title...,
+    #         "rating": ...rating out of 5...,
+    #         "description": ...very short description...,
+    #         "location": ...FULL GOOGLE-MAPS FRIENDLY ADDRESS...,
+    #         "context": ...Because you liked (list something specific from preferences JSON that explains the choice)...
+    #     }},
+    #     ... 19 more ...
+    # ]
+    # Here are the user preferences: {preferences_str_format}
+    # """
+   
+    print(prompt)
+
     data = {
         "contents": [{"parts": [{"text": prompt}]}]
     }
-    
+   
     response = requests.post(url, headers=headers, json=data)
     response_json = response.json()
-    
+    # print(response_json)
+
+   
     text_content = extract_json(response_json["candidates"][0]["content"]["parts"][0]["text"])
+
+    # print(text_content)
+
     parsed_json = json.loads(text_content)
-    
+
+
+
+    #print(parsed_json)
+
     for restaurant in parsed_json["restaurants"]:
-        restaurant["activityID"] = generate_activity_id()
-        restaurant['image'] = get_image(restaurant['title'])
-    
+        #restaurant["activityID"] = generate_activity_id()
+        #restaurant["images"] = get_image(restaurant['title'])
+        restaurant["details"]["images"] = get_image(restaurant["title"])
+        restaurant["details"]["tripId"] = trip_id
+        restaurant["activityID"] = activity_collection.insert_one(restaurant["details"]).inserted_id
+   
     print(parsed_json)
-    
+   
     itinerary_data = {
         "_id": trip_id,
         "restaurants": parsed_json["restaurants"]
     }
-    
+   
     restaurant_collection.insert_one(itinerary_data)
 
 def send_to_gemini(user_id, username, user_message):
