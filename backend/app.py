@@ -880,10 +880,19 @@ def send_to_gemini(user_id, username, user_message, city_data):
     User: {user_message}
     
     Guidelines:
-    - Keep the response under 100 words.
+    - Keep the response under 150 words.
     - Use a conversational and engaging tone.
     - Provide useful and relevant information.
     - Avoid excessive formalities.
+    - Do not greet the user with the user's name in the response.
+    - Start the response with a short, friendly phrase to set a helpful tone. 
+        Use variations like:
+        - “Absolutely!”
+        - “Sure thing, fellow traveler!”
+        - “You got it!”
+        - “Happy to help!”
+        - “Of course!”
+        - “Definitely!”
 
     Overall, do not just output a bunch of text, but make it readable.
     If there are multiple items listed, please format them as a multiple paragraphs.
@@ -906,8 +915,7 @@ def send_to_gemini(user_id, username, user_message, city_data):
     * **Embassy Suites by Hilton:** [Hotel description here]
     * **Mediterranean Inn:** [Hotel description here]
 
-    Then replace [Your forecast here] with sub bullet points for weather condition, temperature, feels like temperature, humidity, wind speed, etc.
-    Replace [Hotel description here] with sub bullet points for hotel name, rating, price, etc.
+    Suggest a minimum of 3 hotels. If there are more, you can suggest up to 5 hotels.
     
     
     Chatbot:

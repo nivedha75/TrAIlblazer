@@ -673,8 +673,9 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
                   }}
                 >
                   <strong>
-                    {msg?.sender === "chatbot" ? "chatbot" : "Me"}:
+                    {msg?.sender === "chatbot" ? "Chatbot" : "Me"}: 
                   </strong>
+                  {" "}
                   <ReactMarkdown
                     components={{
                       p: ({ node, ...props }) => <span {...props} />, // prevent extra <p> tags
