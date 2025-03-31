@@ -229,6 +229,9 @@ const ItineraryDetails = () => {
       sender: username,
       receiver: "chatbot",
       message: inputMessage,
+      location: tripDetails.location,
+      startDate: tripDetails.startDate,
+      endDate: tripDetails.endDate
     };
 
     // Create placeholder chatbot response
