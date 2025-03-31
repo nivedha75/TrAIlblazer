@@ -72,6 +72,7 @@ const ItineraryDetails = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [username, setUsername] = useState("");
   const dropdownRef = useRef(null);
+  const [selectedDay, setSelectedDay] = useState(null);
 
   const navigate = useNavigate();
 
@@ -367,7 +368,22 @@ const ItineraryDetails = () => {
   }
 
   function handleSelectRestaurant(tripId, activity) {
-    fetch(`http://localhost:55000/move_restaurant_activity/${tripId}/${activity.activityID}`, {
+    const daysInTrip = trip.activities.top_preferences.length; // Number of days
+    let day = selectedDay;
+    if (day === null) {
+        const userInput = prompt(`Select a day (1 to ${daysInTrip}):`);
+        if (!userInput || isNaN(userInput) || userInput < 1 || userInput > daysInTrip) return;
+        day = parseInt(userInput, 10) - 1; // Convert input to zero-based index
+        setSelectedDay(day);
+    }
+
+    // Ensure we are not sending 'null' in the URL
+    if (day === null) {
+        console.error("Invalid day selected.");
+        return;
+    }
+    fetch(`http://localhost:55000/move_restaurant_activity/${tripId}/${activity.activityNumber}/${day}`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "http://localhost:3000",
@@ -375,16 +391,33 @@ const ItineraryDetails = () => {
         "Access-Control-Allow-Headers": "Content-Type"
       }
   })
-  .then(response => response.json())
+  .then(response => {
+    if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json();
+})
   .then(data => {
       if (data.message === "Activity moved successfully") {
-        setTrip((prevTrip) => ({
-          ...prevTrip,
-          activities: {
-            ...prevTrip.activities,
-            top_preferences: [...prevTrip.activities.top_preferences, activity],
-          },
-        }));
+        // setTrip((prevTrip) => ({
+        //   ...prevTrip,
+        //   activities: {
+        //     ...prevTrip.activities,
+        //     top_preferences: [...prevTrip.activities.top_preferences, activity],
+        //   },
+        // }));
+        setTrip((prevTrip) => {
+          const newTopPreferences = [...prevTrip.activities.top_preferences];
+          newTopPreferences[day] = [...newTopPreferences[day], { ...activity, day }];
+          
+          return {
+            ...prevTrip,
+            activities: {
+              ...prevTrip.activities,
+              top_preferences: newTopPreferences,
+            },
+          };
+        });
       }
   })
   .catch(error => console.error("Error:", error));
@@ -755,7 +788,7 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
       />
       <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
         {filteredRestaurants.slice(0, 5).map((restaurant) => (
-          <li key={restaurant._id} onClick={() => handleSelectRestaurant(trip._id, restaurant)} style={{ padding: "5px", fontSize: "16px", cursor: "pointer", 
+          <li key={restaurant.activityNumber} onClick={() => handleSelectRestaurant(trip._id, restaurant)} style={{ padding: "5px", fontSize: "16px", cursor: "pointer", 
           transition: "background 0.3s", 
           borderRadius: "5px"  }}
           onMouseEnter={(e) => e.target.style.background = "#f0f0f0"}

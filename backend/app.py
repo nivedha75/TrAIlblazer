@@ -1134,39 +1134,90 @@ def move_itinerary_activity(trip_id, activityID):
     # return response
 
 
+# @app.route(
+#     "/move_restaurant_activity/<trip_id>/<int:activityID>",
+#     methods=["GET", "POST", "OPTIONS"],
+# )
+# def move_restaurant_activity(trip_id, activityID):
+#     if request.method == "OPTIONS":
+#         return jsonify({"message": "CORS preflight passed"}), 200
+
+#     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
+#     if not itinerary:
+#         return jsonify({"error": "Itinerary not found"}), 404
+#     restaurant = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
+#     if not restaurant:
+#         return jsonify({"error": "Restaurant not found"}), 404
+
+#     next_best = restaurant.get("restaurants", [])
+#     activity = next(
+#         (act for act in next_best if act.get("activityNumber") == activityID), None
+#     )
+#     if not activity:
+#         return jsonify({"error": "Restaurant not found"}), 404
+
+#     itinerary["activities"]["top_preferences"].append(activity)
+
+#     itinerary_collection.update_one(
+#         {"_id": ObjectId(trip_id)},
+#         {
+#             "$set": {
+#                 "activities.top_preferences": itinerary["activities"][
+#                     "top_preferences"
+#                 ],
+#             }
+#         },
+#     )
+
+#     response = jsonify(
+#         {
+#             "message": "Activity moved successfully",
+#             "updated_itinerary": convert_objectid(itinerary),
+#         }
+#     )
+#     response.headers.add("Access-Control-Allow-Origin", "*")
+#     return response
+
 @app.route(
-    "/move_restaurant_activity/<trip_id>/<int:activityID>",
+    "/move_restaurant_activity/<trip_id>/<int:activityID>/<int:day>",
     methods=["GET", "POST", "OPTIONS"],
 )
-def move_restaurant_activity(trip_id, activityID):
+def move_restaurant_activity(trip_id, activityID, day):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
 
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
+    
     restaurant = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
     if not restaurant:
         return jsonify({"error": "Restaurant not found"}), 404
 
     next_best = restaurant.get("restaurants", [])
     activity = next(
-        (act for act in next_best if act.get("activityID") == activityID), None
-    )
-    if not activity:
-        return jsonify({"error": "Activity not found in next_best_preferences"}), 404
+        (act for act in next_best if act.get("activityNumber") == activityID), None)
 
-    itinerary["activities"]["top_preferences"].append(activity)
+    # Extract the specific activity
+    #activity = restaurant["restaurants"][0]
+
+    # next_best = restaurant.get("restaurants", [])
+    # activity = next(
+    #     (act for act in next_best if act.get("activityNumber") == activityID), None
+    #)
+    if not activity:
+        return jsonify({"error": "Restaurant not found"}), 404
+    
+    activity["day"] = day
+
+    while len(itinerary["activities"]["top_preferences"]) <= day:
+        itinerary["activities"]["top_preferences"].append([])
+
+    itinerary["activities"]["top_preferences"][day].append(activity)
 
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
-        {
-            "$set": {
-                "activities.top_preferences": itinerary["activities"][
-                    "top_preferences"
-                ],
-            }
-        },
+        {"$set": {f"activities.top_preferences.{day}": itinerary["activities"]["top_preferences"][day]}}
     )
 
     response = jsonify(
