@@ -227,8 +227,12 @@ def trips():
 
             print("\n\nCity data for generating itinerary:", city_data)
             # Step 2: Use Gemini Flash to generate a personalized itinerary
-            generate_itinerary(data["userId"], data["location"], data["days"], trip_id, city_data)
-            generate_restaurant_recommendations(data["userId"], data["location"], trip_id, city_data)
+            generate_itinerary(
+                data["userId"], data["location"], data["days"], trip_id, city_data
+            )
+            generate_restaurant_recommendations(
+                data["userId"], data["location"], trip_id, city_data
+            )
             generate_itinerary(data["userId"], data["location"], trip_id, city_data)
             generate_restaurant_recommendations(
                 data["userId"], data["location"], trip_id
@@ -263,7 +267,10 @@ def get_trip(trip_id):
                 result = itinerary_collection.delete_one({"_id": ObjectId(trip_id)})
                 print(f"Itinerary: {trip_id}")
                 if result.deleted_count > 0:
-                    return jsonify({"message": "Trip and Itinerary deleted successfully"}), 200
+                    return (
+                        jsonify({"message": "Trip and Itinerary deleted successfully"}),
+                        200,
+                    )
                 else:
                     return jsonify({"error": "Itinerary not found"}), 404
             else:
@@ -613,12 +620,15 @@ activity_id_counter = count(1)
 def generate_activity_id():
     return next(activity_id_counter)
 
+
 # @app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
 # add this parameter later: city_data
 def generate_itinerary(user_id, location, days, trip_id, city_data):
     print("generating itinerary")
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
-    preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
+    preferences_str_format = json.dumps(
+        preferences, indent=4, sort_keys=True, default=str
+    )
     # print(preferences_str_format)
     preferences_str_format = json.dumps(
         preferences, indent=4, sort_keys=True, default=str
@@ -626,13 +636,14 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
     # print(preferences_str_format)
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
 
-    headers = {
-        "Content-Type": "application/json"
-    }
-#             \"time_frame\": ...the time the user will start the activity and the time they will end it. example format: {\"start\":\"9:00 AM\",\"end\":\"1:00 PM\"}...,
-#     The time frames for the activities may not overlap, unless it is ONLY the next best preference overlapping with ONLY one top preference.
-    prompt = """I am building a travel itinerary recommendation app.
-    Here is the real-time city data for weather and hotels in that city: """ + city_data + """\n
+    headers = {"Content-Type": "application/json"}
+    #             \"time_frame\": ...the time the user will start the activity and the time they will end it. example format: {\"start\":\"9:00 AM\",\"end\":\"1:00 PM\"}...,
+    #     The time frames for the activities may not overlap, unless it is ONLY the next best preference overlapping with ONLY one top preference.
+    prompt = (
+        """I am building a travel itinerary recommendation app.
+    Here is the real-time city data for weather and hotels in that city: """
+        + city_data
+        + """\n
     Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
     Use this information to make smart activity choices (e.g., recommend indoor activities on rainy days, outdoor ones on sunny days).
     Also consider hotel data for location or quality-based recommendations.
@@ -681,7 +692,13 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
             ],
         \"next_best_preferences\": exact same format as top_preferences\n
         
-        The location is: """ + location + """. The trip is """ + str(days) + """ days long. Here are the user preferences:""" + preferences_str_format
+        The location is: """
+        + location
+        + """. The trip is """
+        + str(days)
+        + """ days long. Here are the user preferences:"""
+        + preferences_str_format
+    )
 
     # print(prompt)
     # Here is the real-time data for weather, activities, and/or hotels in that city: {city_data}
@@ -707,7 +724,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
     parsed_json = json.loads(text_content)
     for day in parsed_json["top_preferences"]:
         for activity in day:
-            activity["details"]["images"] = get_image(activity['title'])
+            activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
             # print(activity)
             activity_collection.insert_one(activity["details"])
@@ -720,7 +737,6 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
     #     print(activity)
 
     # print(parsed_json)
-
 
     itinerary_data = {
         "_id": trip_id,  # Same _id as the trip document
@@ -735,24 +751,25 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
 
 def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
-    print('Generating restaurant recommendations')
-def generate_restaurant_recommendations(user_id, location, trip_id):
     print("Generating restaurant recommendations")
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
-    preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
-   
+    preferences_str_format = json.dumps(
+        preferences, indent=4, sort_keys=True, default=str
+    )
+
     preferences_str_format = json.dumps(
         preferences, indent=4, sort_keys=True, default=str
     )
 
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
-   
-    headers = {
-        "Content-Type": "application/json"
-    }
-   
-    prompt = """I am building a travel itinerary recommendation app.
-    Here is the real-time city data for weather and hotels in that city: """ + city_data + """\n
+
+    headers = {"Content-Type": "application/json"}
+
+    prompt = (
+        """I am building a travel itinerary recommendation app.
+    Here is the real-time city data for weather and hotels in that city: """
+        + city_data
+        + """\n
     Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
     Use this information to make smart restaurant choices.
 
@@ -793,8 +810,12 @@ def generate_restaurant_recommendations(user_id, location, trip_id):
         ...
     ]
    
-    The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
-   
+    The location is: """
+        + location
+        + """. Here are the user preferences:"""
+        + preferences_str_format
+    )
+
     # prompt = f"""I am building a travel itinerary recommendation app. Given a user's preferences, generate 20 restaurant recommendations for the location {location}. Format it as the following JSON STRICTLY:
     # "restaurants": [
     #     {{
@@ -808,13 +829,10 @@ def generate_restaurant_recommendations(user_id, location, trip_id):
     # ]
     # Here are the user preferences: {preferences_str_format}
     # """
-   
+
     print(prompt)
 
-    data = {
-        "contents": [{"parts": [{"text": prompt}]}]
-    }
-   
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
 
     headers = {"Content-Type": "application/json"}
 
@@ -838,39 +856,34 @@ def generate_restaurant_recommendations(user_id, location, trip_id):
     response_json = response.json()
     # print(response_json)
 
-   
-    text_content = extract_json(response_json["candidates"][0]["content"]["parts"][0]["text"])
+    text_content = extract_json(
+        response_json["candidates"][0]["content"]["parts"][0]["text"]
+    )
 
     # print(text_content)
-
 
     text_content = extract_json(
         response_json["candidates"][0]["content"]["parts"][0]["text"]
     )
     parsed_json = json.loads(text_content)
 
-
-
-    #print(parsed_json)
-
+    # print(parsed_json)
 
     for restaurant in parsed_json["restaurants"]:
-        #restaurant["activityID"] = generate_activity_id()
-        #restaurant["images"] = get_image(restaurant['title'])
+        # restaurant["activityID"] = generate_activity_id()
+        # restaurant["images"] = get_image(restaurant['title'])
         restaurant["details"]["images"] = get_image(restaurant["title"])
         restaurant["details"]["tripId"] = trip_id
-        restaurant["activityID"] = activity_collection.insert_one(restaurant["details"]).inserted_id
-   
+        restaurant["activityID"] = activity_collection.insert_one(
+            restaurant["details"]
+        ).inserted_id
+
         restaurant["activityID"] = generate_activity_id()
         restaurant["image"] = get_image(restaurant["title"])
 
     print(parsed_json)
-   
-    itinerary_data = {
-        "_id": trip_id,
-        "restaurants": parsed_json["restaurants"]
-    }
-   
+
+    itinerary_data = {"_id": trip_id, "restaurants": parsed_json["restaurants"]}
 
     itinerary_data = {"_id": trip_id, "restaurants": parsed_json["restaurants"]}
 
@@ -1175,23 +1188,22 @@ def update_activity_order(trip_id):
     if not isinstance(new_order, list) or not isinstance(index, int):
         return jsonify({"error": "Invalid data format"}), 400
 
-
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
 
     top_preferences = itinerary.get("activities", {}).get("top_preferences", [])
-    
+
     if index >= len(top_preferences):
         return jsonify({"error": "Invalid day index"}), 400
 
     top_preferences[index] = new_order
 
-
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
-        {"$set": {"activities.top_preferences": top_preferences}}
-        {"_id": ObjectId(trip_id)}, {"$set": {"activities.top_preferences": new_order}}
+        {"$set": {"activities.top_preferences": top_preferences}},
+        {"_id": ObjectId(trip_id)},
+        {"$set": {"activities.top_preferences": new_order}},
     )
 
     response = jsonify({"message": "Activity order updated successfully"})
