@@ -760,7 +760,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     # return jsonify({"response": parsed_json}), 200
 
-
+#WORKS: DO NOT MODIFY
 def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     try:
         print('Generating restaurant recommendations')
@@ -840,6 +840,7 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
         #print(parsed_json)
 
         for restaurant in parsed_json["restaurants"]:
+            #KEEP THIS
             restaurant["activityNumber"] = generate_activity_number()
             restaurant["details"]["images"] = get_image(restaurant["title"])
             restaurant["details"]["tripId"] = trip_id
@@ -903,6 +904,7 @@ def send_message():
     data = request.json
     print(f"Data: {data}")
     user_id = data.get("user_id")
+    trip_id = data.get("trip_id")
     username = data.get("sender")
     user_message = data.get("message")
 
@@ -912,6 +914,7 @@ def send_message():
     # Save user message
     user_msg_entry = {
         "user_id": user_id,
+        "trip_id": trip_id,
         "sender": username,
         "receiver": "chatbot",
         "message": user_message,
@@ -946,6 +949,7 @@ def send_message():
     # Save chatbot response
     chatbot_msg_entry = {
         "user_id": user_id,
+        "trip_id": trip_id,
         "sender": "chatbot",
         "receiver": username,
         "message": chatbot_response,
@@ -956,17 +960,31 @@ def send_message():
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response, 200
 
-
-@app.route("/get_messages/<user_id>", methods=["GET", "OPTIONS"])
-def get_messages(user_id):
+@app.route("/get_messages/<user_id>/<trip_id>", methods=["GET", "OPTIONS"])
+def get_messages(user_id, trip_id):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    messages = list(messages_collection.find({"user_id": user_id}, {"_id": 0}))
-    if not messages:
-        return jsonify({"error": "Error getting messages"}), 404
-    response = jsonify(messages)
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    return response, 200
+    #messages = list(messages_collection.find({"user_id": user_id}, {"_id": 0}))
+    try:
+        messages = list(messages_collection.find({"user_id": user_id, "trip_id": trip_id}, {"_id": 0}))
+        if not messages:
+            return jsonify({"error": "Error getting messages"}), 404
+        response = jsonify(messages)
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response, 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# @app.route("/get_messages/<user_id>", methods=["GET", "OPTIONS"])
+# def get_messages(user_id):
+#     if request.method == "OPTIONS":
+#         return jsonify({"message": "CORS preflight passed"}), 200
+#     messages = list(messages_collection.find({"user_id": user_id}, {"_id": 0}))
+#     if not messages:
+#         return jsonify({"error": "Error getting messages"}), 404
+#     response = jsonify(messages)
+#     response.headers.add("Access-Control-Allow-Origin", "*")
+#     return response, 200
 
 
 # @app.route('/get_image/<query>')
@@ -1178,6 +1196,7 @@ def move_itinerary_activity(trip_id, activityID):
 #     response.headers.add("Access-Control-Allow-Origin", "*")
 #     return response
 
+#USED TO ADD RESTAURANT. DO NOT CHANGE
 @app.route(
     "/move_restaurant_activity/<trip_id>/<int:activityID>/<int:day>",
     methods=["GET", "POST", "OPTIONS"],
@@ -1198,13 +1217,6 @@ def move_restaurant_activity(trip_id, activityID, day):
     activity = next(
         (act for act in next_best if act.get("activityNumber") == activityID), None)
 
-    # Extract the specific activity
-    #activity = restaurant["restaurants"][0]
-
-    # next_best = restaurant.get("restaurants", [])
-    # activity = next(
-    #     (act for act in next_best if act.get("activityNumber") == activityID), None
-    #)
     if not activity:
         return jsonify({"error": "Restaurant not found"}), 404
     

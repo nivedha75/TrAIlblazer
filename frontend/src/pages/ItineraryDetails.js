@@ -163,9 +163,10 @@ const ItineraryDetails = () => {
     // Fetch chat messages from the backend
     const userId = Cookies.get("user_id");
     const storedUsername = Cookies.get("username");
+    const tripId = tripDetails?._id;
     setUsername(storedUsername);
     if (userId && storedUsername) {
-      fetch(`http://localhost:55000/get_messages/${userId}`, {
+      fetch(`http://localhost:55000/get_messages/${userId}/${tripId}`, {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "http://localhost:3000",
@@ -182,7 +183,7 @@ const ItineraryDetails = () => {
         .then((data) => {console.log(data); setChatMessages(data)})
         .catch((error) => console.error("Error fetching messages:", error));
     }
-  }, []);
+  }, [tripDetails?._id]);
 
   // const handleSendMessage = () => {
   //   if (inputMessage.trim() === "" || !username) return;
@@ -222,13 +223,16 @@ const ItineraryDetails = () => {
     if (inputMessage.trim() === "" || !username) return;
 
     const userId = Cookies.get("user_id");
+    const tripId = tripDetails._id;
     console.log("userId: ", userId);
     console.log("username: ", username);
-    if (!userId) return;
+    console.log("tripID: ", tripId);
+    if (!userId || !tripId) return;
 
     // Create user message object
     const userMessage = {
       user_id: userId,
+      trip_id: tripId,
       sender: username,
       receiver: "chatbot",
       message: inputMessage,
@@ -644,6 +648,12 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
             style={{
               flex: 1,
               padding: "10px",
