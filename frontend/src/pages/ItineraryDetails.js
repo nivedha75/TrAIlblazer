@@ -74,6 +74,7 @@ const ItineraryDetails = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [deleteMode, setDeleteMode] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [tooltipText, setTooltipText] = useState("Open Link in New Tab");
   const [openBook, setOpenBook] = useState(false);
@@ -176,6 +177,7 @@ const ItineraryDetails = () => {
   useEffect(() => {
     // Fetch chat messages from the backend
     const userId = Cookies.get("user_id");
+    if (userId == tripDetails?.userId) setSignedIn(true);
     const storedUsername = Cookies.get("username");
     const tripId = tripDetails?._id;
     setUsername(storedUsername);
@@ -555,6 +557,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
               activity={activity}
               deleteMode={deleteMode}
               handleDeleteClick={handleDeleteClick}
+              disabled={!signedIn}
             />
           ))
         ) : (
@@ -756,14 +759,16 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
           left: "450px",
         }}
       >
-        <Button
-          variant="contained"
-          color="error"
-          style={{ position: "absolute", top: 10, right: 70 }}
-          onClick={() => setDeleteMode(!deleteMode)}
-        >
-          {deleteMode ? "Cancel Delete" : "Delete Activities"}
-        </Button>
+        {signedIn && (
+          <Button
+            variant="contained"
+            color="error"
+            style={{ position: "absolute", top: 10, right: 70 }}
+            onClick={() => setDeleteMode(!deleteMode)}
+          >
+            {deleteMode ? "Cancel Delete" : "Delete Activities"}
+          </Button>
+        )}
         <h1
           style={{ textAlign: "center", color: "#333", marginBottom: "10px" }}
         >
@@ -802,6 +807,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
                 activities={day}
                 deleteMode={deleteMode}
                 handleDeleteClick={handleDeleteClick}
+                signedIn={signedIn}
                 onSortEnd={({ oldIndex, newIndex }) => {
                   const newOrder = arrayMoveImmutable(day, oldIndex, newIndex);
                   setTrip((prevTrip) => ({
@@ -928,101 +934,100 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
         >
           Back to Home
         </button>
-        <div style={{ display: "flex", alignItems: "center", cursor: "pointer", flexDirection: "column", position: "relative" }}>
-  {showSearch && (
-    <div //ref={dropdownRef} 
-    style={{ 
-      position: "absolute", 
-      bottom: "80px", 
-      backgroundColor: "white", 
-      padding: "10px", 
-      borderRadius: "8px", 
-      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
-      width: "280px",
-      textAlign: "center",
-      zIndex: 1000
-    }}>
-      <input
-        type="text"
-        placeholder="Search restaurants..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{ padding: "8px", width: "90%", borderRadius: "5px", border: "1px solid #ccc" }}
-      />
-      <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
-        {filteredRestaurants.slice(0, 5).map((restaurant) => (
-          <li key={restaurant.activityNumber} onClick={() => handleSelectRestaurant(trip._id, restaurant)} style={{ padding: "5px", fontSize: "16px", cursor: "pointer", 
-          transition: "background 0.3s", 
-          borderRadius: "5px"  }}
-          onMouseEnter={(e) => e.target.style.background = "#f0f0f0"}
-            onMouseLeave={(e) => e.target.style.background = "white"}>
-            {restaurant.title}
-          </li>
-        ))}
-      </ul>
-    </div>
-  )}
-
-            <AddCircleIcon
-              style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
-              onClick={addSearch}
-            />
-            <span
-              onClick={addSearch}
+        {signedIn && (
+        <><div style={{ display: "flex", alignItems: "center", cursor: "pointer", flexDirection: "column", position: "relative" }}>
+              {showSearch && (
+                <div //ref={dropdownRef} 
+                  style={{
+                    position: "absolute",
+                    bottom: "80px",
+                    backgroundColor: "white",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                    width: "280px",
+                    textAlign: "center",
+                    zIndex: 1000
+                  }}>
+                  <input
+                    type="text"
+                    placeholder="Search restaurants..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ padding: "8px", width: "90%", borderRadius: "5px", border: "1px solid #ccc" }} />
+                  <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
+                    {filteredRestaurants.slice(0, 5).map((restaurant) => (
+                      <li key={restaurant.activityNumber} onClick={() => handleSelectRestaurant(trip._id, restaurant)} style={{
+                        padding: "5px", fontSize: "16px", cursor: "pointer",
+                        transition: "background 0.3s",
+                        borderRadius: "5px"
+                      }}
+                        onMouseEnter={(e) => e.target.style.background = "#f0f0f0"}
+                        onMouseLeave={(e) => e.target.style.background = "white"}>
+                        {restaurant.title}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <AddCircleIcon
+                style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
+                onClick={addSearch} />
+              <span
+                onClick={addSearch}
+                style={{
+                  fontSize: "18px",
+                  marginLeft: "2px",
+                  color: "#007bff",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                {showSearch ? "Close Search" : "Add Restaurant"}
+              </span>
+            </div><div
               style={{
-                fontSize: "18px",
-                marginLeft: "2px",
-                color: "#007bff",
-                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
                 cursor: "pointer",
               }}
             >
-              {showSearch ? "Close Search" : "Add Restaurant"}
-            </span>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              cursor: "pointer",
-            }}
-          >
-            <AddCircleIcon
-              style={{ fontSize: "50px", color: "#007bff" }}
-              onClick={handleAddClick}
-            />
-            <span
-              onClick={handleAddClick}
-              style={{
-                fontSize: "18px",
-                marginLeft: "2px",
-                color: "#007bff",
-                fontWeight: "bold",
-              }}
-            >
-              Add Activity
-            </span>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-            >
-              {/* {trip.activities.next_best_preferences.map((activity) => (
-          <MenuItem key={activity.details._id} onClick={() => handleSelectActivity(trip._id, activity)}>
-            {activity.title}
-          </MenuItem>
-        ))} */}
-        {trip.activities.next_best_preferences.map(function (day) {
-            return day.map(function (activity) {
-              return (
-                <MenuItem key={activity.activityNumber} onClick={() => handleSelectActivity(trip._id, activity)}>
-                  {activity.title}
-                </MenuItem>
-              )});
-        })}
-      </Menu>
-    </div> 
+                <AddCircleIcon
+                  style={{ fontSize: "50px", color: "#007bff" }}
+                  onClick={handleAddClick} />
+                <span
+                  onClick={handleAddClick}
+                  style={{
+                    fontSize: "18px",
+                    marginLeft: "2px",
+                    color: "#007bff",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Add Activity
+                </span>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleClose}
+                >
+                  {/* {trip.activities.next_best_preferences.map((activity) => (
+<MenuItem key={activity.details._id} onClick={() => handleSelectActivity(trip._id, activity)}>
+  {activity.title}
+</MenuItem>
+))} */}
+                  {trip.activities.next_best_preferences.map(function (day) {
+                    return day.map(function (activity) {
+                      return (
+                        <MenuItem key={activity.activityNumber} onClick={() => handleSelectActivity(trip._id, activity)}>
+                          {activity.title}
+                        </MenuItem>
+                      );
+                    });
+                  })}
+                </Menu>
+              </div></> 
+    )}
     </div>
       </div>
     </div>
