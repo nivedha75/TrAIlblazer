@@ -228,13 +228,17 @@ def trips():
             print("\n\nCity data for generating itinerary:", city_data)
             # Step 2: Use Gemini Flash to generate a personalized itinerary
             try:
-                generate_itinerary(data["userId"], data["location"], data["days"], trip_id, city_data)
+                generate_itinerary(
+                    data["userId"], data["location"], data["days"], trip_id, city_data
+                )
             except Exception as e:
                 print(f"Error in generate_itinerary: {e}")
 
             print("Calling generate_restaurant_recommendations...")  # Debugging
-            generate_restaurant_recommendations(data["userId"], data["location"], trip_id, city_data)
-            
+            generate_restaurant_recommendations(
+                data["userId"], data["location"], trip_id, city_data
+            )
+
             return jsonify({"message": "Trip data saved successfully"}), 201
 
         except Exception as e:
@@ -659,7 +663,10 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     Given a user's travel preferences, destination, and the real-time city data provided, generate an itinerary with, for each day of the trip, 3 activities: 2 as top preferences and 1 as a next best preference.
     Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination.
-    Format it as the following JSON STRICTLY, NO OTHER WORDS:
+
+    Note: Do not use the ISO format for the date. Instead, use the format "Month Day, Year" (e.g., "April 2, 2025").
+
+    Format the itinerary as the following JSON STRICTLY, NO OTHER WORDS:
         \"top_preferences\": [
             [
                 {
@@ -760,13 +767,17 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     # return jsonify({"response": parsed_json}), 200
 
-
+#WORKS: DO NOT MODIFY
 def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     try:
-        print('Generating restaurant recommendations')
-        preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
-        preferences_str_format = json.dumps(preferences, indent=4, sort_keys=True, default=str)
-    
+        print("Generating restaurant recommendations")
+        preferences = collection.find_one(
+            {"user_id": user_id}, {"_id": 0, "user_id": 0}
+        )
+        preferences_str_format = json.dumps(
+            preferences, indent=4, sort_keys=True, default=str
+        )
+
         url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
     
         headers = {
@@ -819,10 +830,8 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     
         # print(prompt)
 
-        data = {
-            "contents": [{"parts": [{"text": prompt}]}]
-        }
-    
+        data = {"contents": [{"parts": [{"text": prompt}]}]}
+
         response = requests.post(url, headers=headers, json=data)
         response_json = response.json()
         # print("Raw AI response:", response_json)
@@ -837,21 +846,19 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
         #parsed_json = text_content
         # print("Parsed json: ", parsed_json)
 
-        #print(parsed_json)
+        # print(parsed_json)
 
         for restaurant in parsed_json["restaurants"]:
+            #KEEP THIS
             restaurant["activityNumber"] = generate_activity_number()
             restaurant["details"]["images"] = get_image(restaurant["title"])
             restaurant["details"]["tripId"] = trip_id
             restaurant["activityID"] = activity_collection.insert_one(restaurant["details"]).inserted_id
     
         print(parsed_json)
-    
-        itinerary_data = {
-            "_id": trip_id,
-            "restaurants": parsed_json["restaurants"]
-        }
-    
+
+        itinerary_data = {"_id": trip_id, "restaurants": parsed_json["restaurants"]}
+
         restaurant_collection.insert_one(itinerary_data)
     except Exception as e:
         print(f"Error in generate_restaurant_recommendations: {e}")
@@ -868,7 +875,7 @@ def send_to_gemini(user_id, username, user_message, city_data):
     Also use their preferences to come up with an answer. Here are the user's preferences: {preferences_str_format}
     Here is the real-time city data: {city_data}
 
-    Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
+    Use the provided structured `city_data` above — it contains real time data such as current weather, weather forecasts, and/or hotel listings for the city.
     If the user asks for activities to do on some day, make smart activity choices based on the weather
     (e.g., recommend indoor activities on rainy days, outdoor ones on sunny days).
     If the user asks for hotels, use the top hotels information provided in the `city_data` above.
@@ -876,23 +883,108 @@ def send_to_gemini(user_id, username, user_message, city_data):
     User: {user_message}
     
     Guidelines:
-    - Keep the response under 100 words.
+    - Keep the response under 250 words.
     - Use a conversational and engaging tone.
     - Provide useful and relevant information.
     - Avoid excessive formalities.
+    - Do not greet the user with the user's name in the response.
+    - Start the response with a short, friendly phrase to set a helpful tone. 
+        Use variations like:
+        - “Absolutely!”
+        - “Sure thing, fellow traveler!”
+        - “You got it!”
+        - “Happy to help!”
+        - “Of course!”
+        - “Definitely!”
+
+    Overall, do not just output a bunch of text, but make it readable.
+    If there are multiple items listed, please format them as a multiple paragraphs.
+    Format with a single Markdown bullet per paragraph, with no extra blank lines in between.
+
+    Use this format for any response with a list of items:
+    * **Item 1:** Explanation of this item goes here.
+    * **Item 2:** Explanation of this item goes here.
+    * **Item 3:** Explanation of this item goes here.
+
+    Example — Weather Format:
+
+    * **April 1st:** [Your forecast here]
+    * **April 2nd:** [Your forecast here]
+    * **April 3rd:** [Your forecast here]
+
+    Example — Hotel Format:
+
+    * **Ballard Inn:** [Hotel description here]
+    * **Embassy Suites by Hilton:** [Hotel description here]
+    * **Mediterranean Inn:** [Hotel description here]
+
+    Suggest a minimum of 3 hotels. If there are more, you can suggest up to 5 hotels.
     
+
+
+    When listing different types of data (ie. weather, hotels, restaurants), always group them with a heading or introductory sentence *before* each group of bullet points.
+    For example:
+
+    * Start with a sentence introducing the weather for the trip.
+    * Then use bullets for each day’s forecast.
+    * Then include a short sentence like: “Here are a few hotel options that might suit your preferences:”
+    * Then use bullets for hotel information.
+
+    This improves readability and avoids combining unrelated bullet points in the same list without a sentence separating them.
+
+    If you cannot find real time hotel data in the specific data I gave that matches conditions the user provided, you can confidently provide generic hotel data alternatives you can find on your own that matches the condition instead
     Chatbot:
     """
     data = {"contents": [{"parts": [{"text": prompt}]}]}
-    print(f"Gemini chatbot response: {data}\n\n")
 
     headers = {"Content-Type": "application/json"}
 
     response = requests.post(url, headers=headers, json=data)
-    response_json = response.json()
 
-    chatbot_reply = response_json["candidates"][0]["content"]["parts"][0]["text"]
-    return chatbot_reply
+    # Extract raw response text
+    raw_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+
+    # print(f"Gemini chatbot response: {chatbot_response}\n\n")
+    print(f"Gemini chatbot response before cleaning: {raw_text}\n\n")
+    # Clean markdown formatting
+    chatbot_response = clean_response_markdown(raw_text)
+    print(f"Gemini chatbot response after cleaning: {chatbot_response}\n\n")
+
+    # Return the cleaned chatbot response
+    return chatbot_response
+
+
+# def clean_response_markdown(text):
+#     import re
+
+#     # Normalize bullets
+#     text = re.sub(r"\n\s*\*\s", r"\n* ", text)
+
+#     # Collapse extra newlines
+#     text = re.sub(r"\n{3,}", "\n\n", text)
+
+#     # Insert newline between last bullet and next paragraph
+#     text = re.sub(r"(\*\*.*?\*\:.*?\n)(?=[^\*\n])", r"\1\n", text)
+
+#     return text.strip()
+
+
+def clean_response_markdown(text):
+    import re
+
+    # Normalize bullets
+    text = re.sub(r"\n\s*\*\s", r"\n* ", text)
+
+    # Add a newline between two sentences if they're separated by only one and both are NOT bullets
+    text = re.sub(r"([^\n*])\n([^\n*])", r"\1\n\n\2", text)
+
+    # Collapse 3+ newlines to just 2
+    text = re.sub(r"\n{3,}", "\n\n", text)
+
+    # Add a newline after a bullet block before non-bullet text if needed
+    text = re.sub(r"(\*\*.*?\*\:.*?\n)(?=[^\*\n])", r"\1\n", text)
+
+    return text.strip()
 
 
 @app.route("/send_message", methods=["POST", "OPTIONS"])
@@ -903,6 +995,7 @@ def send_message():
     data = request.json
     print(f"Data: {data}")
     user_id = data.get("user_id")
+    trip_id = data.get("trip_id")
     username = data.get("sender")
     user_message = data.get("message")
 
@@ -912,6 +1005,7 @@ def send_message():
     # Save user message
     user_msg_entry = {
         "user_id": user_id,
+        "trip_id": trip_id,
         "sender": username,
         "receiver": "chatbot",
         "message": user_message,
@@ -920,18 +1014,25 @@ def send_message():
     messages_collection.insert_one(user_msg_entry)
 
     # Get chatbot response
-    user_query = (
-        """For the city, """
-        + data.get("location")
-        + """ describe the following information:\n
+    user_query = f"""
+        You are helping a traveler with a trip to {data.get("location")} from {data.get("startDate")} to {data.get("endDate")}.
+        Use tools to answer the question as needed — for example:
+        
+        - Use the fetch_weather_for_trip_tool if they ask about weather forecasts for every day on that trip.
         Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions
-        for every day from the start date """
-        + data.get("startDate")
-        + """ to the end date """
-        + data.get("endDate")
-        + """.
-        Also, specifically provide the name, rating, and price of hotels in the city."""
-    )
+        for every day from the start date till the end date.
+        
+        - Use the fetch_hotels_tool if they ask about the hotels in a city.
+        Specifically describe the name, rating, and price of hotels in the city.
+
+        - Use the fetch_current_weather_tool if they ask about the current weather.
+        Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions for the current weather.
+
+        - You can use mulitple tools if the user asks about multiple types of data.
+        For example, if they ask about both the weather and hotels, you can use both tools.
+
+        User query: "{data.get("message")}"
+        """
     agent = get_langchain_agent(OPENAI_API_KEY)
     try:
         city_data = agent.run(user_query)
@@ -942,10 +1043,12 @@ def send_message():
     print("\n\nCity data for chatbot:", city_data)
 
     chatbot_response = send_to_gemini(user_id, username, user_message, city_data)
+    # print(f"Gemini chatbot response: {chatbot_response}\n\n")
 
     # Save chatbot response
     chatbot_msg_entry = {
         "user_id": user_id,
+        "trip_id": trip_id,
         "sender": "chatbot",
         "receiver": username,
         "message": chatbot_response,
@@ -956,17 +1059,31 @@ def send_message():
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response, 200
 
-
-@app.route("/get_messages/<user_id>", methods=["GET", "OPTIONS"])
-def get_messages(user_id):
+@app.route("/get_messages/<user_id>/<trip_id>", methods=["GET", "OPTIONS"])
+def get_messages(user_id, trip_id):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    messages = list(messages_collection.find({"user_id": user_id}, {"_id": 0}))
-    if not messages:
-        return jsonify({"error": "Error getting messages"}), 404
-    response = jsonify(messages)
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    return response, 200
+    #messages = list(messages_collection.find({"user_id": user_id}, {"_id": 0}))
+    try:
+        messages = list(messages_collection.find({"user_id": user_id, "trip_id": trip_id}, {"_id": 0}))
+        if not messages:
+            return jsonify({"error": "Error getting messages"}), 404
+        response = jsonify(messages)
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response, 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# @app.route("/get_messages/<user_id>", methods=["GET", "OPTIONS"])
+# def get_messages(user_id):
+#     if request.method == "OPTIONS":
+#         return jsonify({"message": "CORS preflight passed"}), 200
+#     messages = list(messages_collection.find({"user_id": user_id}, {"_id": 0}))
+#     if not messages:
+#         return jsonify({"error": "Error getting messages"}), 404
+#     response = jsonify(messages)
+#     response.headers.add("Access-Control-Allow-Origin", "*")
+#     return response, 200
 
 
 # @app.route('/get_image/<query>')
@@ -1178,6 +1295,7 @@ def move_itinerary_activity(trip_id, activityID):
 #     response.headers.add("Access-Control-Allow-Origin", "*")
 #     return response
 
+#USED TO ADD RESTAURANT. DO NOT CHANGE
 @app.route(
     "/move_restaurant_activity/<trip_id>/<int:activityID>/<int:day>",
     methods=["GET", "POST", "OPTIONS"],
@@ -1198,13 +1316,6 @@ def move_restaurant_activity(trip_id, activityID, day):
     activity = next(
         (act for act in next_best if act.get("activityNumber") == activityID), None)
 
-    # Extract the specific activity
-    #activity = restaurant["restaurants"][0]
-
-    # next_best = restaurant.get("restaurants", [])
-    # activity = next(
-    #     (act for act in next_best if act.get("activityNumber") == activityID), None
-    #)
     if not activity:
         return jsonify({"error": "Restaurant not found"}), 404
     

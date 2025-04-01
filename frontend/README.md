@@ -29,6 +29,7 @@ Installed everything with
 ### `npm install tailwindcss postcss autoprefixer --legacy-peer-deps`
 ### `npm install framer-motion --legacy-peer-deps`
 ### `npm install react-icons --legacy-peer-deps`
+### `npm install react-markdown --legacy-peer-deps`
 
 
 Added these scripts to the package.json file
