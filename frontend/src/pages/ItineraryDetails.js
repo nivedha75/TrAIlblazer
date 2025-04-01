@@ -1,7 +1,7 @@
 import React from "react";
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Menu, MenuItem  } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Menu, MenuItem, Tooltip  } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import Bot from "../assets/Bot.avif";
@@ -65,6 +65,8 @@ const ItineraryDetails = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [deleteMode, setDeleteMode] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [tooltipText, setTooltipText] = useState("Open Link in New Tab");
+  const [openBook, setOpenBook] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [restaurantsData, setRestaurantsData] = useState([]);
@@ -79,8 +81,6 @@ const ItineraryDetails = () => {
   const activityDetails = (activityId) => {
     navigate(`/activity-details/${encodeURIComponent(activityId)}`);
   };
-
-  const bookActivity = (activityId) => { };
 
   useEffect(() => {
     if (!showSearch) return; 
@@ -307,6 +307,11 @@ const ItineraryDetails = () => {
 // }
 
 
+  const bookActivity = (activity) => {
+    setSelectedActivity(activity);
+    setOpenBook(true);
+  };
+
   const handleDeleteClick = (activity) => {
     setSelectedActivity(activity);
     setOpenDialog(true);
@@ -489,7 +494,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
       <p><strong>Rating:</strong> {activity.details.rating}</p>
       <span><i>{activity.context}</i></span>
     </div>
-    <Button variant="contained" onClick={() => bookActivity(activity.details._id)}
+    <Button variant="contained" onClick={() => bookActivity(activity)}
         sx={{ textTransform: "none", backgroundColor: theme.palette.apple.main, color: "white",
         "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem",
         boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
@@ -724,8 +729,63 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
         ) : (
           <p>No days to display.</p>
         )}
-        
-
+        {/* The Booking Pop-up */}
+        <Dialog open={openBook} onClose={() => setOpenBook(false)}>
+        <DialogTitle>Book Activity</DialogTitle>
+        <DialogContent>Would you like to book this activity with an external website?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenBook(false)} color="error">Cancel</Button>
+          <Tooltip title={tooltipText} arrow>
+            <Button onClick={() => {
+              try {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(selectedActivity?.title)} booking`, "_blank");
+                setTooltipText("Opened!");
+                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
+              } catch (error) {
+                console.error("Failed to open:", error);
+                setTooltipText("Failed to open");
+              }
+            }} color="secondary">Google</Button>
+          </Tooltip>
+          <Tooltip title={tooltipText} arrow>
+            <Button onClick={() => {
+              try {
+                window.open(`https://www.viator.com/searchResults/all?text=${encodeURIComponent(selectedActivity?.title)}`, "_blank");
+                setTooltipText("Opened!");
+                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
+              } catch (error) {
+                console.error("Failed to open:", error);
+                setTooltipText("Failed to open");
+              }
+            }} color="primary">Viator</Button>
+          </Tooltip>
+          <Tooltip title={tooltipText} arrow>
+            <Button onClick={() => {
+              try {
+                window.open(`https://www.tripadvisor.com/Search?q=${encodeURIComponent(selectedActivity?.title)}`, "_blank");
+                setTooltipText("Opened!");
+                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
+              } catch (error) {
+                console.error("Failed to open:", error);
+                setTooltipText("Failed to open");
+              }
+            }} color="secondary">Trip Advisor</Button>
+          </Tooltip>
+          <Tooltip title={tooltipText} arrow>
+            <Button onClick={() => {
+              try {
+                window.open(`https://www.klook.com/en-US/search/?query=${encodeURIComponent(selectedActivity?.title)}`, "_blank");
+                setTooltipText("Opened!");
+                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
+              } catch (error) {
+                console.error("Failed to open:", error);
+                setTooltipText("Failed to open");
+              }
+            }} color="primary">Klook</Button>
+          </Tooltip>
+        </DialogActions>
+        </Dialog>
+        {/* The Delete Warning */}
          <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Confirm</DialogTitle>
           <DialogContent>
