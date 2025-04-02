@@ -1,17 +1,29 @@
 import React from "react";
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Menu, MenuItem  } from "@mui/material";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+  Menu,
+  MenuItem,
+  Tooltip
+} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import Bot from "../assets/Bot.avif";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
-import {arrayMoveImmutable} from "array-move";
+import { arrayMoveImmutable } from "array-move";
 import theme from "../theme";
 import Cookies from "js-cookie";
 import { motion } from "framer-motion";
-import { FaPaperPlane } from "react-icons/fa";
+import { FaPaperPlane, FaThumbsUp } from "react-icons/fa";
+import ReactMarkdown from "react-markdown";
 // import { Input } from "@/components/ui/input";
 // import { Button as ChatButton} from "@/components/ui/button";
 
@@ -64,7 +76,10 @@ const ItineraryDetails = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [deleteMode, setDeleteMode] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [tooltipText, setTooltipText] = useState("Open Link in New Tab");
+  const [openBook, setOpenBook] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [restaurantsData, setRestaurantsData] = useState([]);
@@ -95,7 +110,7 @@ const ItineraryDetails = () => {
   const bookActivity = (activityId) => { };
 
   useEffect(() => {
-    if (!showSearch) return; 
+    if (!showSearch) return;
 
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -104,7 +119,7 @@ const ItineraryDetails = () => {
     };
     const timeoutId = setTimeout(() => {
       document.addEventListener("mousedown", handleClickOutside);
-    }, 500); 
+    }, 500);
 
     return () => {
       clearTimeout(timeoutId);
@@ -112,15 +127,14 @@ const ItineraryDetails = () => {
     };
   }, [showSearch]);
 
-
   useEffect(() => {
     fetch(`http://localhost:55000/itinerary/${tripId}`, {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "http://localhost:3000",
         "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
     })
       .then((response) => {
         if (!response.ok) {
@@ -128,7 +142,9 @@ const ItineraryDetails = () => {
         }
         return response.json();
       })
-      .then((data) => {setTrip(data);})
+      .then((data) => {
+        setTrip(data);
+      })
       .catch((error) => {
         console.error("Error fetching itinerary details:", error);
         setError(error.message); // Set the error message
@@ -141,8 +157,8 @@ const ItineraryDetails = () => {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "http://localhost:3000",
         "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
     })
       .then((response) => {
         if (!response.ok) {
@@ -150,7 +166,10 @@ const ItineraryDetails = () => {
         }
         return response.json();
       })
-      .then((data) => {console.log("Restaurants: ", data); setRestaurantsData(data);})
+      .then((data) => {
+        console.log("Restaurants: ", data);
+        setRestaurantsData(data);
+      })
       .catch((error) => {
         console.error("Error fetching restaurant details:", error);
         setError(error.message); // Set the error message
@@ -163,8 +182,8 @@ const ItineraryDetails = () => {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "http://localhost:3000",
         "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
     })
       .then((response) => response.json())
       .then((data) => setTripDetails(data))
@@ -174,16 +193,18 @@ const ItineraryDetails = () => {
   useEffect(() => {
     // Fetch chat messages from the backend
     const userId = Cookies.get("user_id");
+    if (userId == tripDetails?.userId) setSignedIn(true);
     const storedUsername = Cookies.get("username");
+    const tripId = tripDetails?._id;
     setUsername(storedUsername);
     if (userId && storedUsername) {
-      fetch(`http://localhost:55000/get_messages/${userId}`, {
+      fetch(`http://localhost:55000/get_messages/${userId}/${tripId}`, {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "http://localhost:3000",
           "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type"
-        }
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
       })
         .then((response) => {
           if (!response.ok) {
@@ -191,10 +212,13 @@ const ItineraryDetails = () => {
           }
           return response.json();
         })
-        .then((data) => {console.log(data); setChatMessages(data)})
+        .then((data) => {
+          console.log(data);
+          setChatMessages(data);
+        })
         .catch((error) => console.error("Error fetching messages:", error));
     }
-  }, []);
+  }, [tripDetails?._id]);
 
   // const handleSendMessage = () => {
   //   if (inputMessage.trim() === "" || !username) return;
@@ -234,19 +258,22 @@ const ItineraryDetails = () => {
     if (inputMessage.trim() === "" || !username) return;
 
     const userId = Cookies.get("user_id");
+    const tripId = tripDetails._id;
     console.log("userId: ", userId);
     console.log("username: ", username);
-    if (!userId) return;
+    console.log("tripID: ", tripId);
+    if (!userId || !tripId) return;
 
     // Create user message object
     const userMessage = {
       user_id: userId,
+      trip_id: tripId,
       sender: username,
       receiver: "chatbot",
       message: inputMessage,
       location: tripDetails.location,
       startDate: tripDetails.startDate,
-      endDate: tripDetails.endDate
+      endDate: tripDetails.endDate,
     };
 
     // Create placeholder chatbot response
@@ -264,11 +291,11 @@ const ItineraryDetails = () => {
       const response = await fetch("http://localhost:55000/send_message", {
         method: "POST",
         headers: {
-                  "Content-Type": "application/json",
-                  "Access-Control-Allow-Origin": "http://localhost:3000",
-                  "Access-Control-Allow-Methods": "POST, OPTIONS",
-                  "Access-Control-Allow-Headers": "Content-Type"
-                },
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
         body: JSON.stringify(userMessage),
       });
 
@@ -277,22 +304,20 @@ const ItineraryDetails = () => {
       if (!data.response) {
         throw new Error("Chatbot response is null");
       }
-  
 
       // Update the "Thinking..." message with actual chatbot response
       //console.log("Msg: ", data.botResponse?.message);
       setChatMessages((prev) =>
-      prev.map((msg, index) =>
-        index === prev.length - 1 // Only replace the latest chatbot message
-          ? { sender: "chatbot", message: data.response}
-          : msg
-      )
-    );
+        prev.map((msg, index) =>
+          index === prev.length - 1 // Only replace the latest chatbot message
+            ? { sender: "chatbot", message: data.response }
+            : msg
+        )
+      );
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
-
 
 //   function confirmDelete(tripId, activityId) {
 //     fetch(`http://localhost:55000/delete_itinerary_activity/${tripId}/${activityId}`, {
@@ -319,19 +344,48 @@ const ItineraryDetails = () => {
 // }
 
 
+  const bookActivity = (activity) => {
+    setSelectedActivity(activity);
+    setOpenBook(true);
+  };
+
   const handleDeleteClick = (activity) => {
     setSelectedActivity(activity);
     setOpenDialog(true);
   };
 
+  const handleLike = (activity, isLike) => {
+    if (isLike) {
+      activity.likes++;
+    } else {
+      activity.dislikes++;
+    }
+    setTrip((prevTrip) => {
+      const dayIndex = activity?.day;
+      const newOrder = prevTrip.activities.top_preferences[dayIndex].map((act, i) => 
+        act.details._id === activity?.details._id ? activity : act
+      );
+      saveActivityOrder(activity?.details.tripId, newOrder, activity?.day);
+      return {
+        ...prevTrip,
+        activities: {
+          ...prevTrip.activities,
+          top_preferences: prevTrip.activities.top_preferences.map((day, i) =>
+            i === dayIndex ? newOrder : day
+          ),
+        },
+      };
+    });
+  };
+
   const handleAddClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleClose = () => {
     setAnchorEl(null);
   };
-  
+
   function handleSelectActivity(tripId, activity) {
     fetch(`http://localhost:55000/move_itinerary_activity/${tripId}/${activity.activityNumber}`, {
       headers: {
@@ -374,16 +428,22 @@ const ItineraryDetails = () => {
   }
 
   function handleSelectRestaurant(tripId, activity) {
-    const daysInTrip = trip.activities.top_preferences.length; // Number of days
-    let day = selectedDay;
-    if (day === null) {
-        const userInput = prompt(`Select a day (1 to ${daysInTrip}):`);
-        if (!userInput || isNaN(userInput) || userInput < 1 || userInput > daysInTrip) return;
-        day = parseInt(userInput, 10) - 1; // Convert input to zero-based index
-        setSelectedDay(day);
+    const daysInTrip = trip.activities.top_preferences.length;
+    setShowSearch(false);
+    setTimeout(() => {
+    let day = null;
+    //if (day === null) {
+    while (day === null) {
+      const userInput = prompt(`Select a day that you would like to go to this restaurant. (Since you are planning on going on a ${daysInTrip} day trip, input a number between 1 to ${daysInTrip}):`);
+      if (userInput === null) return;
+      if (!userInput || isNaN(userInput) || userInput < 1 || userInput > daysInTrip) {
+        alert("Invalid input. Try again.");
+        continue; 
+      }
+      day = parseInt(userInput, 10) - 1;
     }
 
-    // Ensure we are not sending 'null' in the URL
+    
     if (day === null) {
         console.error("Invalid day selected.");
         return;
@@ -427,8 +487,8 @@ const ItineraryDetails = () => {
       }
   })
   .catch(error => console.error("Error:", error));
-  setShowSearch(false);
   setSearchTerm("");
+  }, 0);
   };
   
   
@@ -439,22 +499,25 @@ const ItineraryDetails = () => {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "http://localhost:3000",
         "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
+        "Access-Control-Allow-Headers": "Content-Type",
       },
       body: JSON.stringify({ activities: newOrder, index }),
     })
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         if (data.message === "Activity order updated successfully") {
           setTrip((prevTrip) => ({
             ...prevTrip,
-            activities: { 
+            activities: {
               ...prevTrip.activities,
-              top_preferences: prevTrip.activities.top_preferences.map((d, i) => i === index ? newOrder : d )},
+              top_preferences: prevTrip.activities.top_preferences.map((d, i) =>
+                i === index ? newOrder : d
+              ),
+            },
           }));
         }
       })
-      .catch(error => console.error("Error saving activity order:", error));
+      .catch((error) => console.error("Error saving activity order:", error));
   };
 
   const addSearch = () => {
@@ -462,11 +525,12 @@ const ItineraryDetails = () => {
     setSearchTerm("");
   };
 
-  const filteredRestaurants = (restaurantsData?.restaurants || []).filter((restaurant) =>
-  restaurant.title.toLowerCase().includes(searchTerm.toLowerCase())
-);
+  const filteredRestaurants = (restaurantsData?.restaurants || []).filter(
+    (restaurant) =>
+      restaurant.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick }) => {
+const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick, signedIn, handleLike }) => {
   const [isHovered, setIsHovered] = useState(false);
   return <div
     style={{
@@ -501,7 +565,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
       <p><strong>Rating:</strong> {activity.details.rating}</p>
       <span><i>{activity.context}</i></span>
     </div>
-    <Button variant="contained" onClick={() => bookActivity(activity.details._id)}
+    <Button variant="contained" onClick={() => bookActivity(activity)}
         sx={{ textTransform: "none", backgroundColor: theme.palette.apple.main, color: "white",
         "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem",
         boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
@@ -525,26 +589,41 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
         onClick={() => handleDeleteClick(activity)}
       />
     )}
+    <ThumbUpIcon
+      style={{ cursor: "pointer", color: theme.palette.apple.main, fontSize: "35px", marginLeft: "20px" }}
+      onClick={() => handleLike(activity, true)}
+    />
+    <span style={{ fontSize: "20px", marginLeft: "5px" }}>{activity.likes}</span>
+    <ThumbDownIcon
+      style={{ cursor: "pointer", color: theme.palette.purple.main, fontSize: "35px", marginLeft: "20px" }}
+      onClick={() => handleLike(activity, false)}
+    />
+    <span style={{ fontSize: "20px", marginLeft: "5px" }}>{activity.dislikes}</span>
   </div>
 });
 
-const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteClick }) => (
-  <div>
-    {activities.length > 0 ? (
-      activities.map((activity, index) => (
-        <SortableItem
-          key={activity.details._id}
-          index={index}
-          activity={activity}
-          deleteMode={deleteMode}
-          handleDeleteClick={handleDeleteClick}
-        />
-      ))
-    ) : (
-      <p>No activities to display.</p>
-    )}
-  </div>
-));
+  const SortableList = SortableContainer(
+    ({ activities, deleteMode, handleDeleteClick, signedIn, handleLike }) => (
+      <div>
+        {activities.length > 0 ? (
+          activities.map((activity, index) => (
+            <SortableItem
+              key={activity.details._id}
+              index={index}
+              activity={activity}
+              deleteMode={deleteMode}
+              handleDeleteClick={handleDeleteClick}
+              signedIn={signedIn}
+              handleLike={handleLike}
+              disabled={!signedIn}
+            />
+          ))
+        ) : (
+          <p>No activities to display.</p>
+        )}
+      </div>
+    )
+  );
 
   if (error) {
     return (
@@ -553,10 +632,12 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           maxWidth: "1500px",
           margin: "auto",
           textAlign: "center",
-          backgroundColor: "#f9f9f9"
+          backgroundColor: "#f9f9f9",
         }}
       >
-        <h1 style={{ textAlign: "center", color: "#333", marginBottom: "10px" }}>
+        <h1
+          style={{ textAlign: "center", color: "#333", marginBottom: "10px" }}
+        >
           Itinerary Details
         </h1>
         <p style={{ fontSize: "20px", color: "#d9534f" }}>
@@ -574,10 +655,10 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
             borderRadius: "5px",
             cursor: "pointer",
             transition: "0.3s",
-            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)"
+            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
           }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = "#0056b3"}
-          onMouseLeave={(e) => e.target.style.backgroundColor = "#007bff"}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = "#007bff")}
         >
           Back to Home
         </button>
@@ -604,12 +685,24 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           top: "0", // Adjust the vertical position as needed
           left: "0",
           height: "calc(100vh - 40px)", //
-          zIndex: 9999
+          zIndex: 9999,
         }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "10px",
+          }}
         >
-       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "10px" }}>
-          <h2 style={{ margin: 0, display: "flex", alignItems: "center" }}>Chat
-          <img src={Bot} alt="Bot" style={{ width: "40px", height: "40px", marginLeft: "10px" }} />
+          <h2 style={{ margin: 0, display: "flex", alignItems: "center" }}>
+            Chat
+            <img
+              src={Bot}
+              alt="Bot"
+              style={{ width: "40px", height: "40px", marginLeft: "10px" }}
+            />
           </h2>
         </div>
         <div
@@ -621,34 +714,60 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
             borderRadius: "5px",
             boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
           }}
-          >
+        >
           {chatMessages.length > 0 ? (
             chatMessages.map((msg, index) => (
               <div
-            key={index}
-            style={{
-              display: "flex",
-              justifyContent: msg?.sender === "chatbot" ? "flex-start" : "flex-end",
-              marginBottom: "8px"
-            }}
-          >
-            <p
-              style={{
-                padding: "8px 12px",
-                borderRadius: "10px",
-                maxWidth: "70%",
-                wordWrap: "break-word",
-                textAlign: msg?.sender === "chatbot" ? "left" : "right",
-                backgroundColor: msg?.sender === "chatbot" ? "#e0e0e0" : "#007bff",
-                color: msg?.sender === "chatbot" ? "#000": "#fff",
-              }}
-            >
-              <strong>{msg?.sender === "chatbot" ? "chatbot" : "Me"}:</strong> {msg?.message}
-            </p>
-          </div>
+                key={index}
+                style={{
+                  display: "flex",
+                  justifyContent:
+                    msg?.sender === "chatbot" ? "flex-start" : "flex-end",
+                  marginBottom: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    maxWidth: "70%",
+                    wordWrap: "break-word",
+                    textAlign: msg?.sender === "chatbot" ? "left" : "right",
+                    backgroundColor:
+                      msg?.sender === "chatbot" ? "#e0e0e0" : "#007bff",
+                    color: msg?.sender === "chatbot" ? "#000" : "#fff",
+                    whiteSpace: "pre-wrap", // Preserve line breaks
+                  }}
+                >
+                  <strong>
+                    {msg?.sender === "chatbot" ? "Chatbot" : "Me"}:
+                  </strong>{" "}
+                  <ReactMarkdown
+                    components={{
+                      p: ({ node, ...props }) => <span {...props} />, // prevent extra <p> tags
+                    }}
+                  >
+                    {msg?.message}
+                  </ReactMarkdown>
+                  {/* <ReactMarkdown
+                    components={{
+                      p: ({ node, ...props }) => (
+                        <p
+                          style={{ marginBottom: "12px", lineHeight: "1.5" }}
+                          {...props}
+                        />
+                      ),
+                    }}
+                  >
+                    {msg?.message}
+                  </ReactMarkdown> */}
+                </div>
+              </div>
             ))
           ) : (
-            <p style={{ textAlign: "center", color: "#888" }}>No messages yet</p>
+            <p style={{ textAlign: "center", color: "#888" }}>
+              No messages yet
+            </p>
           )}
         </div>
         <div style={{ display: "flex", marginTop: "10px" }}>
@@ -656,6 +775,12 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
             style={{
               flex: 1,
               padding: "10px",
@@ -677,30 +802,34 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
               cursor: "pointer",
             }}
           >
-            Send  <FaPaperPlane />
+            Send <FaPaperPlane />
           </button>
         </div>
       </div>
       <div
         style={{
-       //   width: "70%",
+          //   width: "70%",
           width: "65%",
           padding: "20px",
           textAlign: "center",
           backgroundColor: "#f9f9f9",
           position: "relative",
-          left: "450px"
+          left: "450px",
         }}
       >
-        <Button
-          variant="contained"
-          color="error"
-          style={{ position: "absolute", top: 10, right: 70 }}
-          onClick={() => setDeleteMode(!deleteMode)}
+        {signedIn && (
+          <Button
+            variant="contained"
+            color="error"
+            style={{ position: "absolute", top: 10, right: 70 }}
+            onClick={() => setDeleteMode(!deleteMode)}
+          >
+            {deleteMode ? "Cancel Delete" : "Delete Activities"}
+          </Button>
+        )}
+        <h1
+          style={{ textAlign: "center", color: "#333", marginBottom: "10px" }}
         >
-          {deleteMode ? "Cancel Delete" : "Delete Activities"}
-        </Button>
-        <h1 style={{ textAlign: "center", color: "#333", marginBottom: "10px" }}>
           Itinerary Details
         </h1>
         <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
@@ -721,9 +850,12 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
             e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
           }}>Check out the Map Details</button> */}
         <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
-          {trip.activities.top_preferences.length > 0 && trip.activities.top_preferences[0].length > 0 ? "Activities for the Trip" : "No Activities Found"}
+          {trip.activities.top_preferences.length > 0 &&
+          trip.activities.top_preferences[0].length > 0
+            ? "Activities for the Trip"
+            : "No Activities Found"}
         </h3>
-         {/* make length work */}
+        {/* make length work */}
         {trip.activities.top_preferences.length > 0 ? (
           trip.activities.top_preferences.map((day, index) => (
             <React.Fragment key={index}>
@@ -734,34 +866,95 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
                 boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
                 View Route
               </Button>
-            <SortableList
-              key={index}
-              activities={day}
-              deleteMode={deleteMode}
-              handleDeleteClick={handleDeleteClick}
-              onSortEnd={({ oldIndex, newIndex }) => {
-                const newOrder = arrayMoveImmutable(day, oldIndex, newIndex);
-                setTrip((prevTrip) => ({
-                  ...prevTrip,
-                  activities: { 
-                    ...prevTrip.activities,
-                    top_preferences: prevTrip.activities.top_preferences.map((d, i) => i === index ? newOrder : d )},
-                }));
-                saveActivityOrder(trip._id, newOrder, index);
-              }}
-              distance={10} 
-            />
+              <SortableList
+                key={index}
+                activities={day}
+                deleteMode={deleteMode}
+                handleDeleteClick={handleDeleteClick}
+                signedIn={signedIn}
+                handleLike={handleLike}
+                onSortEnd={({ oldIndex, newIndex }) => {
+                  const newOrder = arrayMoveImmutable(day, oldIndex, newIndex);
+                  setTrip((prevTrip) => ({
+                    ...prevTrip,
+                    activities: {
+                      ...prevTrip.activities,
+                      top_preferences: prevTrip.activities.top_preferences.map(
+                        (d, i) => (i === index ? newOrder : d)
+                      ),
+                    },
+                  }));
+                  saveActivityOrder(trip._id, newOrder, index);
+                }}
+                distance={10}
+              />
             </React.Fragment>
           ))
         ) : (
           <p>No days to display.</p>
         )}
-        
-
+        {/* The Booking Pop-up */}
+        <Dialog open={openBook} onClose={() => setOpenBook(false)}>
+        <DialogTitle>Book Activity</DialogTitle>
+        <DialogContent>Would you like to book this activity with an external website?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenBook(false)} color="error">Cancel</Button>
+          <Tooltip title={tooltipText} arrow>
+            <Button onClick={() => {
+              try {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(selectedActivity?.title)} booking`, "_blank");
+                setTooltipText("Opened!");
+                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
+              } catch (error) {
+                console.error("Failed to open:", error);
+                setTooltipText("Failed to open");
+              }
+            }} color="secondary">Google</Button>
+          </Tooltip>
+          <Tooltip title={tooltipText} arrow>
+            <Button onClick={() => {
+              try {
+                window.open(`https://www.viator.com/searchResults/all?text=${encodeURIComponent(selectedActivity?.title)}`, "_blank");
+                setTooltipText("Opened!");
+                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
+              } catch (error) {
+                console.error("Failed to open:", error);
+                setTooltipText("Failed to open");
+              }
+            }} color="primary">Viator</Button>
+          </Tooltip>
+          <Tooltip title={tooltipText} arrow>
+            <Button onClick={() => {
+              try {
+                window.open(`https://www.tripadvisor.com/Search?q=${encodeURIComponent(selectedActivity?.title)}`, "_blank");
+                setTooltipText("Opened!");
+                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
+              } catch (error) {
+                console.error("Failed to open:", error);
+                setTooltipText("Failed to open");
+              }
+            }} color="secondary">Trip Advisor</Button>
+          </Tooltip>
+          <Tooltip title={tooltipText} arrow>
+            <Button onClick={() => {
+              try {
+                window.open(`https://www.klook.com/en-US/search/?query=${encodeURIComponent(selectedActivity?.title)}`, "_blank");
+                setTooltipText("Opened!");
+                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
+              } catch (error) {
+                console.error("Failed to open:", error);
+                setTooltipText("Failed to open");
+              }
+            }} color="primary">Klook</Button>
+          </Tooltip>
+        </DialogActions>
+        </Dialog>
+        {/* The Delete Warning */}
          <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Confirm</DialogTitle>
           <DialogContent>
-            Are you sure you want to delete the activity "{selectedActivity?.title}"?
+            Are you sure you want to delete the activity "
+            {selectedActivity?.title}"?
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
@@ -806,83 +999,100 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
         >
           Back to Home
         </button>
-        <div style={{ display: "flex", alignItems: "center", cursor: "pointer", flexDirection: "column", position: "relative" }}>
-  {showSearch && (
-    <div //ref={dropdownRef} 
-    style={{ 
-      position: "absolute", 
-      bottom: "80px", 
-      backgroundColor: "white", 
-      padding: "10px", 
-      borderRadius: "8px", 
-      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
-      width: "280px",
-      textAlign: "center",
-      zIndex: 1000
-    }}>
-      <input
-        type="text"
-        placeholder="Search restaurants..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{ padding: "8px", width: "90%", borderRadius: "5px", border: "1px solid #ccc" }}
-      />
-      <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
-        {filteredRestaurants.slice(0, 5).map((restaurant) => (
-          <li key={restaurant.activityNumber} onClick={() => handleSelectRestaurant(trip._id, restaurant)} style={{ padding: "5px", fontSize: "16px", cursor: "pointer", 
-          transition: "background 0.3s", 
-          borderRadius: "5px"  }}
-          onMouseEnter={(e) => e.target.style.background = "#f0f0f0"}
-            onMouseLeave={(e) => e.target.style.background = "white"}>
-            {restaurant.title}
-          </li>
-        ))}
-      </ul>
-    </div>
-  )}
-
-  <AddCircleIcon
-    style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
-    onClick={addSearch}
-  />
-  <span 
-    onClick={addSearch} 
-    style={{ fontSize: "18px", marginLeft: "2px", color: "#007bff", fontWeight: "bold", cursor: "pointer" }}
-  >
-    {showSearch ? "Close Search" : "Add Restaurant"}
-  </span>
-</div>
-      
-        <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        cursor: "pointer",
-      }}
-    >
-      <AddCircleIcon
-        style={{ fontSize: "50px", color: "#007bff" }}
-        onClick={handleAddClick}
-      />
-      <span onClick={handleAddClick} style={{ fontSize: "18px", marginLeft: "2px", color: "#007bff", fontWeight: "bold" }}>
-        Add Activity
-      </span>
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-        {/* {trip.activities.next_best_preferences.map((activity) => (
-          <MenuItem key={activity.details._id} onClick={() => handleSelectActivity(trip._id, activity)}>
-            {activity.title}
-          </MenuItem>
-        ))} */}
-        {trip.activities.next_best_preferences.map(function (day) {
-            return day.map(function (activity) {
-              return (
-                <MenuItem key={activity.activityNumber} onClick={() => handleSelectActivity(trip._id, activity)}>
-                  {activity.title}
-                </MenuItem>
-              )});
-        })}
-      </Menu>
-    </div> 
+        {signedIn && (
+        <><div style={{ display: "flex", alignItems: "center", cursor: "pointer", flexDirection: "column", position: "relative" }}>
+              {showSearch && (
+                <div //ref={dropdownRef} 
+                  style={{
+                    position: "absolute",
+                    bottom: "80px",
+                    backgroundColor: "white",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                    width: "280px",
+                    textAlign: "center",
+                    zIndex: 1000
+                  }}>
+                  <input
+                    type="text"
+                    placeholder="Search restaurants..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ padding: "8px", width: "90%", borderRadius: "5px", border: "1px solid #ccc" }} />
+                  <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
+                    {filteredRestaurants.slice(0, 5).map((restaurant) => (
+                      <li key={restaurant.activityNumber} onClick={() => handleSelectRestaurant(trip._id, restaurant)} style={{
+                        padding: "5px", fontSize: "16px", cursor: "pointer",
+                        transition: "background 0.3s",
+                        borderRadius: "5px"
+                      }}
+                        onMouseEnter={(e) => e.target.style.background = "#f0f0f0"}
+                        onMouseLeave={(e) => e.target.style.background = "white"}>
+                        {restaurant.title}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <AddCircleIcon
+                style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
+                onClick={addSearch} />
+              <span
+                onClick={addSearch}
+                style={{
+                  fontSize: "18px",
+                  marginLeft: "2px",
+                  color: "#007bff",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                {showSearch ? "Close Search" : "Add Restaurant"}
+              </span>
+            </div><div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                cursor: "pointer",
+              }}
+            >
+                <AddCircleIcon
+                  style={{ fontSize: "50px", color: "#007bff" }}
+                  onClick={handleAddClick} />
+                <span
+                  onClick={handleAddClick}
+                  style={{
+                    fontSize: "18px",
+                    marginLeft: "2px",
+                    color: "#007bff",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Add Activity
+                </span>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleClose}
+                >
+                  {/* {trip.activities.next_best_preferences.map((activity) => (
+<MenuItem key={activity.details._id} onClick={() => handleSelectActivity(trip._id, activity)}>
+  {activity.title}
+</MenuItem>
+))} */}
+                  {trip.activities.next_best_preferences.map(function (day) {
+                    return day.map(function (activity) {
+                      return (
+                        <MenuItem key={activity.activityNumber} onClick={() => handleSelectActivity(trip._id, activity)}>
+                          {activity.title}
+                        </MenuItem>
+                      );
+                    });
+                  })}
+                </Menu>
+              </div></> 
+    )}
     </div>
       </div>
     </div>
