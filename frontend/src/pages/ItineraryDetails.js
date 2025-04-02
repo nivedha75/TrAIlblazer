@@ -12,6 +12,8 @@ import {
   Tooltip
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import Bot from "../assets/Bot.avif";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -20,7 +22,7 @@ import { arrayMoveImmutable } from "array-move";
 import theme from "../theme";
 import Cookies from "js-cookie";
 import { motion } from "framer-motion";
-import { FaPaperPlane } from "react-icons/fa";
+import { FaPaperPlane, FaThumbsUp } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 // import { Input } from "@/components/ui/input";
 // import { Button as ChatButton} from "@/components/ui/button";
@@ -338,6 +340,30 @@ const ItineraryDetails = () => {
     setOpenDialog(true);
   };
 
+  const handleLike = (activity, isLike) => {
+    if (isLike) {
+      activity.likes++;
+    } else {
+      activity.dislikes++;
+    }
+    setTrip((prevTrip) => {
+      const dayIndex = activity?.day;
+      const newOrder = prevTrip.activities.top_preferences[dayIndex].map((act, i) => 
+        act.details._id === activity?.details._id ? activity : act
+      );
+      saveActivityOrder(activity?.details.tripId, newOrder, activity?.day);
+      return {
+        ...prevTrip,
+        activities: {
+          ...prevTrip.activities,
+          top_preferences: prevTrip.activities.top_preferences.map((day, i) =>
+            i === dayIndex ? newOrder : day
+          ),
+        },
+      };
+    });
+  };
+
   const handleAddClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -490,7 +516,7 @@ const ItineraryDetails = () => {
       restaurant.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick }) => {
+const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick, signedIn, handleLike }) => {
   const [isHovered, setIsHovered] = useState(false);
   return <div
     style={{
@@ -543,11 +569,21 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
         onClick={() => handleDeleteClick(activity)}
       />
     )}
+    <ThumbUpIcon
+      style={{ cursor: "pointer", color: theme.palette.apple.main, fontSize: "35px", marginLeft: "20px" }}
+      onClick={() => handleLike(activity, true)}
+    />
+    <span style={{ fontSize: "20px", marginLeft: "5px" }}>{activity.likes}</span>
+    <ThumbDownIcon
+      style={{ cursor: "pointer", color: theme.palette.purple.main, fontSize: "35px", marginLeft: "20px" }}
+      onClick={() => handleLike(activity, false)}
+    />
+    <span style={{ fontSize: "20px", marginLeft: "5px" }}>{activity.dislikes}</span>
   </div>
 });
 
   const SortableList = SortableContainer(
-    ({ activities, deleteMode, handleDeleteClick }) => (
+    ({ activities, deleteMode, handleDeleteClick, signedIn, handleLike }) => (
       <div>
         {activities.length > 0 ? (
           activities.map((activity, index) => (
@@ -557,6 +593,8 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
               activity={activity}
               deleteMode={deleteMode}
               handleDeleteClick={handleDeleteClick}
+              signedIn={signedIn}
+              handleLike={handleLike}
               disabled={!signedIn}
             />
           ))
@@ -808,6 +846,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
                 deleteMode={deleteMode}
                 handleDeleteClick={handleDeleteClick}
                 signedIn={signedIn}
+                handleLike={handleLike}
                 onSortEnd={({ oldIndex, newIndex }) => {
                   const newOrder = arrayMoveImmutable(day, oldIndex, newIndex);
                   setTrip((prevTrip) => ({
