@@ -23,10 +23,6 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 from dotenv import load_dotenv
-import os
-
-import datetime
-import json
 
 
 load_dotenv()
