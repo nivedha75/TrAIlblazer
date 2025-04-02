@@ -107,7 +107,7 @@ const ItineraryDetails = () => {
     navigate(`/route-details/${tripId}/${day}`);
   }
 
-  const bookActivity = (activityId) => { };
+  // const bookActivity = (activityId) => { };
 
   useEffect(() => {
     if (!showSearch) return;
