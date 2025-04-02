@@ -25,6 +25,9 @@ logging.basicConfig(level=logging.INFO)
 from dotenv import load_dotenv
 import os
 
+import datetime
+import json
+
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -73,6 +76,7 @@ activity_collection = db["activities"]
 itinerary_collection = db["itineraries"]
 restaurant_collection = db["restaurants"]
 messages_collection = db["messages"]
+forum_collection = db["forum_posts"]
 
 
 @app.route("/")
@@ -181,6 +185,7 @@ def trips():
                 {
                     "userId": data["userId"],
                     "location": data["location"],
+                    "secondaryLocation": data["secondaryLocation"],
                     "days": data["days"],
                     "startDate": data["startDate"],
                     "endDate": data["endDate"],
@@ -228,17 +233,12 @@ def trips():
             print("\n\nCity data for generating itinerary:", city_data)
             # Step 2: Use Gemini Flash to generate a personalized itinerary
             try:
-                generate_itinerary(
-                    data["userId"], data["location"], data["days"], trip_id, city_data
-                )
+                generate_itinerary(data["userId"], data["location"] + (", AND " + data["secondaryLocation"] if "secondaryLocation" in data else ""), data["days"], trip_id, city_data)
             except Exception as e:
                 print(f"Error in generate_itinerary: {e}")
 
             print("Calling generate_restaurant_recommendations...")  # Debugging
-            generate_restaurant_recommendations(
-                data["userId"], data["location"], trip_id, city_data
-            )
-
+            generate_restaurant_recommendations(data["userId"], data["location"] + (", " + data["secondaryLocation"] if "secondaryLocation" in data else ""), trip_id, city_data)
             return jsonify({"message": "Trip data saved successfully"}), 201
 
         except Exception as e:
@@ -663,7 +663,6 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     Given a user's travel preferences, destination, and the real-time city data provided, generate an itinerary with, for each day of the trip, 3 activities: 2 as top preferences and 1 as a next best preference.
     Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination.
-
     Note: Do not use the ISO format for the date. Instead, use the format "Month Day, Year" (e.g., "April 2, 2025").
 
     Format the itinerary as the following JSON STRICTLY, NO OTHER WORDS:
@@ -707,7 +706,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
         
         The location is: """
         + location
-        + """. The trip is """
+        + """. If there is more than one location, distribute activities across each one equally, trying to avoid splitting days. The trip is """
         + str(days)
         + """ days long. Here are the user preferences:"""
         + preferences_str_format
@@ -830,7 +829,7 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
             ...
         ]
     
-        The location is: """ + location + """. Here are the user preferences:""" + preferences_str_format
+        The location is: """ + location + """. If there is more than one location, distribute activities across each one equally, trying to avoid splitting days. Here are the user preferences:""" + preferences_str_format
     
         # print(prompt)
 
@@ -1094,6 +1093,7 @@ def get_messages(user_id, trip_id):
 
 # @app.route('/get_image/<query>')
 def get_image(query):
+    return ""
     # Search query
     # query = "Sushi"
 
@@ -1416,6 +1416,51 @@ def update_activity_order(trip_id):
 #     trip_id = str(uuid.uuid4())
 
 #     return jsonify({"trip_id": trip_id, "activities": activities})
+
+
+
+
+@app.route("/forum", methods=["GET", "POST"])
+def forum():
+    if request.method == 'GET':
+        try:
+            posts = list(forum_collection.find().sort("created_at", -1))
+            print(posts)
+            
+            for post in posts:
+                post["_id"] = str(post["_id"])
+                # post["created_at"] = post["created_at"].isoformat()
+                # print(post["created_at"].isoformat())
+            
+            return jsonify(posts)
+        except Exception as e:
+            print('some error')
+            return jsonify({"error": str(e)}), 500
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            print(data)
+            username = data.get("username")
+            print(username)
+            
+            if not username:
+                return jsonify({"error": "User not authenticated"}), 401
+            
+            new_post = {
+                "username": username,
+                "name": data.get("name"),
+                "location": data.get("location"),
+                "description": data.get("description"),
+                "bestTime": data.get("bestTime"),
+                "created_at": datetime.datetime.now(datetime.timezone.utc)
+            }
+            
+            result = forum_collection.insert_one(new_post)
+            return jsonify({"message": "Post submitted successfully", "post_id": str(result.inserted_id)})
+        
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(port=PORT, debug=True)
