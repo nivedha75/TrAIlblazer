@@ -1,12 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+    Card,
+    CardMedia,
+    CardContent,
+    Container,
+    IconButton,
+    Typography,
+    Paper,
+    Grid2,
+    Box,
+    Tooltip,
+    Button,
+    ThemeProvider
+  } from "@mui/material";
+import theme from "../theme";
+
 
 const MapDetails = () => {
   const { activityId } = useParams();
+  const [activity, setActivity] = useState(null);
   const [address, setAddress] = useState();
+  const [name, setName] = useState();
   const [error, setError] = useState(null);
 
   console.log(activityId);
+  const navigate = useNavigate();
+
+  const itineraryDetails = (tripId) => {
+    navigate(`/itinerary-details/${encodeURIComponent(tripId)}`);
+  };
 
   useEffect(() => {
     fetch(`http://localhost:55000/activities/${activityId}`, {
@@ -30,7 +53,9 @@ const MapDetails = () => {
         //     .filter(Boolean); // Remove null/undefined addresses
         //   setAddresses(extractedAddresses);
         // }
-        setAddress(data.address)
+        setActivity(data);
+        setName(data.name);
+        setAddress(data.address);
       })
       .catch((error) => {
         console.error("Error fetching itinerary details:", error);
@@ -90,19 +115,27 @@ const MapDetails = () => {
   }, [address]);
 
   return (
-    <div>
+    <div style={{ textAlign: "center" }}>
       <h2>Map Details</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <h2>Trip Addresses</h2>
-      <p>{address}</p>
+      <Box display="flex" justifyContent="center" sx={{ mt: 4 }}>
+            <Button variant="contained" sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
+                            "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}
+                             onClick={() => itineraryDetails(activity.tripId)}>
+              Back to Itinerary
+            </Button>
+          </Box>
+
+      <h2>Activity:</h2>
+      <h3>{name}</h3>
 
       <h2>Maps</h2>
         <div style={{ marginBottom: "20px" }}>
-          <h3>{address}</h3>
+          <h4>{address}</h4>
           <div
             id={"map"}
-            style={{ height: "300px", width: "100%" }}
+            style={{ height: "600px", width: "100%" }}
           ></div>
         </div>
     </div>

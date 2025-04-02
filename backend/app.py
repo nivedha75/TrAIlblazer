@@ -182,6 +182,7 @@ def trips():
                     "userId": data["userId"],
                     "location": data["location"],
                     "secondaryLocation": data["secondaryLocation"],
+                    "transportation": data["transportation"],
                     "days": data["days"],
                     "startDate": data["startDate"],
                     "endDate": data["endDate"],

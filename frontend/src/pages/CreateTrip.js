@@ -14,6 +14,7 @@ const CreateTrip = () => {
   const [days, setDays] = useState("");
   const [selectLocation, setSelectLocation] = useState("");
   const [secondaryLocations, setSecondaryLocations] = useState("");
+  const [transportation, setTransportation] = useState("");
   const [places, setPlaces] = useState([]);
   const [selectedImage, setSelectedImage] = useState("");
 
@@ -44,6 +45,10 @@ const CreateTrip = () => {
     setSecondaryLocations(event.target.value);
   }
 
+  const transportationChange = (event) => {
+    setTransportation(event.target.value);
+  }
+
   const goToPlanPage = () => {
     if (!days || isNaN(days) || days <= 0) {
       alert("Please enter a valid number of days!");
@@ -53,7 +58,7 @@ const CreateTrip = () => {
       alert("Please select a starting location!");
       return;
     }
-    navigate("/plan", { state: { days: parseInt(days, 10), locate: selectLocation, secondaryLocate: secondaryLocations, image: selectedImage } });
+    navigate("/plan", { state: { days: parseInt(days, 10), locate: selectLocation, secondaryLocate: secondaryLocations, transportation: transportation, image: selectedImage } });
   };
 
   const handleInputChange = (event) => {
@@ -181,6 +186,14 @@ const CreateTrip = () => {
             boxShadow: "inset 0 0 5px rgba(0, 0, 0, 0.1)"
           }}
         />
+      </div>
+      <div>
+        <h2 style={{color: "#800080"}}>Planned method of transportation </h2>
+        <select onChange={transportationChange}>
+          <option value="driving">Driving</option>
+          <option value="walking">Walking</option>
+          <option value="biking">Biking</option>
+        </select>
       </div>
       <button
         style={{

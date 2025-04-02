@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardMedia,
+  CardContent,
+  Container,
+  IconButton,
+  Typography,
+  Paper,
+  Grid2,
+  Box,
+  Tooltip,
+  Button,
+  ThemeProvider
+} from "@mui/material";
+import theme from "../theme";
 
 const Forum = () => {
   const [posts, setPosts] = useState([]);
@@ -12,6 +28,11 @@ const Forum = () => {
     description: "",
     bestTime: "",
   });
+
+  const navigate = useNavigate();
+  const home = () => {
+    navigate(`/`);
+  };
 
   // Fetch posts when component mounts
   useEffect(() => {
@@ -89,12 +110,19 @@ const Forum = () => {
         flexDirection: "column",
         alignItems: "center",
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #32CD32, #800080)",
+        background: "gray",
         color: "white",
         paddingBottom: "50px",
       }}
     >
       <h1 style={{ color: "#800080" }}>Forum - Share Your Trip Recommendations</h1>
+      <Box display="flex" justifyContent="center" sx={{ mt: 4 }}>
+        <Button variant="contained" sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white", marginBottom: "30px",
+                        "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}
+                          onClick={() => home()}>
+          Back to Home
+        </Button>
+      </Box>
 
       <button
         onClick={() => setIsModalOpen(true)}
@@ -217,6 +245,19 @@ const Forum = () => {
               >
                 Submit
               </button>
+              <button onClick={() => setIsModalOpen(false)}
+                style={{
+                  backgroundColor: "red",
+                  color: "white",
+                  border: "none",
+                  padding: "10px 20px",
+                  fontSize: "16px",
+                  cursor: "pointer",
+                  borderRadius: "5px",
+                }}
+              >
+                Close
+              </button>
             </form>
           </div>
         </div>
@@ -224,7 +265,7 @@ const Forum = () => {
 
       <div
         style={{
-          width: "600px",
+          width: "80%",
           marginTop: "40px",
           backgroundColor: "white",
           padding: "20px",

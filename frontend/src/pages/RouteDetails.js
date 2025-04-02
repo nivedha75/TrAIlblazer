@@ -1,7 +1,22 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+    Card,
+    CardMedia,
+    CardContent,
+    Container,
+    IconButton,
+    Typography,
+    Paper,
+    Grid2,
+    Box,
+    Tooltip,
+    Button,
+    ThemeProvider
+  } from "@mui/material";
+import theme from "../theme";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyD02ijW_hvCeI7WwmYcKylT1eTWEke7gaU"; // Your API Key
+const GOOGLE_MAPS_API_KEY = "AIzaSyD02ijW_hvCeI7WwmYcKylT1eTWEke7gaU";
 
 const RouteDetails = () => {
   const { tripId, day } = useParams();
@@ -12,6 +27,13 @@ const RouteDetails = () => {
 
   const [addresses, setAddresses] = useState([]);
   const [error, setError] = useState(null);
+  
+  const [transportation, setTransportation] = useState();
+
+  const navigate = useNavigate();
+  const itineraryDetails = () => {
+    navigate(`/itinerary-details/${tripId}`);
+  };
 
   useEffect(() => {
     fetch(`http://localhost:55000/itinerary/${tripId}`, {
@@ -27,6 +49,27 @@ const RouteDetails = () => {
             .map((activity) => activity.details?.address)
             .filter(Boolean); // Remove null/undefined addresses
           setAddresses(extractedAddresses);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching itinerary details:", error);
+        setError(error.message);
+      });
+  }, [tripId]);
+
+  useEffect(() => {
+    fetch(`http://localhost:55000/trips/${tripId}`, {
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("Itinerary not found");
+        return response.json();
+      })
+      .then((data) => {
+        if (data.transportation) {
+            setTransportation(data.transportation);
+        } else {
+            setTransportation("driving");
         }
       })
       .catch((error) => {
@@ -101,7 +144,7 @@ const RouteDetails = () => {
       destination: end,
       waypoints,
       optimizeWaypoints: true,
-      travelMode: window.google.maps.TravelMode.DRIVING,
+      travelMode: (transportation === "driving" ? window.google.maps.TravelMode.DRIVING : (transportation == "biking" ? window.google.maps.TravelMode.BICYCLING : window.google.maps.TravelMode.WALKING)), 
       unitSystem: window.google.maps.UnitSystem.METRIC
     }, (response, status) => {
       if (status === window.google.maps.DirectionsStatus.OK) {
@@ -133,7 +176,8 @@ const RouteDetails = () => {
     <div style={{ display: "flex", height: "100vh" }}>
       <div id="map-canvas" style={{ flex: 3, height: "100%" }}></div>
       <aside style={{ flex: 1, padding: "20px", overflowY: "auto", background: "#f8f9fa" }}>
-        <h3>Distances</h3>
+        <h1>Day {parseInt(day)+1}</h1>
+        <h3>Distances ({transportation})</h3>
         <ul>
           {distanceList.map((item, index) => (
             <li key={index}>{item}</li>
@@ -141,6 +185,13 @@ const RouteDetails = () => {
         </ul>
         <b>Total Distance:</b> {totalDistance} Km <br />
         <b>Total Time:</b> {totalTime} min
+        <Box display="flex" justifyContent="center" sx={{ mt: 4 }}>
+            <Button variant="contained" sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
+                            "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}
+                             onClick={() => itineraryDetails()}>
+              Back to Itinerary
+            </Button>
+          </Box>
       </aside>
     </div>
   );

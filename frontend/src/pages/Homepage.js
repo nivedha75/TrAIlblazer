@@ -74,6 +74,7 @@ const HomePage = () => {
   const ddRef = useRef(null);
   const [upcomingTrips, setUpcomingTrips] = useState([]);
   const [pastTrips, setPastTrips] = useState([]);
+  const [pastRecommendingIndex, setPastRecommendingIndex] = useState();
   const [recommendedPlaces, setRecommendedPlaces] = useState([]);
 
   useEffect(() => {
@@ -129,7 +130,9 @@ const HomePage = () => {
       console.log("Past Trips: ", past);
 
       if (past.length > 0) {
-        const recentPastTrip = past[past.length - 1];
+        const index = Math.floor(Math.random() * past.length);
+        setPastRecommendingIndex(index);
+        const recentPastTrip = past[index];
         // past.reduce((latest, trip) =>
         //   parse(trip.endDate, "yyyy-MM-dd", new Date()) > parse(latest.endDate, "yyyy-MM-dd", new Date()) ? trip : latest
         // );
@@ -742,7 +745,7 @@ const HomePage = () => {
         </div>
   </div>
   {pastTrips.length > 0 ? (
-    <><h1 style={{ marginLeft: "20px" }}>Recommended Vacation Spots Based on your past trip to {pastTrips[pastTrips.length - 1].location}:</h1><div style={{ width: "90%", margin: "auto", position: "relative", zIndex: 1, display: "flex" }}>
+    <><h1 style={{ marginLeft: "20px" }}>Because you went to {pastTrips[pastRecommendingIndex].location}, we recommend:</h1><div style={{ width: "90%", margin: "auto", position: "relative", zIndex: 1, display: "flex" }}>
               {recommendedPlaces.length > 0 ? (
                 recommendedPlaces.map(place => (
                   <Card key={place._id} image={imageMap[place.images[0]]} title={place.name} description={place.description} button={() => placeDetails(place._id)} buttonText="Place Details" type="discover" />
