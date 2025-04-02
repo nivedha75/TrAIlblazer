@@ -1448,7 +1448,7 @@ def forum():
                 "location": data.get("location"),
                 "description": data.get("description"),
                 "bestTime": data.get("bestTime"),
-                "created_at": datetime.datetime.now(datetime.timezone.utc)
+                "created_at": datetime.now(timezone.utc)
             }
             
             result = forum_collection.insert_one(new_post)
