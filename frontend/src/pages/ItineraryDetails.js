@@ -80,6 +80,18 @@ const ItineraryDetails = () => {
     navigate(`/activity-details/${encodeURIComponent(activityId)}`);
   };
 
+  const mapDetails = (activityId) => {
+    navigate(`/map-details/${encodeURIComponent(activityId)}`);
+  };
+
+  // const navigateToMapDetails = () => {
+  //   navigate(`/map-details/${tripId}`);
+  // };
+
+  const navigateToRouteDetails = (day) => {
+    navigate(`/route-details/${tripId}/${day}`);
+  }
+
   const bookActivity = (activityId) => { };
 
   useEffect(() => {
@@ -501,6 +513,12 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick 
         boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
         More Details
     </Button>
+    <Button variant="contained" onClick={() => mapDetails(activity.details._id)}
+        sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
+        "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
+        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
+        View in Map
+    </Button>
     {deleteMode && (
       <DeleteIcon
         style={{ cursor: "pointer", color: "red", fontSize: "35px", marginLeft: "20px" }}
@@ -694,6 +712,14 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
         <p style={{ fontSize: "18px", margin: "5px 0" }}>
           <strong>End Date:</strong> {tripDetails?.endDate}
         </p>
+        {/* <button onClick={navigateToMapDetails} style={{ marginTop: "10px", padding: "10px", fontSize: "20px", backgroundColor: "#0000FF", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)", transition: "transform 0.2s ease, box-shadow 0.2s e", display: "flex", alignItems: "center"}} onMouseEnter={(e) => {
+            e.target.style.transform = "scale(1.05)";
+            e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "scale(1)";
+            e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
+          }}>Check out the Map Details</button> */}
         <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
           {trip.activities.top_preferences.length > 0 && trip.activities.top_preferences[0].length > 0 ? "Activities for the Trip" : "No Activities Found"}
         </h3>
@@ -702,6 +728,12 @@ const SortableList = SortableContainer(({ activities, deleteMode, handleDeleteCl
           trip.activities.top_preferences.map((day, index) => (
             <React.Fragment key={index}>
               <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>Day {index+1}</h3>
+              <Button variant="contained" onClick={() => navigateToRouteDetails(index)}
+                sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
+                "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
+                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
+                View Route
+              </Button>
             <SortableList
               key={index}
               activities={day}

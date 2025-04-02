@@ -55,6 +55,7 @@ const PlanTrip = () => {
     const tripData = {
       userId: Cookies.get("user_id"),
       location: location.state?.locate || "Unknown Destination",
+      secondaryLocation: location.state?.secondaryLocate || "",
       days,
       startDate: startDate.toISOString().split("T")[0],
       endDate: getEndDate(),

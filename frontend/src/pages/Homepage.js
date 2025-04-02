@@ -60,6 +60,12 @@ const PrevArrow = ({ onClick }) => (
   </IconButton>
 );
 
+const SIMILAR_DESTINATION_SETS = [
+  new Set(["67b91de835b54e8daa42393d", "67ba807bfe85ae9d77bb42a5"]), // bali, honolulu
+  new Set(["67b921aa35b54e8daa42393f", "67ba8142fe85ae9d77bb42a6", "67ba81f8fe85ae9d77bb42a7"]), // paris, tokyo, beijing
+  new Set(["67ba7f4efe85ae9d77bb42a4", "67c1ee75b5c78ef7266e0d39"]), // nyc, seattle
+];
+
 const HomePage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -68,6 +74,7 @@ const HomePage = () => {
   const ddRef = useRef(null);
   const [upcomingTrips, setUpcomingTrips] = useState([]);
   const [pastTrips, setPastTrips] = useState([]);
+  const [recommendedPlaces, setRecommendedPlaces] = useState([]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -120,6 +127,34 @@ const HomePage = () => {
 
       console.log("Upcoming Trips: ", upcoming);
       console.log("Past Trips: ", past);
+
+      if (past.length > 0) {
+        const recentPastTrip = past[past.length - 1];
+        // past.reduce((latest, trip) =>
+        //   parse(trip.endDate, "yyyy-MM-dd", new Date()) > parse(latest.endDate, "yyyy-MM-dd", new Date()) ? trip : latest
+        // );
+
+        console.log("Most Recent Past Trip:", recentPastTrip.location);
+
+        // Find the place object for the most recent past trip
+        const recentPlace = places.find(place => place.name === recentPastTrip.location);
+
+        if (recentPlace) {
+          console.log("Matched Place Object:", recentPlace);
+
+          // Find the set containing this place's _id
+          const matchingSet = SIMILAR_DESTINATION_SETS.find(set => set.has(recentPlace._id));
+
+          if (matchingSet) {
+            // Get recommended places (excluding the recently visited place)
+            const recommendedIds = [...matchingSet].filter(id => id !== recentPlace._id);
+            const recommendedPlaces = places.filter(place => recommendedIds.includes(place._id));
+
+            setRecommendedPlaces(recommendedPlaces);
+            console.log("Recommended Places:", recommendedPlaces);
+          }
+        }
+      }
     }
   }, [trips]);
 
@@ -179,6 +214,10 @@ const HomePage = () => {
 
   const navigateToCreate = () => {
     navigate("/create");
+  };
+
+  const navigateToForum = () => {
+    navigate("/forum");
   };
 
   const navigateToSurvey = () => {
@@ -618,7 +657,15 @@ const HomePage = () => {
           </button>
         )}
       </div>
-  
+      <h2 style={{ marginLeft: "20px" }}>Want some recommendations? Look at what other users have to say:</h2>
+      <button onClick={navigateToForum} style={{ marginTop: "10px", padding: "10px", fontSize: "20px", backgroundColor: "#0000FF", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)", transition: "transform 0.2s ease, box-shadow 0.2s e", display: "flex", alignItems: "center"}} onMouseEnter={(e) => {
+            e.target.style.transform = "scale(1.05)";
+            e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "scale(1)";
+            e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
+          }}>Visit the Forum</button>
       <div>
         <h1 style={{ marginLeft: "20px" }}>My Trips:</h1>
         <div style={{ width: "90%", margin: "auto", position: "relative", zIndex: 1 }}>
@@ -694,6 +741,18 @@ const HomePage = () => {
   </Slider>
         </div>
   </div>
+  {pastTrips.length > 0 ? (
+    <><h1 style={{ marginLeft: "20px" }}>Recommended Vacation Spots Based on your past trip to {pastTrips[pastTrips.length - 1].location}:</h1><div style={{ width: "90%", margin: "auto", position: "relative", zIndex: 1, display: "flex" }}>
+              {recommendedPlaces.length > 0 ? (
+                recommendedPlaces.map(place => (
+                  <Card key={place._id} image={imageMap[place.images[0]]} title={place.name} description={place.description} button={() => placeDetails(place._id)} buttonText="Place Details" type="discover" />
+                ))
+              ) : (
+                <p>No recommendations available.</p>
+              )}
+          </div></>
+  ) : (<></>)
+  }
   </div>);
 };
 
