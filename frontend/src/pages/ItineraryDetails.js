@@ -341,11 +341,22 @@ const ItineraryDetails = () => {
   };
 
   const handleLike = (activity, isLike) => {
-    if (isLike) {
+    const userId = Cookies.get("user_id");
+    if (isLike && !activity.likedBy.includes(userId)) {
+      if (activity.dislikedBy.includes(userId)) {
+        activity.dislikes--;
+        activity.dislikedBy = activity.dislikedBy.filter(id => id !== userId);
+      }
       activity.likes++;
-    } else {
+      activity.likedBy = [...(activity.likedBy || []), userId];
+    } else if (!isLike && !activity.dislikedBy.includes(userId)) {
+      if (activity.likedBy.includes(userId)) {
+        activity.likes--;
+        activity.likedBy = activity.likedBy.filter(id => id !== userId);
+      }
       activity.dislikes++;
-    }
+      activity.dislikedBy = [...(activity.dislikedBy || []), userId];
+    } else return;
     setTrip((prevTrip) => {
       const dayIndex = activity?.day;
       const newOrder = prevTrip.activities.top_preferences[dayIndex].map((act, i) => 
@@ -559,26 +570,32 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
     </Button>
     <Button variant="contained" onClick={() => activityDetails(activity.details._id)}
         sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
-        "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem",
+        "&:hover": { backgroundColor: theme.palette.purple.main}, fontSize: "1rem",
         boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
         More Details
     </Button>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+        <ThumbUpIcon
+          style={{ cursor: "pointer", color: theme.palette.apple.main, fontSize: "35px", marginLeft: "20px" }}
+          onClick={() => handleLike(activity, true)}
+        />
+        <span style={{ fontSize: "20px", marginLeft: "5px" }}>{activity.likes}</span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+        <ThumbDownIcon
+          style={{ cursor: "pointer", color: theme.palette.purple.main, fontSize: "35px", marginLeft: "20px" }}
+          onClick={() => handleLike(activity, false)}
+        />
+        <span style={{ fontSize: "20px", marginLeft: "5px" }}>{activity.dislikes}</span>
+      </div>
+    </div>
     {deleteMode && (
       <DeleteIcon
         style={{ cursor: "pointer", color: "red", fontSize: "35px", marginLeft: "20px" }}
         onClick={() => handleDeleteClick(activity)}
       />
     )}
-    <ThumbUpIcon
-      style={{ cursor: "pointer", color: theme.palette.apple.main, fontSize: "35px", marginLeft: "20px" }}
-      onClick={() => handleLike(activity, true)}
-    />
-    <span style={{ fontSize: "20px", marginLeft: "5px" }}>{activity.likes}</span>
-    <ThumbDownIcon
-      style={{ cursor: "pointer", color: theme.palette.purple.main, fontSize: "35px", marginLeft: "20px" }}
-      onClick={() => handleLike(activity, false)}
-    />
-    <span style={{ fontSize: "20px", marginLeft: "5px" }}>{activity.dislikes}</span>
   </div>
 });
 

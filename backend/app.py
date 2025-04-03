@@ -740,7 +740,9 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
             #KEEP THIS
             activity["activityNumber"] = generate_activity_number()
             activity["likes"] = 0
+            activity["likedBy"] = []
             activity["dislikes"] = 0
+            activity["dislikedBy"] = []
             activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
             # print(activity)
@@ -752,7 +754,9 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
             #KEEP THIS
             activity["activityNumber"] = generate_activity_number()
             activity["likes"] = 0
+            activity["likedBy"] = []
             activity["dislikes"] = 0
+            activity["dislikedBy"] = []
             activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
             activity["activityID"] = activity_collection.insert_one(activity["details"]).inserted_id
@@ -856,7 +860,9 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
             #KEEP THIS
             restaurant["activityNumber"] = generate_activity_number()
             restaurant["likes"] = 0
+            restaurant["likedBy"] = []
             restaurant["dislikes"] = 0
+            restaurant["dislikedBy"] = []
             restaurant["details"]["images"] = get_image(restaurant["title"])
             restaurant["details"]["tripId"] = trip_id
             restaurant["activityID"] = activity_collection.insert_one(restaurant["details"]).inserted_id
