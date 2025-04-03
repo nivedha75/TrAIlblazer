@@ -13,6 +13,8 @@ const CreateTrip = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [days, setDays] = useState("");
   const [selectLocation, setSelectLocation] = useState("");
+  const [secondaryLocations, setSecondaryLocations] = useState("");
+  const [transportation, setTransportation] = useState("");
   const [places, setPlaces] = useState([]);
   const [selectedImage, setSelectedImage] = useState("");
 
@@ -39,16 +41,24 @@ const CreateTrip = () => {
     setDays(event.target.value);
   }
 
+  const secondaryLocationsChange = (event) => {
+    setSecondaryLocations(event.target.value);
+  }
+
+  const transportationChange = (event) => {
+    setTransportation(event.target.value);
+  }
+
   const goToPlanPage = () => {
     if (!days || isNaN(days) || days <= 0) {
       alert("Please enter a valid number of days!");
       return;
     }
     else if (!selectLocation) {
-      alert("Please select a location!");
+      alert("Please select a starting location!");
       return;
     }
-    navigate("/plan", { state: { days: parseInt(days, 10), locate: selectLocation, image: selectedImage } });
+    navigate("/plan", { state: { days: parseInt(days, 10), locate: selectLocation, secondaryLocate: secondaryLocations, transportation: transportation, image: selectedImage } });
   };
 
   const handleInputChange = (event) => {
@@ -100,7 +110,7 @@ const CreateTrip = () => {
         />
       </div>
         <div>
-        <h2 style={{color: "#800080"}}>Select a Location: </h2>
+        <h2 style={{color: "#800080"}}>Select a Starting Location: </h2>
         <input
         type="text"
         value={query}
@@ -157,6 +167,33 @@ const CreateTrip = () => {
           ))}
         </ul>
       )}
+      </div>
+      <div>
+        <h2 style={{color: "#800080"}}>If you want multiple locations, list the others here: </h2>
+        <input
+          type="text"
+          value={secondaryLocations}
+          onChange={secondaryLocationsChange}
+          placeholder="Secondary locations..."
+          style={{
+            width: "600px",
+            height: "50px",
+            padding: "10px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            marginBottom: "20px",
+            fontSize: "16px",
+            boxShadow: "inset 0 0 5px rgba(0, 0, 0, 0.1)"
+          }}
+        />
+      </div>
+      <div>
+        <h2 style={{color: "#800080"}}>Planned method of transportation </h2>
+        <select onChange={transportationChange}>
+          <option value="driving">Driving</option>
+          <option value="walking">Walking</option>
+          <option value="biking">Biking</option>
+        </select>
       </div>
       <button
         style={{

@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import HomePage from "./pages/Homepage";
 import CreateTrip from './pages/CreateTrip';
 import PlanTrip from './pages/PlanTrip';
+import Forum from './pages/Forum';
 import PreferenceSurvey from "./pages/PreferenceSurvey";
 import TripDetails from './pages/TripDetails';
 import ItineraryDetails from './pages/ItineraryDetails';
@@ -13,6 +14,8 @@ import PlaceDetails from './pages/PlaceDetails';
 import ActivityDetails from './pages/ActivityDetails';
 import SignIn from "./pages/SignIn";
 import NextBestActivities from './pages/NextBestActivities';
+import MapDetails from './pages/MapDetails';
+import RouteDetails from './pages/RouteDetails';
 
 
    function App() {
@@ -47,6 +50,7 @@ import NextBestActivities from './pages/NextBestActivities';
             <Route path="/" element={<HomePage />} />
             <Route path="/create" element={<CreateTrip />} />
             <Route path="/plan" element={<PlanTrip />} />
+            <Route path="/forum" element={<Forum />} />
             <Route path="/survey" element={<PreferenceSurvey />} />
             {/* <Route path="/activities/:tripId" element={<ActivityCarousel />} /> */}
             <Route path="/activities" element={<ActivityCarousel />} />
@@ -55,6 +59,8 @@ import NextBestActivities from './pages/NextBestActivities';
             {/* <Route path="/next-best-activities/:tripId" element={<NextBestActivities />} /> */}
             <Route path="/place-details/:placeId" element={<PlaceDetails />} />
             <Route path="/activity-details/:activityId" element={<ActivityDetails />} />
+            <Route path="/map-details/:activityId" element={<MapDetails />} />
+            <Route path="/route-details/:tripId/:day" element={<RouteDetails />} />
             <Route path="/sign-in" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
           </Routes>
         </Router>
