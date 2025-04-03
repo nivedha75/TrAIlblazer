@@ -110,6 +110,7 @@ const RouteDetails = () => {
           }
         } catch (error) {
           console.error("Geocoding failed:", error);
+          setError("Sorry, one of the addresses may be corrupted. Google Maps is unable to route properly.");
         }
       }
 
@@ -168,6 +169,7 @@ const RouteDetails = () => {
         setTotalTime(Math.round(totalT / 60)); // Convert total seconds to minutes
       } else {
         console.error(`Directions request failed: ${status}`);
+        setError("Sorry, Google Maps was unable to route properly.");
       }
     });
   }, [pointsList]);
@@ -177,6 +179,7 @@ const RouteDetails = () => {
       <div id="map-canvas" style={{ flex: 3, height: "100%" }}></div>
       <aside style={{ flex: 1, padding: "20px", overflowY: "auto", background: "#f8f9fa" }}>
         <h1>Day {parseInt(day)+1}</h1>
+        <p style={{ color: "red" }}>{error}</p>
         <h3>Distances ({transportation})</h3>
         <ul>
           {distanceList.map((item, index) => (

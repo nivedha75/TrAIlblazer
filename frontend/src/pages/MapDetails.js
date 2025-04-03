@@ -108,6 +108,7 @@ const MapDetails = () => {
           }
         } catch (error) {
           console.error("Geocoding failed:", error);
+          setError("Sorry, Google Maps was unable to find this address.");
         }
     }
 
