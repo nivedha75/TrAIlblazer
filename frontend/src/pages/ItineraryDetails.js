@@ -853,8 +853,8 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
         </h1>
         <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
           {tripDetails?.secondaryLocation
-            ? `${tripDetails.location} and ${tripDetails.secondaryLocation}`
-            : tripDetails.location}
+            ? `${tripDetails?.location} and ${tripDetails?.secondaryLocation}`
+            : tripDetails?.location}
         </h3>
         <p style={{ fontSize: "18px", margin: "5px 0" }}>
           <strong>Start Date:</strong> {tripDetails?.startDate}

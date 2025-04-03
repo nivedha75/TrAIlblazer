@@ -167,6 +167,7 @@ const RouteDetails = () => {
         setDistanceList(segments);
         setTotalDistance(Math.round(totalDist / 1000)); // Convert total meters to KM
         setTotalTime(Math.round(totalT / 60)); // Convert total seconds to minutes
+        setError("");
       } else {
         console.error(`Directions request failed: ${status}`);
         setError("Sorry, Google Maps was unable to route properly.");
