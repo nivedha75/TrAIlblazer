@@ -577,14 +577,14 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
       <span><i>{activity.context}</i></span>
     </div>
     <Button variant="contained" onClick={() => bookActivity(activity)}
-        sx={{ textTransform: "none", backgroundColor: theme.palette.apple.main, color: "white",
-        "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem",
+        sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
+        "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
         boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
         Book
     </Button>
     <Button variant="contained" onClick={() => activityDetails(activity.details._id)}
-        sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
-        "&:hover": { backgroundColor: theme.palette.purple.main}, fontSize: "1rem",
+        sx={{ textTransform: "none", backgroundColor: theme.palette.apple.main, color: "white",
+        "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
         boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
         More Details
     </Button>
