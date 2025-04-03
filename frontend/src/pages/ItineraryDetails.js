@@ -576,24 +576,26 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
       <p><strong>Rating:</strong> {activity.details.rating}</p>
       <span><i>{activity.context}</i></span>
     </div>
-    <Button variant="contained" onClick={() => bookActivity(activity)}
-        sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
-        "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
-        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
-        Book
-    </Button>
-    <Button variant="contained" onClick={() => activityDetails(activity.details._id)}
-        sx={{ textTransform: "none", backgroundColor: theme.palette.apple.main, color: "white",
-        "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
-        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
-        More Details
-    </Button>
-    <Button variant="contained" onClick={() => mapDetails(activity.details._id)}
-        sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
-        "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
-        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
-        View in Map
-    </Button>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Button variant="contained" onClick={() => bookActivity(activity)}
+          sx={{ textTransform: "none", width: "150px", backgroundColor: theme.palette.purple.main, color: "white",
+          "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
+          Book
+      </Button>
+      <Button variant="contained" onClick={() => activityDetails(activity.details._id)}
+          sx={{ textTransform: "none", width: "150px", backgroundColor: theme.palette.apple.main, color: "white",
+          "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
+          More Details
+      </Button>
+      <Button variant="contained" onClick={() => mapDetails(activity.details._id)}
+          sx={{ textTransform: "none", width: "150px", backgroundColor: theme.palette.purple.main, color: "white",
+          "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
+          View in Map
+      </Button>
+    </div>
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
         <ThumbUpIcon
