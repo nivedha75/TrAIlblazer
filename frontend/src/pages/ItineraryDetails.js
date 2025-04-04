@@ -833,7 +833,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
           textAlign: "center",
           backgroundColor: "#f9f9f9",
           position: "relative",
-          left: "450px",
+          left: "550px",
         }}
       >
         {signedIn && (

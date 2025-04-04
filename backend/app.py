@@ -230,12 +230,33 @@ def trips():
             print("\n\nCity data for generating itinerary:", city_data)
             # Step 2: Use Gemini Flash to generate a personalized itinerary
             try:
-                generate_itinerary(data["userId"], data["location"] + (", AND " + data["secondaryLocation"] if "secondaryLocation" in data else ""), data["days"], trip_id, city_data)
+                generate_itinerary(
+                    data["userId"],
+                    data["location"]
+                    + (
+                        ", AND " + data["secondaryLocation"]
+                        if "secondaryLocation" in data
+                        else ""
+                    ),
+                    data["days"],
+                    trip_id,
+                    city_data,
+                )
             except Exception as e:
                 print(f"Error in generate_itinerary: {e}")
 
             print("Calling generate_restaurant_recommendations...")  # Debugging
-            generate_restaurant_recommendations(data["userId"], data["location"] + (", " + data["secondaryLocation"] if "secondaryLocation" in data else ""), trip_id, city_data)
+            generate_restaurant_recommendations(
+                data["userId"],
+                data["location"]
+                + (
+                    ", " + data["secondaryLocation"]
+                    if "secondaryLocation" in data
+                    else ""
+                ),
+                trip_id,
+                city_data,
+            )
             return jsonify({"message": "Trip data saved successfully"}), 201
 
         except Exception as e:
@@ -622,10 +643,10 @@ def extract_json(text):
 
 activity_id_counter = count(1)
 
-#DO NOT DELETE. THIS IS NEEDED FOR ADDING ACTIVITY TO ITINERARY
+
+# DO NOT DELETE. THIS IS NEEDED FOR ADDING ACTIVITY TO ITINERARY
 def generate_activity_number():
     return next(activity_id_counter)
-
 
 
 # @app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
@@ -660,14 +681,15 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     Given a user's travel preferences, destination, and the real-time city data provided, generate an itinerary with, for each day of the trip, 3 activities: 2 as top preferences and 1 as a next best preference.
     Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination.
-    Note: Do not use the ISO format for the date. Instead, use the format "Month Day, Year" (e.g., "April 2, 2025").
+    
+    ** Important Note: Do not use the ISO format for the date in your response. Instead, use the format "Month Day, Year" (e.g., "April 2, 2025").
 
     Format the itinerary as the following JSON STRICTLY, NO OTHER WORDS:
         \"top_preferences\": [
             [
                 {
                 \"title\": ...title...,
-                \"context\": ...Because you liked (and then list something specific in the preferences JSON. Then state the weather that explains the choice. example format: "since 2025-04-02 will have light rain and heavy wind, this indoor activity is perfect.")...,
+                \"context\": ...Because you liked (and then list something specific in the preferences JSON. Then state the weather that explains the choice. example format: "since April 2, 2025 will have light rain and heavy wind, this indoor activity is perfect.")...,
                 \"day\": ...the number of the itinerary day this activity takes place (starting at 0)...
                 \"weather\": ...ALL weather for this day on the trip...,
                 \"details\": {
@@ -733,7 +755,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
     parsed_json = json.loads(text_content)
     for day in parsed_json["top_preferences"]:
         for activity in day:
-            #KEEP THIS
+            # KEEP THIS
             activity["activityNumber"] = generate_activity_number()
             activity["likes"] = 0
             activity["likedBy"] = []
@@ -742,12 +764,14 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
             activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
             # print(activity)
-            activity["activityID"] = activity_collection.insert_one(activity["details"]).inserted_id
+            activity["activityID"] = activity_collection.insert_one(
+                activity["details"]
+            ).inserted_id
             # print(activity["details"])
 
     for day in parsed_json["next_best_preferences"]:
         for activity in day:
-            #KEEP THIS
+            # KEEP THIS
             activity["activityNumber"] = generate_activity_number()
             activity["likes"] = 0
             activity["likedBy"] = []
@@ -755,7 +779,9 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
             activity["dislikedBy"] = []
             activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
-            activity["activityID"] = activity_collection.insert_one(activity["details"]).inserted_id
+            activity["activityID"] = activity_collection.insert_one(
+                activity["details"]
+            ).inserted_id
     #     print(activity)
 
     # print(parsed_json)
@@ -771,7 +797,8 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     # return jsonify({"response": parsed_json}), 200
 
-#WORKS: DO NOT MODIFY
+
+# WORKS: DO NOT MODIFY
 def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     try:
         print("Generating restaurant recommendations")
@@ -783,13 +810,14 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
         )
 
         url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
-    
-        headers = {
-            "Content-Type": "application/json"
-        }
-    
-        prompt = """I am building a travel itinerary recommendation app.
-        Here is the real-time city data for weather and hotels in that city: """ + city_data + """\n
+
+        headers = {"Content-Type": "application/json"}
+
+        prompt = (
+            """I am building a travel itinerary recommendation app.
+        Here is the real-time city data for weather and hotels in that city: """
+            + city_data
+            + """\n
         Use the provided structured `city_data` above — it contains weather forecasts and hotel listings for the city.
         Use this information to make smart restaurant choices.
 
@@ -830,8 +858,12 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
             ...
         ]
     
-        The location is: """ + location + """. If there is more than one location, distribute activities across each one equally, trying to avoid splitting days. Here are the user preferences:""" + preferences_str_format
-    
+        The location is: """
+            + location
+            + """. If there is more than one location, distribute activities across each one equally, trying to avoid splitting days. Here are the user preferences:"""
+            + preferences_str_format
+        )
+
         # print(prompt)
 
         data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -841,19 +873,20 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
         # print("Raw AI response:", response_json)
         # print(response_json)
 
-    
-        text_content = extract_json(response_json["candidates"][0]["content"]["parts"][0]["text"])
+        text_content = extract_json(
+            response_json["candidates"][0]["content"]["parts"][0]["text"]
+        )
 
         # print("Text context: ", text_content)
 
         parsed_json = json.loads(text_content)
-        #parsed_json = text_content
+        # parsed_json = text_content
         # print("Parsed json: ", parsed_json)
 
         # print(parsed_json)
 
         for restaurant in parsed_json["restaurants"]:
-            #KEEP THIS
+            # KEEP THIS
             restaurant["activityNumber"] = generate_activity_number()
             restaurant["likes"] = 0
             restaurant["likedBy"] = []
@@ -861,8 +894,10 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
             restaurant["dislikedBy"] = []
             restaurant["details"]["images"] = get_image(restaurant["title"])
             restaurant["details"]["tripId"] = trip_id
-            restaurant["activityID"] = activity_collection.insert_one(restaurant["details"]).inserted_id
-    
+            restaurant["activityID"] = activity_collection.insert_one(
+                restaurant["details"]
+            ).inserted_id
+
         print(parsed_json)
 
         itinerary_data = {"_id": trip_id, "restaurants": parsed_json["restaurants"]}
@@ -1067,13 +1102,18 @@ def send_message():
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response, 200
 
+
 @app.route("/get_messages/<user_id>/<trip_id>", methods=["GET", "OPTIONS"])
 def get_messages(user_id, trip_id):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    #messages = list(messages_collection.find({"user_id": user_id}, {"_id": 0}))
+    # messages = list(messages_collection.find({"user_id": user_id}, {"_id": 0}))
     try:
-        messages = list(messages_collection.find({"user_id": user_id, "trip_id": trip_id}, {"_id": 0}))
+        messages = list(
+            messages_collection.find(
+                {"user_id": user_id, "trip_id": trip_id}, {"_id": 0}
+            )
+        )
         if not messages:
             return jsonify({"error": "Error getting messages"}), 404
         response = jsonify(messages)
@@ -1081,6 +1121,7 @@ def get_messages(user_id, trip_id):
         return response, 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # @app.route("/get_messages/<user_id>", methods=["GET", "OPTIONS"])
 # def get_messages(user_id):
@@ -1112,8 +1153,8 @@ def get_image(query):
         data = response.json()
 
         if "items" in data and len(data["items"]) > 0:
-            output = [item["link"] for item in data["items"][:6]]   # Limit to 6 images
-            
+            output = [item["link"] for item in data["items"][:6]]  # Limit to 6 images
+
             for i, link in enumerate(output):
                 print(f"Image {i+1} URL:", link)
         else:
@@ -1167,7 +1208,8 @@ def convert_objectid(itinerary):
     else:
         return itinerary
 
-#USED TO ADD ACTIVITY. DO NOT CHANGE
+
+# USED TO ADD ACTIVITY. DO NOT CHANGE
 @app.route(
     "/move_itinerary_activity/<trip_id>/<int:activityID>",
     methods=["GET", "POST", "OPTIONS"],
@@ -1179,8 +1221,10 @@ def move_itinerary_activity(trip_id, activityID):
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
-    
-    next_best_preferences = itinerary.get("activities", {}).get("next_best_preferences", [])
+
+    next_best_preferences = itinerary.get("activities", {}).get(
+        "next_best_preferences", []
+    )
     top_preferences = itinerary.get("activities", {}).get("top_preferences", [])
 
     found_activity = None
@@ -1190,19 +1234,19 @@ def move_itinerary_activity(trip_id, activityID):
         filtered_activities = []
         for act in day_activities:
             if act["activityNumber"] == activityID:
-                found_activity = act  
+                found_activity = act
             else:
                 filtered_activities.append(act)
-        
+
         if filtered_activities:
-            updated_next_best.append(filtered_activities)  
+            updated_next_best.append(filtered_activities)
 
     if not found_activity:
         return jsonify({"error": "Activity not found in next_best_preferences"}), 404
 
     day_index = found_activity["day"]
     while len(top_preferences) <= day_index:
-        top_preferences.append([]) 
+        top_preferences.append([])
 
     top_preferences[day_index].append(found_activity)
 
@@ -1304,7 +1348,8 @@ def move_itinerary_activity(trip_id, activityID):
 #     response.headers.add("Access-Control-Allow-Origin", "*")
 #     return response
 
-#USED TO ADD RESTAURANT. DO NOT CHANGE
+
+# USED TO ADD RESTAURANT. DO NOT CHANGE
 @app.route(
     "/move_restaurant_activity/<trip_id>/<int:activityID>/<int:day>",
     methods=["GET", "POST", "OPTIONS"],
@@ -1316,18 +1361,19 @@ def move_restaurant_activity(trip_id, activityID, day):
     itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
     if not itinerary:
         return jsonify({"error": "Itinerary not found"}), 404
-    
+
     restaurant = restaurant_collection.find_one({"_id": ObjectId(trip_id)})
     if not restaurant:
         return jsonify({"error": "Restaurant not found"}), 404
 
     next_best = restaurant.get("restaurants", [])
     activity = next(
-        (act for act in next_best if act.get("activityNumber") == activityID), None)
+        (act for act in next_best if act.get("activityNumber") == activityID), None
+    )
 
     if not activity:
         return jsonify({"error": "Restaurant not found"}), 404
-    
+
     activity["day"] = day
 
     while len(itinerary["activities"]["top_preferences"]) <= day:
@@ -1337,7 +1383,13 @@ def move_restaurant_activity(trip_id, activityID, day):
 
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
-        {"$set": {f"activities.top_preferences.{day}": itinerary["activities"]["top_preferences"][day]}}
+        {
+            "$set": {
+                f"activities.top_preferences.{day}": itinerary["activities"][
+                    "top_preferences"
+                ][day]
+            }
+        },
     )
 
     response = jsonify(
@@ -1421,46 +1473,49 @@ def update_activity_order(trip_id):
 #     return jsonify({"trip_id": trip_id, "activities": activities})
 
 
-
-
 @app.route("/forum", methods=["GET", "POST"])
 def forum():
-    if request.method == 'GET':
+    if request.method == "GET":
         try:
             posts = list(forum_collection.find().sort("created_at", -1))
             print(posts)
-            
+
             for post in posts:
                 post["_id"] = str(post["_id"])
                 # post["created_at"] = post["created_at"].isoformat()
                 # print(post["created_at"].isoformat())
-            
+
             return jsonify(posts)
         except Exception as e:
-            print('some error')
+            print("some error")
             return jsonify({"error": str(e)}), 500
-    elif request.method == 'POST':
+    elif request.method == "POST":
         try:
             data = request.json
             print(data)
             username = data.get("username")
             print(username)
-            
+
             if not username:
                 return jsonify({"error": "User not authenticated"}), 401
-            
+
             new_post = {
                 "username": username,
                 "name": data.get("name"),
                 "location": data.get("location"),
                 "description": data.get("description"),
                 "bestTime": data.get("bestTime"),
-                "created_at": datetime.now(timezone.utc)
+                "created_at": datetime.now(timezone.utc),
             }
-            
+
             result = forum_collection.insert_one(new_post)
-            return jsonify({"message": "Post submitted successfully", "post_id": str(result.inserted_id)})
-        
+            return jsonify(
+                {
+                    "message": "Post submitted successfully",
+                    "post_id": str(result.inserted_id),
+                }
+            )
+
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
