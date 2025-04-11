@@ -76,6 +76,7 @@ const HomePage = () => {
   const [pastTrips, setPastTrips] = useState([]);
   const [pastRecommendingIndex, setPastRecommendingIndex] = useState();
   const [recommendedPlaces, setRecommendedPlaces] = useState([]);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -190,6 +191,7 @@ const HomePage = () => {
     // If 'user_id' cookie exists, the user is authenticated
     if (userId) {
       setIsAuthenticated(true);
+      setUser(userId);
       fetch(`http://localhost:55000/trips/user/${userId}`, {
       headers: {
         "Content-Type": "application/json",
@@ -631,6 +633,7 @@ const HomePage = () => {
                       onClick={() => {
                         if (option === "Logout") handleLogout();
                         if (option === "Edit Survey") navigate("/survey");
+                        if (option === "Edit Profile") navigate(`/profile/${user}`);
                       }}
                     >
                       {option}
