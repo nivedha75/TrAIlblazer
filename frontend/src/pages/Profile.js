@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import {useNavigate} from "react-router-dom";
 import Cookies from "js-cookie";
 import { Avatar, TextField, Button  } from "@mui/material"; 
@@ -7,25 +7,123 @@ const Profile = () => {
     const [user, setUser] = useState({
         userId: Cookies.get("user_id"),
         username: Cookies.get("username"),
-        name: Cookies.get("name") || "",
-        age: Cookies.get("age") || "",
-        about: Cookies.get("about") || "",
-        location: Cookies.get("location") || "",
-        interests: Cookies.get("interests") || ""
+        name: "",
+        age: "",
+        about: "",
+        location: "",
+        interests: ""
       });
-    
+      //const [profilePic, setProfilePic] = useState(null);
+    const [profilePic, setProfilePic] = useState("");
+    const fileInputRef = useRef();
       const navigate = useNavigate();
-      
+      //const fileInputRef = React.useRef(null);
+      useEffect(() => {
+        const fetchProfile = async () => {
+          const userId = Cookies.get("user_id");
+    
+          if (!userId) return;
+    
+          try {
+            const response = await fetch(`http://localhost:55000/profile/${userId}`, {
+                headers: {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "http://localhost:3000",
+                  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+                  "Access-Control-Allow-Headers": "Content-Type",
+                },
+              });
+            if (response.ok) {
+              const data = await response.json();
+              setUser(prev => ({
+                ...prev,
+                ...data 
+              }));
+              if (data.profile_pic) {
+                setProfilePic(`http://localhost:55000${data.profile_pic}`);
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching profile:", error);
+          }
+        };
+    
+        fetchProfile();
+      }, []);
+
       const handleChange = (field, value) => {
         setUser(prev => ({ ...prev, [field]: value }));
       };
     
-      const handleSave = () => {
-        // For now just log; later can POST to backend
-        console.log("Updated user profile:", user);
-        alert("Profile saved (not really, just frontend)");
+      const handleSave = async () => {
+        try {
+          const response = await fetch("http://localhost:55000/profile/save", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "http://localhost:3000",
+                "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+              },
+            body: JSON.stringify(user)
+          });
+      
+          const result = await response.json();
+      
+          if (response.ok) {
+            alert("Profile saved successfully!");
+          } else {
+            alert("Error saving profile: " + result.message);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Something went wrong while saving profile.");
+        }
       };
-    
+      
+      const handleAvatarClick = () => {
+        fileInputRef.current.click(); // Open file picker
+      };
+      
+      const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+      
+        const formData = new FormData();
+        formData.append("file", file);
+      
+        const username = Cookies.get("username");
+      
+        try {
+          const response = await fetch(`http://localhost:55000/api/upload-profile-pic/${username}`, {
+            method: "POST",
+            headers: {
+                "Access-Control-Allow-Origin": "http://localhost:3000",
+                "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+              },
+            body: formData,
+          });
+      
+          const data = await response.json();
+          if (data.filepath) {
+            setProfilePic(`http://localhost:55000${data.filepath}`);
+          }
+        } catch (error) {
+          console.error("Error uploading profile picture:", error);
+        }
+      };
+
+    // const handleFileChange = (event) => {
+    //     const file = event.target.files[0];
+    //     if (file) {
+    //       const reader = new FileReader();
+    //       reader.onloadend = () => {
+    //         setProfilePic(reader.result); // base64 image data
+    //       };
+    //       reader.readAsDataURL(file);
+    //     }
+    //   };
+
       return (
         <div style={styles.pageBackground}>
         <div style={styles.containerWrapper}>
@@ -34,9 +132,20 @@ const Profile = () => {
         </button>
           <div style={styles.container}>
             <div style={styles.header}>
-              <Avatar style={styles.avatar}>
-                {user.name?.charAt(0).toUpperCase() || "U"}
-              </Avatar>
+            <Avatar
+            style={styles.avatar}
+            onClick={handleAvatarClick}
+            src={profilePic}
+            >
+            {!profilePic && (user.name?.charAt(0).toUpperCase() || "U")}
+            </Avatar>
+            <input
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            />
               <h2 style={styles.username}>@{user.username}</h2>
             </div>
     
@@ -147,7 +256,8 @@ const Profile = () => {
         width: 70,
         height: 70,
         fontSize: 30,
-        background: "linear-gradient(to right, #7f53ac, #647dee)"
+        background: "linear-gradient(to right, #7f53ac, #647dee)",
+        cursor: "pointer"
       },
       username: {
         fontSize: "1.6rem",

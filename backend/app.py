@@ -1,5 +1,6 @@
 from datetime import timedelta
-from flask import Flask, request, jsonify, session, make_response
+from flask import Flask, request, jsonify, session, make_response, send_from_directory
+from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from pymongo import MongoClient
 from datetime import datetime, timezone
@@ -29,7 +30,8 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 IMAGE_API_KEY = os.getenv("IMAGE_API_KEY")
 IMAGE_CX = os.getenv("IMAGE_CX")
-
+UPLOAD_FOLDER = "static/uploads"
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 app = Flask(__name__)
 
@@ -53,7 +55,7 @@ CORS(
     supports_credentials=True,
 )
 # CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
-
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_SENDER = "noreply.trailblazer@gmail.com"
@@ -73,6 +75,7 @@ itinerary_collection = db["itineraries"]
 restaurant_collection = db["restaurants"]
 messages_collection = db["messages"]
 forum_collection = db["forum_posts"]
+profiles = db["profiles"]
 
 
 @app.route("/")
@@ -1518,7 +1521,70 @@ def forum():
 
         except Exception as e:
             return jsonify({"error": str(e)}), 500
+    
+@app.route("/profile/save", methods=["GET", "POST", "OPTIONS"])
+def save_profile():
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+    
+    data = request.get_json()
 
+    username = data.get("username")
+    if not username:
+        return jsonify({"message": "Username is required"}), 400
+
+    result = profiles.update_one(
+        {"username": username},
+        {"$set": data},
+        upsert=True
+    )
+
+    return jsonify({"message": "Profile saved successfully"}), 200
+
+@app.route("/profile/<userId>", methods=["GET"])
+def get_profile(userId):
+    profile = profiles.find_one({"userId": userId}, {"_id": 0}) 
+    if profile:
+        return jsonify(profile), 200
+    else:
+        return jsonify({"message": "Profile not found"}), 404
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route("/api/upload-profile-pic/<username>", methods=["POST", "GET", "OPTIONS"])
+def upload_profile_pic(username):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+    
+    print("FILES:", request.files)
+    print("FORM:", request.form)
+    if "file" not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+    if file and allowed_file(file.filename):
+        print("Filename:", file.filename)
+        filename = secure_filename(f"{username}_{file.filename}")
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        file.save(filepath)
+
+        profiles.update_one(
+            {"username": username},
+            {"$set": {"profile_pic": f"/static/uploads/{filename}"}},
+            upsert=True
+        )
+        return jsonify({"message": "File uploaded successfully", "filepath": f"/static/uploads/{filename}"}), 200
+    return jsonify({"error": "File type not allowed"}), 400
+
+
+@app.route("/static/uploads/<filename>")
+def serve_image(filename):
+    return send_from_directory("static/uploads", filename)
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 if __name__ == "__main__":
     app.run(port=PORT, debug=True)

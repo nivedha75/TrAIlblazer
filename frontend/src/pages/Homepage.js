@@ -77,6 +77,8 @@ const HomePage = () => {
   const [pastRecommendingIndex, setPastRecommendingIndex] = useState();
   const [recommendedPlaces, setRecommendedPlaces] = useState([]);
   const [user, setUser] = useState(null);
+  const [profilePic, setProfilePic] = useState(null);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -91,6 +93,39 @@ const HomePage = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const userId = Cookies.get("user_id");
+
+      if (!userId) return;
+
+      try {
+        const response = await fetch(`http://localhost:55000/profile/${userId}`, {
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "http://localhost:3000",
+              "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            },
+          });
+        if (response.ok) {
+          const data = await response.json();
+          setUser(prev => ({
+            ...prev,
+            ...data 
+          }));
+          if (data.profile_pic) {
+            setProfilePic(`http://localhost:55000${data.profile_pic}`);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     fetch("http://localhost:55000/trips", {
@@ -590,13 +625,28 @@ const HomePage = () => {
   
         {isAuthenticated ? (
           <div style={{  position: "absolute", top: "10px", right: "20px"  }} ref={ddRef}>
-           <PersonIcon
+           {profilePic ? (
+            <img
+              src={profilePic}
+              alt="Profile"
+              style={{
+                width: "50px",
+                height: "50px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                cursor: "pointer"
+              }}
+              onClick={toggleDropdown}
+            />
+          ) : (
+            <PersonIcon
               style={{
                 fontSize: "50px",
                 cursor: "pointer"
               }}
               onClick={toggleDropdown}
             />
+          )}
             <p>{Cookies.get("username")}</p>
             {isOpen && (
               <div
