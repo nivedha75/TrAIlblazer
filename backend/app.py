@@ -126,6 +126,40 @@ def save_progress():
         upsert=True,  # Insert new document if none exists
     )
 
+    # interests = []
+    # if "activityPreferences" in survey_data:
+    #     interests.extend(survey_data["activityPreferences"])
+    # if "socialEnterAct" in survey_data:
+    #     interests.extend(survey_data["socialEnterAct"])
+
+    # if interests:
+    #     profiles.update_one(
+    #         {"userId": user_id},
+    #         {"$set": {"interests": ", ".join(interests)}},
+    #         upsert=True,
+    #     )
+    new_interests = []
+    if "activityPreferences" in survey_data:
+        new_interests.extend(survey_data["activityPreferences"])
+    if "socialEnterAct" in survey_data:
+        new_interests.extend(survey_data["socialEnterAct"])
+
+    if new_interests:
+        profile = profiles.find_one({"userId": user_id})
+        current_interests = []
+
+        if profile and "interests" in profile and profile["interests"]:
+            current_interests = [i.strip() for i in profile["interests"].split(",")]
+
+        merged = current_interests + [i for i in new_interests if i not in current_interests]
+        merged_str = ", ".join(merged)
+
+        profiles.update_one(
+            {"userId": user_id},
+            {"$set": {"interests": merged_str}},
+            upsert=True,
+        )
+
     return jsonify({"message": "Survey progress saved"}), 200
 
 
@@ -156,6 +190,42 @@ def submit_preferences():
             {"$set": data},  # Update document
             upsert=True,  # Insert if not exists
         )
+
+        # interests = []
+        # if "activityPreferences" in data:
+        #     interests.extend(data["activityPreferences"])
+        # if "socialEnterAct" in data:
+        #     interests.extend(data["socialEnterAct"])
+
+        # if interests:
+        #     profiles.update_one(
+        #         {"userId": data["user_id"]},
+        #         {"$set": {"interests": ", ".join(interests)}},
+        #         upsert=True,
+        #     )
+
+        new_interests = []
+        if "activityPreferences" in data:
+            new_interests.extend(data["activityPreferences"])
+        if "socialEnterAct" in data:
+            new_interests.extend(data["socialEnterAct"])
+
+        if new_interests:
+            profile = profiles.find_one({"userId": data["user_id"]})
+            current_interests = []
+
+            if profile and "interests" in profile and profile["interests"]:
+                current_interests = [i.strip() for i in profile["interests"].split(",")]
+
+            merged = current_interests + [i for i in new_interests if i not in current_interests]
+            merged_str = ", ".join(merged)
+
+            profiles.update_one(
+                {"userId": data["user_id"]},
+                {"$set": {"interests": merged_str}},
+                upsert=True,
+            )
+
         return jsonify({"message": "Survey data saved successfully"}), 201
 
     except Exception as e:
@@ -1585,6 +1655,24 @@ def serve_image(filename):
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+@app.route("/api/remove-profile-pic/<username>", methods=["GET", "POST", "OPTIONS"])
+def remove_profile_pic(username):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+    
+    user = profiles.find_one({"username": username})
+    if not user or "profile_pic" not in user:
+        return jsonify({"error": "Profile picture not found"}), 404
+
+    pic_path = os.path.join(app.root_path, user["profile_pic"].lstrip("/"))
+    
+    if os.path.exists(pic_path):
+        os.remove(pic_path)
+
+    profiles.update_one({"username": username}, {"$unset": {"profile_pic": ""}})
+    
+    return jsonify({"message": "Profile picture removed"}), 200
 
 if __name__ == "__main__":
     app.run(port=PORT, debug=True)

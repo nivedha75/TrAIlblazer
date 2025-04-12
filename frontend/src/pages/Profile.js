@@ -13,11 +13,12 @@ const Profile = () => {
         location: "",
         interests: ""
       });
-      //const [profilePic, setProfilePic] = useState(null);
+
     const [profilePic, setProfilePic] = useState("");
+
     const fileInputRef = useRef();
-      const navigate = useNavigate();
-      //const fileInputRef = React.useRef(null);
+    const navigate = useNavigate();
+
       useEffect(() => {
         const fetchProfile = async () => {
           const userId = Cookies.get("user_id");
@@ -81,6 +82,28 @@ const Profile = () => {
         }
       };
       
+      const handleRemovePic = async () => {
+        try {
+          const res = await fetch(`http://localhost:55000/api/remove-profile-pic/${user.username}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "http://localhost:3000",
+                "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+              },
+          });
+          if (res.ok) {
+            setProfilePic("");
+            alert("Profile picture removed!");
+          } else {
+            alert("Failed to remove profile picture");
+          }
+        } catch (err) {
+          console.error("Error removing profile picture:", err);
+        }
+      };
+
       const handleAvatarClick = () => {
         fileInputRef.current.click(); // Open file picker
       };
@@ -132,10 +155,11 @@ const Profile = () => {
         </button>
           <div style={styles.container}>
             <div style={styles.header}>
+            <div style={styles.avatarSection}>
             <Avatar
             style={styles.avatar}
             onClick={handleAvatarClick}
-            src={profilePic}
+            src={profilePic || undefined}
             >
             {!profilePic && (user.name?.charAt(0).toUpperCase() || "U")}
             </Avatar>
@@ -146,6 +170,18 @@ const Profile = () => {
             ref={fileInputRef}
             onChange={handleFileChange}
             />
+            {profilePic && (
+            <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                style={styles.removeBtn}
+                onClick={handleRemovePic}
+            >
+                Remove Profile Picture
+            </Button>
+            )}
+            </div>
               <h2 style={styles.username}>@{user.username}</h2>
             </div>
     
@@ -252,12 +288,27 @@ const Profile = () => {
         gap: "15px",
         marginBottom: "30px"
       },
+      avatarSection: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        minWidth: "80px" 
+      },
       avatar: {
         width: 70,
         height: 70,
         fontSize: 30,
         background: "linear-gradient(to right, #7f53ac, #647dee)",
-        cursor: "pointer"
+        cursor: "pointer",
+        transition: "none"
+      },
+      removeBtn: {
+        marginTop: "6px",
+        padding: "3px 8px",
+        fontSize: "0.7rem",
+        lineHeight: 1,
+        textTransform: "none",
+        whiteSpace: "nowrap"
       },
       username: {
         fontSize: "1.6rem",
