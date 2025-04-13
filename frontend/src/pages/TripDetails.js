@@ -6,7 +6,7 @@ import Beijing from "../assets/Beijing.png";
 import Hawaii from "../assets/hawaii.png";
 import York from "../assets/NewYork.png";
 import Japan from "../assets/Japan.png";
-import Seattle from "../assets/Seattle2.png";
+import Seattle from "../assets/Seattle.jpeg";
 
 const imageMap = {
     "../assets/Indonesia.png": Indonesia,
@@ -15,7 +15,7 @@ const imageMap = {
     "../assets/Japan.png": Japan, 
     "../assets/hawaii.png": Hawaii,
     "../assets/Beijing.png": Beijing,
-    "../assets/Seattle2.png": Seattle
+    "../assets/Seattle.jpeg": Seattle
   };
 
 const TripDetails = () => {

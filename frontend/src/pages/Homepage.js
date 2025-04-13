@@ -21,7 +21,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import { isPast, parseISO, format, isBefore, startOfDay, parse } from 'date-fns';
 import AddIcon from "@mui/icons-material/Add"; 
 import Bot from "../assets/Bot.avif";
-import Seattle from "../assets/Seattle2.png";
+import Seattle from "../assets/Seattle.jpeg";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 const NextArrow = ({ onClick }) => (
@@ -296,7 +296,7 @@ const HomePage = () => {
     "../assets/Japan.png": Japan, 
     "../assets/hawaii.png": Hawaii,
     "../assets/Beijing.png": Beijing,
-    "../assets/Seattle2.png": Seattle
+    "../assets/Seattle.jpeg": Seattle
   };
 
   const navigateToSignIn = () => {
