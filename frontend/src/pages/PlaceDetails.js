@@ -21,6 +21,7 @@ import Japan3 from "../assets/Tokyo3.jpeg";
 import Seattle from "../assets/Seattle.jpeg";
 import Seattle2 from "../assets/Seattle2.jpeg";
 import Seattle3 from "../assets/Seattle3.jpeg";
+import Cookies from "js-cookie";
 
 const imageMap = {
     "../assets/Indonesia.png": Indonesia,
@@ -48,7 +49,10 @@ const imageMap = {
 
 const PlaceDetails = () => {
     const { placeId } = useParams();
+    const userId = Cookies.get("user_id");
     const [place, setPlace] = useState(null);
+    const [activities, setActivities] = useState([]);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
   
     useEffect(() => {
@@ -64,7 +68,53 @@ const PlaceDetails = () => {
         .then((data) => setPlace(data))
         .catch((error) => console.error("Error fetching trip details:", error));
     }, [placeId]);
-  
+
+    useEffect(() => {
+      fetch(`http://localhost:55000/api/activities/${placeId}/${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type"
+        }
+      })
+        .then((response) => response.json())
+        .then((data) => setActivities(data.activities))
+        .catch((error) => console.error("Error fetching activity details:", error));
+    }, [placeId, userId]);
+
+    const generateSuggestions = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:55000/api/generate_suggestions", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "http://localhost:3000",
+              "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            },
+          body: JSON.stringify({
+            user_id: userId,
+            place: place.name,
+            place_id: placeId,
+          })
+        });
+    
+        const result = await response.json();
+        console.log("Result: ", result);
+        if (response.ok) {
+          setActivities(result.activities);
+          setLoading(false);
+        } else {
+          alert("Error generating activities: " + result.message);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Something went wrong while generating activities.");
+      }
+    };
+
     if (!place) {
       return <p>Loading trip details...</p>;
     }
@@ -133,9 +183,37 @@ const PlaceDetails = () => {
           marginBottom: "30px",
           textAlign: "center",
         }}>  <strong style={{ color: "white" }}> Description:</strong> {place.description}</p>
+        {activities.length === 0 ? (
+          <div className="flex justify-center mt-6 mb-16">
+          <button
+            onClick={generateSuggestions}
+            className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
+            disabled={loading}
+          >
+            {loading ? "Generating..." : "Generate Activity Suggestions"}
+          </button>
+          </div>
+        ) : (
+          <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-4 text-black">Your Activity Suggestions</h2>
+          <div className="grid gap-4">
+            {activities.map((act, index) => (
+              <div
+                key={index}
+                className="p-6 bg-white rounded-2xl shadow-md border border-gray-200 text-black"
+              >
+                <h3 className="font-bold text-lg">{act.title}</h3>
+                <p className="text-sm text-gray-700">Rating: {act.rating}</p>
+                <p className="mt-2 text-gray-800">{act.description}</p>
+                <p className="mt-1 italic text-gray-500">Context: {act.context}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        )}
         <div style={{ textAlign: "center" }}>
         <button style={{
-          // marginTop: "20px",
+          marginTop: "40px",
           // padding: "10px 20px",
           // fontSize: "18px",
           // backgroundColor: "#007bff",
