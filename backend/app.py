@@ -253,6 +253,8 @@ def trips():
             trip_result = trip_collection.insert_one(
                 {
                     "userId": data["userId"],
+                    "collaborators": data["collaborators"],
+                    "collaboratorsNames": data["collaboratorsNames"],
                     "location": data["location"],
                     "secondaryLocation": data["secondaryLocation"],
                     "transportation": data["transportation"],
@@ -381,6 +383,53 @@ def get_trips_by_user(user_id):
             trip["_id"] = str(trip["_id"])
             trip_list.append(trip)
         return jsonify(trip_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/trips/share/user/<user_id>", methods=["GET"])
+def get_shared_trips_by_user(user_id):
+    try:
+        trips = trip_collection.find({"collaborators": user_id})
+        trip_list = []
+        for trip in trips:
+            trip["_id"] = str(trip["_id"])
+            trip_list.append(trip)
+        return jsonify(trip_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/trips/add-collaborator/<trip_id>", methods=["POST"])
+def add_user_as_collaborator(trip_id):
+    data = request.get_json()
+    name = data.get("name")
+    email = data.get("email")
+
+    DB_PATH = os.path.join(os.path.dirname(__file__), "main.db")
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT user_id, username, hashed_pw, verified FROM UserTable WHERE email = ?",
+        (email,),
+    )
+    user = cursor.fetchone()
+    conn.close()
+
+    if not user:
+        return jsonify({"error": "User doesn't exist"}), 401
+
+    user_id = user[0]
+    print(user_id)
+
+    try:
+        trip_collection.update_one(
+            {"_id": ObjectId(trip_id)},
+            {"$addToSet": {"collaborators": user_id}},
+            {"$addToSet": {"collaboratorsNames": name}}
+        )
+        return jsonify({"message": "Collaborator added successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -194,6 +194,7 @@ const ItineraryDetails = () => {
     // Fetch chat messages from the backend
     const userId = Cookies.get("user_id");
     if (userId == tripDetails?.userId) setSignedIn(true);
+    if (tripDetails?.collaborators.includes(userId)) setSignedIn(true);
     const storedUsername = Cookies.get("username");
     const tripId = tripDetails?._id;
     setUsername(storedUsername);
@@ -856,6 +857,11 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             ? `${tripDetails?.location} and ${tripDetails?.secondaryLocation}`
             : tripDetails?.location}
         </h3>
+        {tripDetails?.collaboratorsNames?.length > 0 && (
+          <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
+            Collaborators: {tripDetails.collaboratorsNames.join(", ")}
+          </h3>
+        )}
         <p style={{ fontSize: "18px", margin: "5px 0" }}>
           <strong>Start Date:</strong> {tripDetails?.startDate}
         </p>
