@@ -255,6 +255,7 @@ def trips():
                     "userId": data["userId"],
                     "collaborators": data["collaborators"],
                     "collaboratorsNames": data["collaboratorsNames"],
+                    "name": data["name"],
                     "location": data["location"],
                     "secondaryLocation": data["secondaryLocation"],
                     "transportation": data["transportation"],
@@ -390,7 +391,7 @@ def get_trips_by_user(user_id):
 @app.route("/trips/share/user/<user_id>", methods=["GET"])
 def get_shared_trips_by_user(user_id):
     try:
-        trips = trip_collection.find({"collaborators": user_id})
+        trips = trip_collection.find({"collaborators": int(user_id)})
         trip_list = []
         for trip in trips:
             trip["_id"] = str(trip["_id"])
@@ -424,10 +425,18 @@ def add_user_as_collaborator(trip_id):
     print(user_id)
 
     try:
+        if str(user_id) == str(trip_collection.find_one({"_id": ObjectId(trip_id)}).get("userId")):
+            return jsonify({"message": "User already the owner"}), 200
+
+        if user_id in trip_collection.find_one({"_id": ObjectId(trip_id)}).get("collaborators", []):
+            return jsonify({"message": "User already a collaborator"}), 200
+
         trip_collection.update_one(
             {"_id": ObjectId(trip_id)},
-            {"$addToSet": {"collaborators": user_id}},
-            {"$addToSet": {"collaboratorsNames": name}}
+            {"$addToSet": {
+                "collaborators": user_id,
+                "collaboratorsNames": name
+            }}
         )
         return jsonify({"message": "Collaborator added successfully"}), 200
     except Exception as e:

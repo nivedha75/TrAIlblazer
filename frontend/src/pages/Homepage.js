@@ -416,7 +416,8 @@ const HomePage = () => {
         });
     
         if (response.ok) {
-          setSnackbarMessage('Collaborator added successfully!');
+          const data = await response.json();
+          setSnackbarMessage(data.message ||'Collaborator added successfully!');
           setSnackbarSeverity('success');
           setCollabName('');
           setCollabEmail('');
@@ -468,7 +469,7 @@ const HomePage = () => {
         <DeleteIcon />
       </IconButton> 
       )}
-      <Dialog open={false} onClose={() => setOpen(false)}  BackdropProps={{
+      <Dialog open={open} onClose={() => setOpen(false)}  BackdropProps={{
     style: { backgroundColor: "rgba(0, 0, 0, 0.5)" }
   }}>
         <DialogTitle>Confirm Deletion</DialogTitle>
@@ -533,7 +534,7 @@ const HomePage = () => {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setCollab(false)} color="error">Cancel</Button>
+            <Button onClick={() => setCollab(false)} color="error">Close</Button>
             <Button type="submit" color="primary">Add Collaborator</Button>
           </DialogActions>
         </form>
@@ -748,6 +749,13 @@ const HomePage = () => {
     setTrips((prevTrips) => prevTrips.filter((trip) => trip._id !== tripId));
   };
 
+  const deleteSharedTrip = (tripId) => {
+    setTrips((sharedTrips) => {
+      sharedTrips.filter((trip) => trip._id !== tripId);
+      sharedTrips.filter((trip) => trip._id !== tripId);
+    });
+  };
+
   return (
     <div>
       <div>
@@ -895,7 +903,7 @@ const HomePage = () => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
              return (
-    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="shared" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setSharedTrips} trips={sharedTrips}/>
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="shared" tripId={trip._id} deleteTrip={() => deleteSharedTrip(trip._id)} setTrips={setSharedTrips} trips={sharedTrips}/>
   );})}
   </Slider>
         </div>

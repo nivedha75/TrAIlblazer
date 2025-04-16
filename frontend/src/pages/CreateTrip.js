@@ -10,6 +10,7 @@ const CreateTrip = () => {
 
   const [query, setQuery] = useState("");
   const [filteredLocations, setFilteredLocations] = useState([]);
+  const [name, setName] = useState("");
   const [collaborators, setCollaborators] = useState([]);
   const [collaboratorsNames, setCollaboratorsNames] = useState([]);
   const [showOptions, setShowOptions] = useState(false);
@@ -60,7 +61,7 @@ const CreateTrip = () => {
       alert("Please select a starting location!");
       return;
     }
-    navigate("/plan", { state: { days: parseInt(days, 10), locate: selectLocation, secondaryLocate: secondaryLocations, transportation: transportation, collaborators: collaborators, collaboratorsNames: collaboratorsNames, image: selectedImage } });
+    navigate("/plan", { state: { days: parseInt(days, 10), locate: selectLocation, secondaryLocate: secondaryLocations, transportation: transportation, collaborators: collaborators, name: name, collaboratorsNames: collaboratorsNames, image: selectedImage } });
   };
 
   const handleInputChange = (event) => {
