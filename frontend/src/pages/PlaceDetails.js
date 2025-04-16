@@ -194,20 +194,34 @@ const PlaceDetails = () => {
           </button>
           </div>
         ) : (
-          <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-4 text-black">Your Activity Suggestions</h2>
-          <div className="grid gap-4">
-            {activities.map((act, index) => (
-              <div
-                key={index}
-                className="p-6 bg-white rounded-2xl shadow-md border border-gray-200 text-black"
-              >
-                <h3 className="font-bold text-lg">{act.title}</h3>
-                <p className="text-sm text-gray-700">Rating: {act.rating}</p>
-                <p className="mt-2 text-gray-800">{act.description}</p>
-                <p className="mt-1 italic text-gray-500">Context: {act.context}</p>
-              </div>
-            ))}
+         
+          <div style={{ marginTop: "40px", display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "100%", maxWidth: "1000px", padding: "0 20px" }}>
+            <h2 style={{ fontSize: "28px", color: "white", textAlign: "center", marginBottom: "24px" }}>
+              Your Activity Suggestions
+            </h2>
+      
+            <div style={{ display: "grid", gap: "20px" }}>
+              {activities.map((act, index) => (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: "white",
+                    color: "black",
+                    padding: "20px",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
+                    border: "1px solid #ddd",
+                    textAlign: "left"
+                  }}
+                >
+                  <h3 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "8px" }}>{act.title}</h3>
+                  <p style={{ fontSize: "14px", color: "#666", marginBottom: "6px" }}>Rating: {act.rating}</p>
+                  <p style={{ marginBottom: "10px" }}>{act.description}</p>
+                  <p style={{ fontStyle: "italic", color: "#444" }}>Context: {act.context}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         )}
