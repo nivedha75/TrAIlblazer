@@ -76,6 +76,7 @@ restaurant_collection = db["restaurants"]
 messages_collection = db["messages"]
 forum_collection = db["forum_posts"]
 profiles = db["profiles"]
+suggestions_collection = db["suggestions"]
 
 
 @app.route("/")
@@ -1037,6 +1038,97 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     except Exception as e:
         print(f"Error in generate_restaurant_recommendations: {e}")
 
+@app.route("/api/generate_suggestions", methods=["GET", "POST", "OPTIONS"])
+def generate_suggestions():
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+
+    try: 
+        data = request.get_json()
+        print(data)
+        user_id = data["user_id"]
+        place = data["place"]
+        place_id = data["place_id"]
+        
+        preferences = collection.find_one(
+                {"user_id": user_id}, {"_id": 0, "user_id": 0}
+            )
+        preferences_str = json.dumps(preferences, indent=4, sort_keys=True, default=str)
+
+        prompt = (
+            f"""
+            I am building a travel app. Recommend 2 unique and engaging activities for the location: {place}
+            personalized for the user based on the following preferences:\n{preferences_str}
+            
+            Respond ONLY in the following JSON format:
+
+            {{
+                "activities": [
+                    {{
+                        "title": "...",
+                        "rating": ...,
+                        "description": "...",
+                        "context": "Because you liked ... and given the current weather ...",
+                        "place_id": "{place_id}",
+                        "user_id": "{user_id}"
+                    }},
+                    ...
+                ]
+            }}
+            """
+        )
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+        headers = {"Content-Type": "application/json"}
+        data = {"contents": [{"parts": [{"text": prompt}]}]}
+        response = requests.post(url, headers=headers, json=data)
+        # data = {"contents": [{"parts": [{"text": prompt}]}]}
+
+        #     response = requests.post(url, headers=headers, json=data)
+        #     response_json = response.json()
+        #     # print("Raw AI response:", response_json)
+        #     # print(response_json)
+
+        #     text_content = extract_json(
+        #         response_json["candidates"][0]["content"]["parts"][0]["text"]
+        #     )
+
+        #     # print("Text context: ", text_content)
+
+        #     parsed_json = json.loads(text_content)
+
+        raw = response.json()
+        print(f"raw: {raw}")
+        content = raw["candidates"][0]["content"]["parts"][0]["text"]
+        text_context = extract_json(content)  # make sure this returns valid JSON string
+        print(f"text context: {text_context}")
+        generated = json.loads(text_context)
+        print(f"Generated: {generated}")
+        saved_activities = []
+        for activity in generated["activities"]:
+            activity["place_id"] = place_id
+            activity["user_id"] = user_id
+            suggestions_collection.insert_one(activity)
+            activity_copy = activity.copy()
+            activity_copy.pop("_id", None) 
+            saved_activities.append(activity_copy)  
+        return jsonify({"success": True, "activities": saved_activities}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/activities/<place_id>/<user_id>", methods=["GET", "OPTIONS"])
+def get_user_place_activities(place_id, user_id):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+    
+    try:
+        activities = list(suggestions_collection.find(
+            {"place_id": place_id, "user_id": user_id},
+            {"_id": 0}  # exclude MongoDB ObjectId
+        ))
+        return jsonify({"activities": activities}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 def send_to_gemini(user_id, username, user_message, city_data):
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
