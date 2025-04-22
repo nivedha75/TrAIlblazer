@@ -54,6 +54,9 @@ const PlanTrip = () => {
     }
     const tripData = {
       userId: Cookies.get("user_id"),
+      collaborators: [],
+      collaboratorsNames: [],
+      name: Cookies.get("username"),
       location: location.state?.locate || "Unknown Destination",
       secondaryLocation: location.state?.secondaryLocate || "",
       transportation: location.state?.transportation || "driving",

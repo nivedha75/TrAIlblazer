@@ -10,13 +10,14 @@ import Japan from "../assets/Japan.png";
 import Paris from "../assets/Paris.png";
 import Canyon from "../assets/Canyon.png";
 import Share from "@mui/icons-material/Share";
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import Cookies from "js-cookie";
 import Slider from "react-slick";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import {IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Button, Tooltip} from "@mui/material";
+import {IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Button, Tooltip, TextField, Snackbar, Alert} from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import { isPast, parseISO, format, isBefore, startOfDay, parse } from 'date-fns';
 import AddIcon from "@mui/icons-material/Add"; 
@@ -74,6 +75,7 @@ const HomePage = () => {
   const ddRef = useRef(null);
   const [upcomingTrips, setUpcomingTrips] = useState([]);
   const [pastTrips, setPastTrips] = useState([]);
+  const [sharedTrips, setSharedTrips] = useState([]);
   const [pastRecommendingIndex, setPastRecommendingIndex] = useState();
   const [recommendedPlaces, setRecommendedPlaces] = useState([]);
   const [user, setUser] = useState(null);
@@ -157,13 +159,18 @@ const HomePage = () => {
         const tripEndDate = startOfDay(parse(trip.endDate, 'yyyy-MM-dd', new Date()));
         return tripEndDate < today;
       });
-  
+
+      const userId = Cookies.get("user_id");
+
+      // const shared = trips.filter(trip => trip.collaborators.includes(userId));
       
       setUpcomingTrips(upcoming);
       setPastTrips(past);
+      // setSharedTrips(shared);
 
       console.log("Upcoming Trips: ", upcoming);
       console.log("Past Trips: ", past);
+      // console.log("Shared Trips: ", shared);
 
       if (past.length > 0) {
         const index = Math.floor(Math.random() * past.length);
@@ -243,9 +250,26 @@ const HomePage = () => {
       .catch((error) => {console.error("Error fetching trips:", error);
         setTrips([]);
       });
+      fetch(`http://localhost:55000/trips/share/user/${userId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Fetched user shared trips: ", data);
+        setSharedTrips(data);
+      })
+      .catch((error) => {console.error("Error fetching shared trips:", error);
+        setSharedTrips([]);
+      });
     } else {
       setIsAuthenticated(false);
       setTrips([]);
+      setSharedTrips([]);
     }
     //const savedTrips = JSON.parse(localStorage.getItem("trips")) || [];
     //setTrips(savedTrips);
@@ -270,19 +294,6 @@ const HomePage = () => {
 
   const itineraryDetails = (tripId) => {
     navigate(`/itinerary-details/${encodeURIComponent(tripId)}`);
-  };
-
-  const shareDetails = (tripId) => {
-    if (navigator.share) {
-      navigator.share({
-        title: document.title,
-        url: window.location.href,
-      })
-      .then(() => console.log("Shared successfully"))
-      .catch((error) => console.error("Error sharing:", error));
-    } else {
-      alert("Sharing is not supported on this browser.");
-    }
   };
 
   const placeDetails = (placeId) => {
@@ -318,11 +329,11 @@ const HomePage = () => {
     buttonText = "Trip Details", 
     button = () => alert("Trip Details"), 
     itineraryButton = null,
-    shareButton = null,
     start, 
     end, 
     people, 
     share,
+    collab,
     deleteTrip, 
     type,
     tripId,
@@ -332,9 +343,16 @@ const HomePage = () => {
     const [open, setOpen] = useState(false);
     const handleDeleteClick = () => setOpen(true);
     const [shr, setShare] = useState(false);
+    const [clb, setCollab] = useState(false);
+    const [collabName, setCollabName] = useState('');
+    const [collabEmail, setCollabEmail] = useState('');
     const [tooltipText_T, setTooltipText_T] = useState("Copy link");
     const [tooltipText_I, setTooltipText_I] = useState("Copy link");
     const handleShareClick = () => setShare(true);
+    const handleCollabClick = () => setCollab(true);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
     const handleConfirmDelete = (tripId) => {
       setOpen(false);
       console.log("Trip ID being deleted:", tripId);
@@ -381,27 +399,61 @@ const HomePage = () => {
       }
     };
 
-
+    const handleAddCollaborator = async (tripId) => {
+      try {
+        const response = await fetch(`http://localhost:55000/trips/add-collaborator/${tripId}`, {
+          method: 'POST',
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "http://localhost:3000",
+            "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+          body: JSON.stringify({
+            name: collabName,
+            email: collabEmail
+          }),
+        });
+    
+        if (response.ok) {
+          const data = await response.json();
+          setSnackbarMessage(data.message ||'Collaborator added successfully!');
+          setSnackbarSeverity('success');
+          setCollabName('');
+          setCollabEmail('');
+        } else {
+          const errorData = await response.json();
+          setSnackbarMessage(errorData.message || 'Failed to add collaborator.');
+          setSnackbarSeverity('error');
+        }
+      } catch (error) {
+        console.error("Failed to add collaborator:", error);
+        setSnackbarMessage('Server error while adding collaborator.');
+        setSnackbarSeverity('error');
+      }
+      setSnackbarOpen(true);
+    };
 
     return (
       <div style={{
-        width: "270px",
-        padding: "20px",
-        borderRadius: "10px",
-        boxShadow: "0px 8px 8px rgba(0, 0, 0, 0.1), -3px -6px 8px rgba(0, 0, 0, 0.15)",
-        backgroundColor: "#90EE90",
-        textAlign: "center",
-        margin: "10px",
-        position: "relative", 
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        minHeight: "350px",
-        transition: "transform 0.3s ease, box-shadow 0.3s ease"
-      }}
-      onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"}
-      onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}>
-        {type !== "discover" && (
+          width: "270px",
+          padding: "20px",
+          borderRadius: "10px",
+          boxShadow: "0px 8px 8px rgba(0, 0, 0, 0.1), -3px -6px 8px rgba(0, 0, 0, 0.15)",
+          backgroundColor: "#90EE90",
+          textAlign: "center",
+          margin: "10px",
+          position: "relative", 
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          minHeight: "350px",
+          transition: "transform 0.3s ease, box-shadow 0.3s ease"
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"}
+        onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
+      >
+        {(type !== "discover" && type !== "shared") && (
        <IconButton 
         onClick={handleDeleteClick} 
         sx={{
@@ -426,6 +478,82 @@ const HomePage = () => {
           <Button onClick={() => setOpen(false)} color="primary">Cancel</Button>
           <Button onClick={() => handleConfirmDelete(tripId)} color="error">Delete</Button>
         </DialogActions>
+      </Dialog>
+      <IconButton 
+        onClick={handleCollabClick} 
+        sx={{
+          position: "absolute",
+          bottom: "60px",
+          left: "10px",
+          color: "gray",
+          backgroundColor: "rgba(255, 255, 255, 0.7)",
+          transition: "background-color 0.3s ease-in-out",
+          "&:hover": { backgroundColor: "rgba(255, 255, 255, 70)" }
+        }}
+      >
+        <GroupAddIcon />
+      </IconButton> 
+      <Dialog
+        open={clb}
+        onClose={(event, reason) => {
+          console.log('Dialog closed. Reason:', reason);
+          if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+            setCollab(false);
+          }
+        }}
+        BackdropProps={{
+          style: { backgroundColor: "rgba(0, 0, 0, 0.5)" },
+        }}
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleAddCollaborator(tripId);
+          }}
+          noValidate
+          autoComplete="off"
+        >
+          <DialogTitle>Add Trip Collaborators</DialogTitle>
+          <DialogContent>
+            Enter the Name and Email of the user you would like to share your trip with:
+            <TextField
+              margin="dense"
+              label="Name"
+              fullWidth
+              variant="outlined"
+              value={collabName}
+              onChange={(e) => setCollabName(e.target.value)}
+            />
+            <TextField
+              margin="dense"
+              label="Email"
+              fullWidth
+              variant="outlined"
+              value={collabEmail}
+              onChange={(e) => setCollabEmail(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCollab(false)} color="error">Close</Button>
+            <Button type="submit" color="primary">Add Collaborator</Button>
+          </DialogActions>
+        </form>
+        {/* For collaboration confirmation message */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={4000}
+          onClose={() => setSnackbarOpen(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </Dialog>
       <IconButton 
         onClick={handleShareClick} 
@@ -484,19 +612,6 @@ const HomePage = () => {
           alignItems: "center",
           gap: "8px"
         }}>
-         {/* {share && shareButton && (
-             <Share onClick={shareButton} style={{ fontSize: 24, color: "#555" }} />
-          // {share && (
-          //   <img 
-          //     src={share} 
-          //     alt="Share" 
-          //     style={{ 
-          //       width: "30px", 
-          //       height: "30px", 
-          //       cursor: "pointer" 
-          //     }}
-          //   />
-          )} */}
           
           {/* Trip Details Button */}
           <button 
@@ -608,12 +723,37 @@ const HomePage = () => {
     ],
   };
 
+  const settings4 = {
+    dots: false,
+    infinite: sharedTrips.length > 1,
+    slidesToShow: Math.min(4, sharedTrips.length),
+    slidesToScroll: 1,
+    arrows: sharedTrips.length > 1,
+    nextArrow: <NextArrow />, 
+    prevArrow: <PrevArrow />, 
+    centerMode: sharedTrips.length == 1,
+    speed: 500,
+    variableWidth: false,
+    responsive: [
+      { breakpoint: 1300, settings: { slidesToShow: Math.min(3, sharedTrips.length) } },
+      { breakpoint: 1000, settings: { slidesToShow: Math.min(2, sharedTrips.length) } },
+      { breakpoint: 600, settings: { slidesToShow: Math.min(1, sharedTrips.length) } },
+    ],
+  };
+
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
   const deleteTrip = (tripId) => {
     setTrips((prevTrips) => prevTrips.filter((trip) => trip._id !== tripId));
+  };
+
+  const deleteSharedTrip = (tripId) => {
+    setTrips((sharedTrips) => {
+      sharedTrips.filter((trip) => trip._id !== tripId);
+      sharedTrips.filter((trip) => trip._id !== tripId);
+    });
   };
 
   return (
@@ -730,7 +870,7 @@ const HomePage = () => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
              return (
-    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} shareButton={() => shareDetails(trip._id)} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="upcoming" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setUpcomingTrips} trips={upcomingTrips}/>
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="upcoming" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setUpcomingTrips} trips={upcomingTrips}/>
   );})}
   </Slider>
         </div>
@@ -755,6 +895,19 @@ const HomePage = () => {
             e.target.style.transform = "scale(1)";
             e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
           }}>Create Trip <AddIcon style={{ fontSize: "24px" }} /></button>
+  <div style={{ marginTop: "40px" }}>
+  <h1 style={{marginLeft: "20px"}}>Shared Trips:</h1>
+  <div style={{ width: "90%", margin: "auto", position: "relative" }}>
+        <Slider {...settings4}>
+          {sharedTrips.map((trip) => {
+            const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
+            const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
+             return (
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="shared" tripId={trip._id} deleteTrip={() => deleteSharedTrip(trip._id)} setTrips={setSharedTrips} trips={sharedTrips}/>
+  );})}
+  </Slider>
+        </div>
+  </div>
   <div style={{ marginTop: "40px" }}>
   <h1 style={{marginLeft: "20px"}}>Discover New Vacation Spots:</h1>
   <div style={{ width: "90%", margin: "auto", position: "relative", zIndex: 1 }}>
@@ -792,7 +945,7 @@ const HomePage = () => {
             const formattedStartDate = format(parseISO(trip.startDate), "MMMM dd");
             const formattedEndDate = format(parseISO(trip.endDate), "MMMM dd");
              return (
-    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} shareButton={() => shareDetails(trip._id)} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="past" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setPastTrips} trips={pastTrips}/>
+    <Card key={trip._id} image={imageMap[trip.images]} title={trip.location} button={() => viewDetails(trip._id)} itineraryButton={() => itineraryDetails(trip._id)} start={formattedStartDate} end={formattedEndDate} people={trip.people} description="Upcoming trip" share={Share} type="past" tripId={trip._id} deleteTrip={() => deleteTrip(trip._id)} setTrips={setPastTrips} trips={pastTrips}/>
   );})}
   </Slider>
         </div>
