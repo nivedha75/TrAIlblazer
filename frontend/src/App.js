@@ -17,6 +17,8 @@ import NextBestActivities from './pages/NextBestActivities';
 import MapDetails from './pages/MapDetails';
 import RouteDetails from './pages/RouteDetails';
 import Profile from "./pages/Profile";
+import ActivitiesPage from "./pages/ActivitiesPage";
+
 
 
    function App() {
@@ -64,6 +66,7 @@ import Profile from "./pages/Profile";
             <Route path="/route-details/:tripId/:day" element={<RouteDetails />} />
             <Route path="/sign-in" element={<SignIn setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/profile/:user" element={<Profile />} />
+            <Route path="/activities/:location" element={<ActivitiesPage />} />
           </Routes>
         </Router>
       );

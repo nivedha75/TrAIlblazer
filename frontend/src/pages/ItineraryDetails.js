@@ -833,7 +833,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
           textAlign: "center",
           backgroundColor: "#f9f9f9",
           position: "relative",
-          left: "550px",
+          left: "500px",
         }}
       >
         {signedIn && (
@@ -998,7 +998,16 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
         }} color="error">Delete</Button>
           </DialogActions>
         </Dialog>
-        <div style={{display: "flex", justifyContent: "center", alignItems: "center", gap: "200px", marginTop: "20px"}}>
+        <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "flex-start",
+                  gap: "100px",
+                  marginTop: "20px",
+                  flexWrap: "wrap",
+                }}
+              >
         <button
           onClick={() => navigate("/")}
           style={{
@@ -1056,6 +1065,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                   </ul>
                 </div>
               )}
+              <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
               <AddCircleIcon
                 style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
                 onClick={addSearch} />
@@ -1071,13 +1081,27 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
               >
                 {showSearch ? "Close Search" : "Add Restaurant"}
               </span>
-            </div><div
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
+            <AddCircleIcon
+              style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
+              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`)}
+            />
+            <span
+              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`)}
               style={{
-                display: "flex",
-                alignItems: "center",
+                fontSize: "15px",
+                marginLeft: "2px",
+                color: "#007bff",
+                fontWeight: "bold",
                 cursor: "pointer",
               }}
             >
+              Add Any Activity
+            </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
                 <AddCircleIcon
                   style={{ fontSize: "50px", color: "#007bff" }}
                   onClick={handleAddClick} />
