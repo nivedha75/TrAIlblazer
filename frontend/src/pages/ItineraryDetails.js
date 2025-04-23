@@ -194,7 +194,7 @@ const ItineraryDetails = () => {
     // Fetch chat messages from the backend
     const userId = Cookies.get("user_id");
     if (userId == tripDetails?.userId) setSignedIn(true);
-    if (tripDetails?.collaborators.includes(Number(userId))) setSignedIn(true);
+    //if (tripDetails?.collaborators.includes(Number(userId))) setSignedIn(true);
     const storedUsername = Cookies.get("username");
     const tripId = tripDetails?._id;
     setUsername(storedUsername);
@@ -1040,7 +1040,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
         </button>
         {signedIn && (
         <><div style={{ display: "flex", alignItems: "center", cursor: "pointer", flexDirection: "column", position: "relative" }}>
-              {showSearch && (
+              {/* {showSearch && (
                 <div //ref={dropdownRef} 
                   style={{
                     position: "absolute",
@@ -1073,13 +1073,16 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                     ))}
                   </ul>
                 </div>
-              )}
+              )} */}
               <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
               <AddCircleIcon
                 style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
-                onClick={addSearch} />
+                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`)}
+                //onClick={addSearch} 
+                />
               <span
-                onClick={addSearch}
+                //onClick={addSearch}
+                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`)}
                 style={{
                   fontSize: "18px",
                   marginLeft: "2px",
@@ -1088,7 +1091,8 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                   cursor: "pointer",
                 }}
               >
-                {showSearch ? "Close Search" : "Add Restaurant"}
+                {/* {showSearch ? "Close Search" : "Add Restaurant"} */}
+                Add Restaurant
               </span>
               </div>
             </div>

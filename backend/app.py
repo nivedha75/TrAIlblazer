@@ -27,6 +27,7 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 IMAGE_API_KEY = os.getenv("IMAGE_API_KEY")
 IMAGE_CX = os.getenv("IMAGE_CX")
@@ -1823,6 +1824,63 @@ def remove_profile_pic(username):
     profiles.update_one({"username": username}, {"$unset": {"profile_pic": ""}})
     
     return jsonify({"message": "Profile picture removed"}), 200
+
+
+@app.route("/api/activities/<city>", methods=["GET", "OPTIONS"])
+def fetch_activities(city):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+     
+    try:
+        query = f"top tourist attractions and activities to do in {city}"
+        url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}&key={GOOGLE_API_KEY}"
+        response = requests.get(url)
+        data = response.json()
+
+        results = []
+        for place in data.get("results", [])[:10]:  # Limit to 10 results
+            result = {
+                "id": place.get("place_id"),
+                "title": place.get("name"),
+                "image": f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}" if "photos" in place else "https://via.placeholder.com/400",
+                "rating": place.get("rating", "N/A"),
+                "description": place.get("formatted_address", "No address available")
+            }
+            results.append(result)
+
+        return jsonify(results), 200
+
+    except Exception as e:
+        print("Error fetching activities:", e)
+        return jsonify({"error": "Failed to fetch activities"}), 500
+
+@app.route("/api/restaurants/<city>", methods=["GET", "OPTIONS"])
+def fetch_restaurants(city):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+     
+    try:
+        query = f"top restaurants to eat at in {city}"
+        url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}&key={GOOGLE_API_KEY}"
+        response = requests.get(url)
+        data = response.json()
+
+        results = []
+        for place in data.get("results", [])[:10]:  # Limit to 10 results
+            result = {
+                "id": place.get("place_id"),
+                "title": place.get("name"),
+                "image": f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}" if "photos" in place else "https://via.placeholder.com/400",
+                "rating": place.get("rating", "N/A"),
+                "description": place.get("formatted_address", "No address available")
+            }
+            results.append(result)
+
+        return jsonify(results), 200
+
+    except Exception as e:
+        print("Error fetching activities:", e)
+        return jsonify({"error": "Failed to fetch activities"}), 500
 
 if __name__ == "__main__":
     app.run(port=PORT, debug=True)

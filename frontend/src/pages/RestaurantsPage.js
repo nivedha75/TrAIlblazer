@@ -4,22 +4,22 @@ import { TextField, Card, CardContent, CardMedia, Typography, IconButton, Dialog
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import theme from "../theme";
 
-const ActivitiesPage = () => {
+const RestaurantsPage = () => {
   const { location } = useParams();
   const navigate = useNavigate();
-  const [activities, setActivities] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
-    fetchActivities(location).then(data => setActivities(data));
+    fetchRestaurants(location).then(data => setRestaurants(data));
   }, [location]);
 
-  const fetchActivities = async (loc) => {
+  const fetchRestaurants = async (loc) => {
     console.log("Location: ", loc)
     try {
-      const response = await fetch(`http://localhost:55000/api/activities/${loc}`, {
+      const response = await fetch(`http://localhost:55000/api/restaurants/${loc}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -49,16 +49,16 @@ const ActivitiesPage = () => {
     // ];
   };
 
-  const filteredActivities = activities?.filter(activity =>
-    activity.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRestaurants = restaurants?.filter(restaurant =>
+    restaurant.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddActivity = (activity) => {
-    setSelectedActivity(activity);
+  const handleAddRestaurant = (restaurant) => {
+    setSelectedRestaurant(restaurant);
     setOpenDialog(true);
   };
 
-  const confirmAddActivity = () => {
+  const confirmAddRestaurant = () => {
     // Logic to add activity to itinerary
     // For example, send a POST request to your backend
     // After adding, navigate back to the itinerary page
@@ -93,7 +93,7 @@ const ActivitiesPage = () => {
         </button>
   
         <TextField
-          label="Search Activities"
+          label="Search Restaurants"
           variant="outlined"
           fullWidth
           value={searchTerm}
@@ -120,14 +120,14 @@ const ActivitiesPage = () => {
         </button>
       </div>
   
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '20px',
-        maxWidth: 'calc(4 * 300px + 3 * 20px)',
-        margin: '0 auto',
-      }}>
-        {filteredActivities?.slice(0, 8).map(activity => (
+        <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '20px',
+            maxWidth: 'calc(4 * 300px + 3 * 20px)',
+            margin: '0 auto',
+        }}>
+        {filteredRestaurants?.slice(0, 8).map(activity => (
           <Card key={activity.id} style={{ width: '300px',  backgroundColor: '#b2e59e',
           position: 'relative',
           border: '2px solid #4caf50', 
@@ -142,7 +142,7 @@ const ActivitiesPage = () => {
             e.currentTarget.style.boxShadow = 'none';
             e.currentTarget.style.backgroundColor = '#b2e59e';
           }}>
-             <IconButton onClick={() => handleAddActivity(activity)} color="primary" style={{
+             <IconButton onClick={() => handleAddRestaurant(activity)} color="primary" style={{
           position: 'absolute',
           top: '10px',
           right: '10px',
@@ -181,11 +181,11 @@ const ActivitiesPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={confirmAddActivity} color="primary">Add</Button>
+          <Button onClick={confirmAddRestaurant} color="primary">Add</Button>
         </DialogActions>
       </Dialog>
     </div>
   );
 };
 
-export default ActivitiesPage;
+export default RestaurantsPage;
