@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { TextField, Card, CardContent, CardMedia, Typography, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import theme from "../theme";
 
 const ActivitiesPage = () => {
   const { location } = useParams();
+  const locate = useLocation();
   const navigate = useNavigate();
   const [activities, setActivities] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const itineraryId = locate.state?.tripId;
+  const daysInTrip = locate.state?.numDays;
 
   useEffect(() => {
-    fetchActivities(location).then(data => setActivities(data));
-  }, [location]);
+    console.log("Id: ", itineraryId);
+    console.log("Days: ", daysInTrip)
+    fetchActivities(location).then(data => {console.log("Data: ", data); setActivities(data)});
+  }, [location, itineraryId, daysInTrip]);
 
   const fetchActivities = async (loc) => {
     console.log("Location: ", loc)
@@ -54,15 +59,45 @@ const ActivitiesPage = () => {
   );
 
   const handleAddActivity = (activity) => {
-    setSelectedActivity(activity);
-    setOpenDialog(true);
+    console.log("Activity: ", activity);
+    let day = null;
+
+    while (day === null) {
+      const userInput = prompt(`Select a day to add this activity. Enter a number between 1 and ${daysInTrip}:`);
+      if (userInput === null) return; 
+      if (!userInput || isNaN(userInput) || userInput < 1 || userInput > daysInTrip) {
+        alert("Invalid input. Try again.");
+        continue;
+      }
+      day = parseInt(userInput, 10) - 1;
+    }
+
+    fetch(`http://localhost:55000/add_activity_to_itinerary/${itineraryId}/${day}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
+        "Access-Control-Allow-Headers": "Content-Type"
+      },
+      body: JSON.stringify(activity)
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to add activity");
+        return res.json();
+      })
+      .then((data) => {
+        alert("Activity added to itinerary!");
+        navigate(`/itinerary-details/${itineraryId}`);
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Something went wrong. Try again.");
+      });
   };
 
   const confirmAddActivity = () => {
-    // Logic to add activity to itinerary
-    // For example, send a POST request to your backend
-    // After adding, navigate back to the itinerary page
-    navigate(-1); // Adjust as needed
+    navigate(-1);
   };
 
   return (
@@ -154,7 +189,7 @@ const ActivitiesPage = () => {
             <CardMedia
               component="img"
               height="140"
-              image={activity.image}
+              image={activity.details.images}
               alt={activity.title}
             />
             <CardContent>
@@ -162,10 +197,10 @@ const ActivitiesPage = () => {
                 {activity.title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Rating: {activity.rating}
+                Rating: {activity.details.rating}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {activity.description}
+                {activity.details.description}
               </Typography>
 
             </CardContent>

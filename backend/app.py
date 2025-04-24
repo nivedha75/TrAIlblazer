@@ -453,11 +453,23 @@ def get_itinerary(trip_id):
             # print(str(itinerary["_id"]))
             # print(itinerary)
             itinerary["_id"] = str(itinerary["_id"])
+            # for day in itinerary["activities"]["top_preferences"]:
+            #     for act in day:
+            #         if act["details"]["tripId"]: 
+            #             act["details"]["tripId"] = str(act["details"]["tripId"])
+            #         if act["details"]["_id"]:
+            #             act["details"]["_id"] = str(act["details"]["_id"])
+            #         if act["activityID"]:
+            #             act["activityID"] = str(act["activityID"])
             for day in itinerary["activities"]["top_preferences"]:
                 for act in day:
-                    act["details"]["tripId"] = str(act["details"]["tripId"])
-                    act["details"]["_id"] = str(act["details"]["_id"])
-                    act["activityID"] = str(act["activityID"])
+                    if "details" in act:
+                        if "tripId" in act["details"]:
+                            act["details"]["tripId"] = str(act["details"]["tripId"])
+                        if "_id" in act["details"]:
+                            act["details"]["_id"] = str(act["details"]["_id"])
+                    if "activityID" in act:
+                        act["activityID"] = str(act["activityID"])
 
             for day in itinerary["activities"]["next_best_preferences"]:
                 for act in day:
@@ -469,6 +481,8 @@ def get_itinerary(trip_id):
             print("itinerary not found")
             return jsonify({"error": "Itinerary not found"}), 404
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
@@ -1832,6 +1846,24 @@ def fetch_activities(city):
         return jsonify({"message": "CORS preflight passed"}), 200
      
     try:
+        user_interest = "Photography"
+        target_date = "April 25, 2025"
+        weather_stub = {
+            "temperature": "66.88°F",
+            "feels_like": "65.43°F",
+            "humidity": "46%",
+            "wind_speed": "17.56 mph",
+            "condition": "scattered clouds"
+        }
+        hours_stub = {
+            "sunday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "monday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "tuesday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "wednesday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "thursday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "friday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "saturday": {"open": "9:00 AM", "close": "11:00 PM"},
+        }
         query = f"top tourist attractions and activities to do in {city}"
         url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}&key={GOOGLE_API_KEY}"
         response = requests.get(url)
@@ -1839,12 +1871,45 @@ def fetch_activities(city):
 
         results = []
         for place in data.get("results", [])[:10]:  # Limit to 10 results
+            title = place.get("name")
+            address = place.get("formatted_address", "No address available")
+            photo_url = (
+                f"https://maps.googleapis.com/maps/api/place/photo"
+                f"?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}"
+                if "photos" in place else "https://via.placeholder.com/400"
+            )
             result = {
-                "id": place.get("place_id"),
-                "title": place.get("name"),
-                "image": f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}" if "photos" in place else "https://via.placeholder.com/400",
-                "rating": place.get("rating", "N/A"),
-                "description": place.get("formatted_address", "No address available")
+                "title": title,
+                "context": f"Since you like {user_interest} and {target_date} will have {weather_stub['condition']}",
+                "weather": weather_stub,
+                "details": {
+                    "name": title,
+                    "description": f"Enjoy the amazing experience at {title}",
+                    "number": "(212) 000-0000",  # placeholder
+                    "address": address,
+                    "email": "info@example.com",  # placeholder
+                    "hours": hours_stub,
+                    "rating": place.get("rating", "N/A"),
+                    "experience": f"Visitors enjoy a wonderful time at {title}.",
+                    "city": city,
+                    "website": "https://example.com",  # placeholder
+                    "images": photo_url,
+                },
+                "activityNumber": generate_activity_number(),
+                "likes": 0,
+                "likedBy": [],
+                "dislikes": 0,
+                "dislikedBy": [],
+                # "id": place.get("place_id"),
+                # "title": place.get("name"),
+                # "image": f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}" if "photos" in place else "https://via.placeholder.com/400",
+                # "rating": place.get("rating", "N/A"),
+                # "description": place.get("formatted_address", "No address available"),
+                # "activityNumber": generate_activity_number(),
+                # "likes": 0,
+                # "likedBy": [],
+                # "dislikes":  0,
+                # "dislikedBy": [],
             }
             results.append(result)
 
@@ -1881,6 +1946,45 @@ def fetch_restaurants(city):
     except Exception as e:
         print("Error fetching activities:", e)
         return jsonify({"error": "Failed to fetch activities"}), 500
+
+@app.route(
+    "/add_activity_to_itinerary/<trip_id>/<int:day>",
+    methods=["POST", "OPTIONS"],
+)
+def add_activity_to_itinerary(trip_id, day):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+
+    itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
+    if not itinerary:
+        return jsonify({"error": "Itinerary not found"}), 404
+
+    activity = request.get_json()
+    if not activity:
+        return jsonify({"error": "No activity provided"}), 400
+
+    activity["day"] = day
+
+    while len(itinerary["activities"]["top_preferences"]) <= day:
+        itinerary["activities"]["top_preferences"].append([])
+
+    itinerary["activities"]["top_preferences"][day].append(activity)
+
+    itinerary_collection.update_one(
+        {"_id": ObjectId(trip_id)},
+        {
+            "$set": {
+                f"activities.top_preferences.{day}": itinerary["activities"]["top_preferences"][day]
+            }
+        },
+    )
+
+    response = jsonify({
+        "message": "Activity added to itinerary successfully",
+        "updated_itinerary": convert_objectid(itinerary),
+    })
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
 
 if __name__ == "__main__":
     app.run(port=PORT, debug=True)

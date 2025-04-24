@@ -128,6 +128,7 @@ const ItineraryDetails = () => {
   }, [showSearch]);
 
   useEffect(() => {
+    console.log("id: ", tripId);
     fetch(`http://localhost:55000/itinerary/${tripId}`, {
       headers: {
         "Content-Type": "application/json",
@@ -1099,10 +1100,15 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
             <AddCircleIcon
               style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
-              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`)}
+              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`, {
+                state: { tripId, numDays: trip.activities.top_preferences.length },
+
+              })}
             />
             <span
-              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`)}
+              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`, {
+                state: { tripId, numDays: trip.activities.top_preferences.length },
+              })}
               style={{
                 fontSize: "15px",
                 marginLeft: "2px",
