@@ -1844,7 +1844,7 @@ def remove_profile_pic(username):
 def fetch_activities(city):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-     
+    trip_id = request.args.get("tripId") 
     try:
         user_interest = "Photography"
         target_date = "April 25, 2025"
@@ -1873,28 +1873,65 @@ def fetch_activities(city):
         for place in data.get("results", [])[:10]:  # Limit to 10 results
             title = place.get("name")
             address = place.get("formatted_address", "No address available")
+            rating = place.get("rating", "N/A")
+            place_id = place.get("place_id")
+            details_url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=name,formatted_phone_number,opening_hours,website,rating,photos,formatted_address&key={GOOGLE_API_KEY}"
+            details_response = requests.get(details_url)
+            details_data = details_response.json().get("result", {})
             photo_url = (
                 f"https://maps.googleapis.com/maps/api/place/photo"
                 f"?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}"
                 if "photos" in place else "https://via.placeholder.com/400"
             )
+            place_types = place.get("types", [])
+            description = f"This is a popular {place_types[0].replace('_', ' ')} in {city}." if place_types else f"Enjoy the amazing experience at {title}."
+            weekday_text = details_data.get("opening_hours", {}).get("weekday_text", [])
+            formatted_hours = {}
+
+            for day_entry in weekday_text:
+                try:
+                    day_name, time_range = day_entry.split(": ", 1)
+                    open_time, close_time = time_range.split("–")
+                    formatted_hours[day_name.lower()] = {
+                        "open": open_time.strip(),
+                        "close": close_time.strip()
+                    }
+                except Exception:
+                    continue  # In case the formatting isn't as expected
+            
+            if not formatted_hours:
+                formatted_hours = hours_stub
+            details = {
+                "name": title,
+                "description": description,
+                "number": details_data.get("formatted_phone_number", "Not available"),
+                "address": address,
+                "email": "info@example.com",
+                "hours": formatted_hours,
+                "rating": rating,
+                "experience": f"Visitors rate this place a {rating}/5.",
+                "city": city,
+                "website": details_data.get("website", "Not available"),
+                #"images": [photo_url],
+                "images": get_image(title)
+            }
+            if trip_id:
+                try:
+                    details["tripId"] = str(ObjectId(trip_id))
+                    print("trip id: ", details["tripId"])
+                except Exception:
+                    print("Invalid tripId provided:", trip_id)
+                    details["tripId"] = None  # fallback or skip this line if preferred
+            inserted_id = activity_collection.insert_one(details).inserted_id
             result = {
                 "title": title,
-                "context": f"Since you like {user_interest} and {target_date} will have {weather_stub['condition']}",
-                "weather": weather_stub,
+                "context": f"This activity was manually added.",
+                #"weather": weather_stub,
                 "details": {
-                    "name": title,
-                    "description": f"Enjoy the amazing experience at {title}",
-                    "number": "(212) 000-0000",  # placeholder
-                    "address": address,
-                    "email": "info@example.com",  # placeholder
-                    "hours": hours_stub,
-                    "rating": place.get("rating", "N/A"),
-                    "experience": f"Visitors enjoy a wonderful time at {title}.",
-                    "city": city,
-                    "website": "https://example.com",  # placeholder
-                    "images": photo_url,
+                    **details,
+                    "_id": str(inserted_id)  # Also as string in nested field
                 },
+                "activityID": str(inserted_id),
                 "activityNumber": generate_activity_number(),
                 "likes": 0,
                 "likedBy": [],
@@ -1964,6 +2001,14 @@ def add_activity_to_itinerary(trip_id, day):
         return jsonify({"error": "No activity provided"}), 400
 
     activity["day"] = day
+
+    if "details" in activity:
+        activity["details"]["tripId"] = ObjectId(trip_id)
+        if "activityID" not in activity and "_id" in activity["details"]:
+            activity["activityID"] = ObjectId(activity["details"]["_id"])
+        elif "activityID" in activity:
+            activity["activityID"] = ObjectId(activity["activityID"])
+            activity["details"]["_id"] = activity["activityID"]
 
     while len(itinerary["activities"]["top_preferences"]) <= day:
         itinerary["activities"]["top_preferences"].append([])

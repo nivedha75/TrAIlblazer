@@ -24,7 +24,7 @@ const ActivitiesPage = () => {
   const fetchActivities = async (loc) => {
     console.log("Location: ", loc)
     try {
-      const response = await fetch(`http://localhost:55000/api/activities/${loc}`, {
+      const response = await fetch(`http://localhost:55000/api/activities/${loc}?tripId=${itineraryId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
