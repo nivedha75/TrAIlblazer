@@ -139,6 +139,7 @@ const ItineraryDetails = () => {
   }, [showSearch]);
 
   useEffect(() => {
+    console.log("id: ", tripId);
     fetch(`http://localhost:55000/itinerary/${tripId}`, {
       headers: {
         "Content-Type": "application/json",
@@ -205,7 +206,7 @@ const ItineraryDetails = () => {
     // Fetch chat messages from the backend
     const userId = Cookies.get("user_id");
     if (userId == tripDetails?.userId) setSignedIn(true);
-    if (tripDetails?.collaborators.includes(Number(userId))) setSignedIn(true);
+    //if (tripDetails?.collaborators.includes(Number(userId))) setSignedIn(true);
     const storedUsername = Cookies.get("username");
     const tripId = tripDetails?._id;
     setUsername(storedUsername);
@@ -882,7 +883,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
           textAlign: "center",
           backgroundColor: "#f9f9f9",
           position: "relative",
-          left: "550px",
+          left: "500px",
         }}
       >
         {signedIn && (
@@ -1138,7 +1139,16 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             </Alert>
           </Snackbar>
         </Dialog>
-        <div style={{display: "flex", justifyContent: "center", alignItems: "center", gap: "200px", marginTop: "20px"}}>
+        <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "flex-start",
+                  gap: "100px",
+                  marginTop: "20px",
+                  flexWrap: "wrap",
+                }}
+              >
         <button
           onClick={() => navigate("/")}
           style={{
@@ -1162,7 +1172,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
         </button>
         {signedIn && (
         <><div style={{ display: "flex", alignItems: "center", cursor: "pointer", flexDirection: "column", position: "relative" }}>
-              {showSearch && (
+              {/* {showSearch && (
                 <div //ref={dropdownRef} 
                   style={{
                     position: "absolute",
@@ -1195,12 +1205,16 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                     ))}
                   </ul>
                 </div>
-              )}
+              )} */}
+              <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
               <AddCircleIcon
                 style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
-                onClick={addSearch} />
+                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`)}
+                //onClick={addSearch} 
+                />
               <span
-                onClick={addSearch}
+                //onClick={addSearch}
+                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`)}
                 style={{
                   fontSize: "18px",
                   marginLeft: "2px",
@@ -1209,15 +1223,35 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                   cursor: "pointer",
                 }}
               >
-                {showSearch ? "Close Search" : "Add Restaurant"}
+                {/* {showSearch ? "Close Search" : "Add Restaurant"} */}
+                Add Restaurant
               </span>
-            </div><div
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
+            <AddCircleIcon
+              style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
+              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`, {
+                state: { tripId, numDays: trip.activities.top_preferences.length },
+
+              })}
+            />
+            <span
+              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`, {
+                state: { tripId, numDays: trip.activities.top_preferences.length },
+              })}
               style={{
-                display: "flex",
-                alignItems: "center",
+                fontSize: "15px",
+                marginLeft: "2px",
+                color: "#007bff",
+                fontWeight: "bold",
                 cursor: "pointer",
               }}
             >
+              Add Any Activity
+            </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
                 <AddCircleIcon
                   style={{ fontSize: "50px", color: "#007bff" }}
                   onClick={handleAddClick} />

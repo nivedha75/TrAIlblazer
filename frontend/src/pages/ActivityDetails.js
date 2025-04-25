@@ -138,6 +138,7 @@ const ActivityDetails = () => {
       })
         .then((response) => response.json())
         .then((data) => {
+          console.log("Data: ", data);
           setActivity(data);
           setImages(data.images || [] );
         })
