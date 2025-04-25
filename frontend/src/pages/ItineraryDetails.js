@@ -206,7 +206,7 @@ const ItineraryDetails = () => {
     // Fetch chat messages from the backend
     const userId = Cookies.get("user_id");
     if (userId == tripDetails?.userId) setSignedIn(true);
-    //if (tripDetails?.collaborators.includes(Number(userId))) setSignedIn(true);
+    if (tripDetails?.collaborators.includes(Number(userId))) setSignedIn(true);
     const storedUsername = Cookies.get("username");
     const tripId = tripDetails?._id;
     setUsername(storedUsername);
