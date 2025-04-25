@@ -9,9 +9,14 @@ import {
   Button,
   Menu,
   MenuItem,
-  Tooltip
+  Tooltip,
+  Select,
+  Typography,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -24,6 +29,7 @@ import Cookies from "js-cookie";
 import { motion } from "framer-motion";
 import { FaPaperPlane, FaThumbsUp } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
+import SwapVert from "@mui/icons-material/SwapVert";
 // import { Input } from "@/components/ui/input";
 // import { Button as ChatButton} from "@/components/ui/button";
 
@@ -78,6 +84,11 @@ const ItineraryDetails = () => {
   const [deleteMode, setDeleteMode] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openDays, setOpenDays] = useState(false);
+  const [selectedNewDay, setSelectedNewDay] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [tooltipText, setTooltipText] = useState("Open Link in New Tab");
   const [openBook, setOpenBook] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
@@ -128,6 +139,7 @@ const ItineraryDetails = () => {
   }, [showSearch]);
 
   useEffect(() => {
+    console.log("id: ", tripId);
     fetch(`http://localhost:55000/itinerary/${tripId}`, {
       headers: {
         "Content-Type": "application/json",
@@ -194,7 +206,7 @@ const ItineraryDetails = () => {
     // Fetch chat messages from the backend
     const userId = Cookies.get("user_id");
     if (userId == tripDetails?.userId) setSignedIn(true);
-    if (tripDetails?.collaborators.includes(Number(userId))) setSignedIn(true);
+    //if (tripDetails?.collaborators.includes(Number(userId))) setSignedIn(true);
     const storedUsername = Cookies.get("username");
     const tripId = tripDetails?._id;
     setUsername(storedUsername);
@@ -355,6 +367,11 @@ const ItineraryDetails = () => {
     setOpenDialog(true);
   };
 
+  const handleMoveDaysClick = (activity) => {
+    setSelectedActivity(activity);
+    setOpenDays(true);
+  };
+
   const handleLike = (activity, isLike) => {
     const userId = Cookies.get("user_id");
     if (isLike && !activity.likedBy.includes(userId)) {
@@ -503,7 +520,32 @@ const ItineraryDetails = () => {
   }, 0);
   };
   
-  
+  const saveTopOrder = (tripId, newTop) => {
+    fetch(`http://localhost:55000/update_top_order/${tripId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify({ top: newTop }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.message === "Top preferences order updated successfully") {
+          setTrip((prevTrip) => ({
+            ...prevTrip,
+            activities: {
+              ...prevTrip.activities,
+              top_preferences: newTop,
+            },
+          }));
+        }
+      })
+      .catch((error) => console.error("Error saving top preferences order:", error));
+  };
+
   const saveActivityOrder = (tripId, newOrder, index) => {
     fetch(`http://localhost:55000/update_activity_order/${tripId}`, {
       method: "POST",
@@ -542,7 +584,7 @@ const ItineraryDetails = () => {
       restaurant.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick, signedIn, handleLike }) => {
+const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick, handleMoveDaysClick, signedIn, handleLike }) => {
   const [isHovered, setIsHovered] = useState(false);
   return <div
     style={{
@@ -619,11 +661,17 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
         onClick={() => handleDeleteClick(activity)}
       />
     )}
+    {deleteMode && (
+      <SwapVertIcon
+        style={{ cursor: "pointer", color: theme.palette.purple.main, fontSize: "35px", marginLeft: "20px" }}
+        onClick={() => handleMoveDaysClick(activity)}
+      />
+    )}
   </div>
 });
 
   const SortableList = SortableContainer(
-    ({ activities, deleteMode, handleDeleteClick, signedIn, handleLike }) => (
+    ({ activities, deleteMode, handleDeleteClick, handleMoveDaysClick, signedIn, handleLike }) => (
       <div>
         {activities.length > 0 ? (
           activities.map((activity, index) => (
@@ -633,6 +681,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
               activity={activity}
               deleteMode={deleteMode}
               handleDeleteClick={handleDeleteClick}
+              handleMoveDaysClick={handleMoveDaysClick}
               signedIn={signedIn}
               handleLike={handleLike}
               disabled={!signedIn}
@@ -834,7 +883,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
           textAlign: "center",
           backgroundColor: "#f9f9f9",
           position: "relative",
-          left: "550px",
+          left: "500px",
         }}
       >
         {signedIn && (
@@ -844,7 +893,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             style={{ position: "absolute", top: 10, right: 70 }}
             onClick={() => setDeleteMode(!deleteMode)}
           >
-            {deleteMode ? "Cancel Delete" : "Delete Activities"}
+            {deleteMode ? "Cancel Edit" : "Edit Activities"}
           </Button>
         )}
         <h1
@@ -901,6 +950,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                 activities={day}
                 deleteMode={deleteMode}
                 handleDeleteClick={handleDeleteClick}
+                handleMoveDaysClick={handleMoveDaysClick}
                 signedIn={signedIn}
                 handleLike={handleLike}
                 onSortEnd={({ oldIndex, newIndex }) => {
@@ -1007,7 +1057,98 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
         }} color="error">Delete</Button>
           </DialogActions>
         </Dialog>
-        <div style={{display: "flex", justifyContent: "center", alignItems: "center", gap: "200px", marginTop: "20px"}}>
+        {/* The Move Days Popup */}
+        <Dialog open={openDays} onClose={() => setOpenDays(false)}>
+          <DialogTitle>Confirm</DialogTitle>
+          <DialogContent>
+            <Typography gutterBottom>
+              Select which day you would like to move the activity "
+              {selectedActivity?.title}" to:
+            </Typography>
+            <Select
+              fullWidth
+              value={selectedNewDay ?? ""}
+              onChange={(e) => setSelectedNewDay(Number(e.target.value))}
+            >
+              {trip?.activities?.top_preferences?.map((_, index) => (
+                <MenuItem key={index} value={index}>
+                  Day {index + 1}
+                </MenuItem>
+              ))}
+            </Select>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setOpenDays(false); setSelectedNewDay(null); }}>Cancel</Button>
+            <Button onClick={() => {
+                if (selectedNewDay === null) {
+                  setSnackbarMessage('Select a day to move this activity to.');
+                  setSnackbarSeverity('error');
+                  setSnackbarOpen(true);
+                  return;
+                }
+
+                if (selectedNewDay === selectedActivity.day) {
+                  setSnackbarMessage('The activity is already in this day.');
+                  setSnackbarSeverity('error');
+                  setSnackbarOpen(true);
+                  return;
+                }
+
+                setTrip((prevTrip) => {
+                  const oldDayIndex = selectedActivity?.day;
+                  const newDayIndex = selectedNewDay;
+
+                  const newTopPreferences = prevTrip.activities.top_preferences.map((day, i) => {
+                    if (i === oldDayIndex) {
+                      return day.filter((act) => act.details._id !== selectedActivity.details._id);
+                    }
+                    if (i === newDayIndex) {
+                      return [...day, { ...selectedActivity, day: newDayIndex }];
+                    }
+                    return day;
+                  });
+
+                  saveTopOrder(selectedActivity?.details.tripId, newTopPreferences);
+
+                  return {
+                    ...prevTrip,
+                    activities: {
+                      ...prevTrip.activities,
+                      top_preferences: newTopPreferences,
+                    },
+                  };
+              });
+              setOpenDays(false);
+              setSelectedNewDay(null);
+            }} color="secondary">Confirm</Button>
+          </DialogActions>
+           {/* For collaboration confirmation message */}
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={4000}
+            onClose={() => setSnackbarOpen(false)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          >
+            <Alert
+              onClose={() => setSnackbarOpen(false)}
+              severity={snackbarSeverity}
+              variant="filled"
+              sx={{ width: '100%' }}
+            >
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
+        </Dialog>
+        <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "flex-start",
+                  gap: "100px",
+                  marginTop: "20px",
+                  flexWrap: "wrap",
+                }}
+              >
         <button
           onClick={() => navigate("/")}
           style={{
@@ -1031,7 +1172,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
         </button>
         {signedIn && (
         <><div style={{ display: "flex", alignItems: "center", cursor: "pointer", flexDirection: "column", position: "relative" }}>
-              {showSearch && (
+              {/* {showSearch && (
                 <div //ref={dropdownRef} 
                   style={{
                     position: "absolute",
@@ -1064,12 +1205,16 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                     ))}
                   </ul>
                 </div>
-              )}
+              )} */}
+              <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
               <AddCircleIcon
                 style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
-                onClick={addSearch} />
+                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`)}
+                //onClick={addSearch} 
+                />
               <span
-                onClick={addSearch}
+                //onClick={addSearch}
+                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`)}
                 style={{
                   fontSize: "18px",
                   marginLeft: "2px",
@@ -1078,15 +1223,35 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                   cursor: "pointer",
                 }}
               >
-                {showSearch ? "Close Search" : "Add Restaurant"}
+                {/* {showSearch ? "Close Search" : "Add Restaurant"} */}
+                Add Restaurant
               </span>
-            </div><div
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
+            <AddCircleIcon
+              style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
+              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`, {
+                state: { tripId, numDays: trip.activities.top_preferences.length },
+
+              })}
+            />
+            <span
+              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`, {
+                state: { tripId, numDays: trip.activities.top_preferences.length },
+              })}
               style={{
-                display: "flex",
-                alignItems: "center",
+                fontSize: "15px",
+                marginLeft: "2px",
+                color: "#007bff",
+                fontWeight: "bold",
                 cursor: "pointer",
               }}
             >
+              Add Any Activity
+            </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
                 <AddCircleIcon
                   style={{ fontSize: "50px", color: "#007bff" }}
                   onClick={handleAddClick} />

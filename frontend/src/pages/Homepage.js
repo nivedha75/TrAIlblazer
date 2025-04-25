@@ -483,7 +483,7 @@ const HomePage = () => {
         onClick={handleCollabClick} 
         sx={{
           position: "absolute",
-          bottom: "60px",
+          bottom: "100px",  // Moved out of way of travelers text
           left: "10px",
           color: "gray",
           backgroundColor: "rgba(255, 255, 255, 0.7)",

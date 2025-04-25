@@ -21,6 +21,7 @@ import Japan3 from "../assets/Tokyo3.jpeg";
 import Seattle from "../assets/Seattle.jpeg";
 import Seattle2 from "../assets/Seattle2.jpeg";
 import Seattle3 from "../assets/Seattle3.jpeg";
+import Cookies from "js-cookie";
 
 const imageMap = {
     "../assets/Indonesia.png": Indonesia,
@@ -48,7 +49,10 @@ const imageMap = {
 
 const PlaceDetails = () => {
     const { placeId } = useParams();
+    const userId = Cookies.get("user_id");
     const [place, setPlace] = useState(null);
+    const [activities, setActivities] = useState([]);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
   
     useEffect(() => {
@@ -64,7 +68,53 @@ const PlaceDetails = () => {
         .then((data) => setPlace(data))
         .catch((error) => console.error("Error fetching trip details:", error));
     }, [placeId]);
-  
+
+    useEffect(() => {
+      fetch(`http://localhost:55000/api/activities/${placeId}/${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type"
+        }
+      })
+        .then((response) => response.json())
+        .then((data) => setActivities(data.activities))
+        .catch((error) => console.error("Error fetching activity details:", error));
+    }, [placeId, userId]);
+
+    const generateSuggestions = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:55000/api/generate_suggestions", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "http://localhost:3000",
+              "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            },
+          body: JSON.stringify({
+            user_id: userId,
+            place: place.name,
+            place_id: placeId,
+          })
+        });
+    
+        const result = await response.json();
+        console.log("Result: ", result);
+        if (response.ok) {
+          setActivities(result.activities);
+          setLoading(false);
+        } else {
+          alert("Error generating activities: " + result.message);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Something went wrong while generating activities.");
+      }
+    };
+
     if (!place) {
       return <p>Loading trip details...</p>;
     }
@@ -133,9 +183,51 @@ const PlaceDetails = () => {
           marginBottom: "30px",
           textAlign: "center",
         }}>  <strong style={{ color: "white" }}> Description:</strong> {place.description}</p>
+        {activities.length === 0 ? (
+          <div className="flex justify-center mt-6 mb-16">
+          <button
+            onClick={generateSuggestions}
+            className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
+            disabled={loading}
+          >
+            {loading ? "Generating..." : "Generate Activity Suggestions"}
+          </button>
+          </div>
+        ) : (
+         
+          <div style={{ marginTop: "40px", display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "100%", maxWidth: "1000px", padding: "0 20px" }}>
+            <h2 style={{ fontSize: "28px", color: "white", textAlign: "center", marginBottom: "24px" }}>
+              Your Activity Suggestions
+            </h2>
+      
+            <div style={{ display: "grid", gap: "20px" }}>
+              {activities.map((act, index) => (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: "white",
+                    color: "black",
+                    padding: "20px",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
+                    border: "1px solid #ddd",
+                    textAlign: "left"
+                  }}
+                >
+                  <h3 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "8px" }}>{act.title}</h3>
+                  <p style={{ fontSize: "14px", color: "#666", marginBottom: "6px" }}>Rating: {act.rating}</p>
+                  <p style={{ marginBottom: "10px" }}>{act.description}</p>
+                  <p style={{ fontStyle: "italic", color: "#444" }}>Context: {act.context}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        )}
         <div style={{ textAlign: "center" }}>
         <button style={{
-          // marginTop: "20px",
+          marginTop: "40px",
           // padding: "10px 20px",
           // fontSize: "18px",
           // backgroundColor: "#007bff",
