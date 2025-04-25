@@ -1658,6 +1658,27 @@ def update_activity_order(trip_id):
     return response
 
 
+@app.route("/update_top_order/<trip_id>", methods=["GET", "POST", "OPTIONS"])
+def update_top_order(trip_id):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+
+    data = request.get_json()
+    new_order = data.get("top", [])
+
+    if not isinstance(new_order, list):
+        return jsonify({"error": "Invalid data format"}), 400
+
+    itinerary_collection.update_one(
+        {"_id": ObjectId(trip_id)},
+        {"$set": {"activities.top_preferences": new_order}},
+    )
+
+    response = jsonify({"message": "Top preferences order updated successfully"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+
 # WARNING I think this is unnecessary but not sure
 
 # @app.route("/get_activities", methods=["POST"])
