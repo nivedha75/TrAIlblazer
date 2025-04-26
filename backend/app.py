@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from itertools import count
 from bson import ObjectId  # Import ObjectId for MongoDB ID conversion for user_id
 import os
-
+from urllib.parse import urlparse
 import sqlite3
 import hashlib
 import re
@@ -31,7 +31,9 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 IMAGE_API_KEY = os.getenv("IMAGE_API_KEY")
 IMAGE_CX = os.getenv("IMAGE_CX")
-UPLOAD_FOLDER = "static/uploads"
+basedir = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_FOLDER = os.path.join(basedir, "static/uploads")
+#UPLOAD_FOLDER = "static/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 app = Flask(__name__)
@@ -1842,6 +1844,36 @@ def serve_image(filename):
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+def extract_email_from_website(url):
+    try:
+        response = requests.get(url, timeout=5)
+        domain = urlparse(url).netloc
+        possible_emails = re.findall(
+            r"[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}", 
+            response.text
+        )
+        print(f"URL: {url}")
+        print(f"Possible emails found: {possible_emails}")
+        filtered_emails = [
+        email for email in possible_emails 
+            if not email.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.svg'))
+        ]
+        print(f"Filtered emails: {filtered_emails}")
+        return filtered_emails[0] if filtered_emails else "Not available"
+    except Exception as e:
+        print(f"Email extraction failed from {url}: {e}")
+        return "Not available"
+
+def convert_to_ampm(time_str):
+    try:
+        if "AM" in time_str.upper() or "PM" in time_str.upper():
+            return time_str.strip()
+        time_obj = datetime.strptime(time_str.strip(), "%H:%M")
+        return time_obj.strftime("%I:%M %p").lstrip("0") 
+    except Exception as e:
+        print(f"Error parsing time: {time_str} - {e}")
+        return time_str 
+       
 @app.route("/api/remove-profile-pic/<username>", methods=["GET", "POST", "OPTIONS"])
 def remove_profile_pic(username):
     if request.method == "OPTIONS":
@@ -1896,7 +1928,7 @@ def fetch_activities(city):
             address = place.get("formatted_address", "No address available")
             rating = place.get("rating", "N/A")
             place_id = place.get("place_id")
-            details_url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=name,formatted_phone_number,opening_hours,website,rating,photos,formatted_address&key={GOOGLE_API_KEY}"
+            details_url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=name,formatted_phone_number,opening_hours,website,rating,photos,formatted_address,editorial_summary&key={GOOGLE_API_KEY}"
             details_response = requests.get(details_url)
             details_data = details_response.json().get("result", {})
             photo_url = (
@@ -1905,7 +1937,10 @@ def fetch_activities(city):
                 if "photos" in place else "https://via.placeholder.com/400"
             )
             place_types = place.get("types", [])
-            description = f"This is a popular {place_types[0].replace('_', ' ')} in {city}." if place_types else f"Enjoy the amazing experience at {title}."
+            editorial = details_data.get("editorial_summary", {}).get("overview")
+            description = editorial if editorial else f"This is a popular {place_types[0].replace('_', ' ')} in {city}."
+            website = details_data.get("website", None)
+            email = extract_email_from_website(website) if website else "Not available"
             weekday_text = details_data.get("opening_hours", {}).get("weekday_text", [])
             formatted_hours = {}
 
@@ -1914,11 +1949,11 @@ def fetch_activities(city):
                     day_name, time_range = day_entry.split(": ", 1)
                     open_time, close_time = time_range.split("–")
                     formatted_hours[day_name.lower()] = {
-                        "open": open_time.strip(),
-                        "close": close_time.strip()
+                        "open": convert_to_ampm(open_time.strip()),
+                        "close": convert_to_ampm(close_time.strip())
                     }
                 except Exception:
-                    continue  # In case the formatting isn't as expected
+                    continue  
             
             if not formatted_hours:
                 formatted_hours = hours_stub
@@ -1927,14 +1962,14 @@ def fetch_activities(city):
                 "description": description,
                 "number": details_data.get("formatted_phone_number", "Not available"),
                 "address": address,
-                "email": "info@example.com",
+                "email": email,
                 "hours": formatted_hours,
                 "rating": rating,
                 "experience": f"Visitors rate this place a {rating}/5.",
                 "city": city,
                 "website": details_data.get("website", "Not available"),
-                #"images": [photo_url],
-                "images": get_image(title)
+                "images": [photo_url],
+                #"images": get_image(title)
             }
             if trip_id:
                 try:
@@ -1942,7 +1977,7 @@ def fetch_activities(city):
                     print("trip id: ", details["tripId"])
                 except Exception:
                     print("Invalid tripId provided:", trip_id)
-                    details["tripId"] = None  # fallback or skip this line if preferred
+                    details["tripId"] = None  
             inserted_id = activity_collection.insert_one(details).inserted_id
             result = {
                 "title": title,
@@ -1950,7 +1985,7 @@ def fetch_activities(city):
                 #"weather": weather_stub,
                 "details": {
                     **details,
-                    "_id": str(inserted_id)  # Also as string in nested field
+                    "_id": str(inserted_id) 
                 },
                 "activityID": str(inserted_id),
                 "activityNumber": generate_activity_number(),
@@ -1981,8 +2016,18 @@ def fetch_activities(city):
 def fetch_restaurants(city):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-     
+    
+    trip_id = request.args.get("tripId")  
     try:
+        hours_stub = {
+            "sunday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "monday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "tuesday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "wednesday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "thursday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "friday": {"open": "9:00 AM", "close": "11:00 PM"},
+            "saturday": {"open": "9:00 AM", "close": "11:00 PM"},
+        }
         query = f"top restaurants to eat at in {city}"
         url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}&key={GOOGLE_API_KEY}"
         response = requests.get(url)
@@ -1990,12 +2035,85 @@ def fetch_restaurants(city):
 
         results = []
         for place in data.get("results", [])[:10]:  # Limit to 10 results
+            title = place.get("name")
+            address = place.get("formatted_address", "No address available")
+            rating = place.get("rating", "N/A")
+            place_id = place.get("place_id")
+            details_url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=name,formatted_phone_number,opening_hours,website,rating,photos,formatted_address,editorial_summary&key={GOOGLE_API_KEY}"
+            details_response = requests.get(details_url)
+            details_data = details_response.json().get("result", {})
+            photo_url = (
+                f"https://maps.googleapis.com/maps/api/place/photo"
+                f"?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}"
+                if "photos" in place else "https://via.placeholder.com/400"
+            )
+            place_types = place.get("types", [])
+            editorial = details_data.get("editorial_summary", {}).get("overview")
+            description = editorial if editorial else f"This is a popular {place_types[0].replace('_', ' ')} in {city}."
+            website = details_data.get("website", None)
+            email = extract_email_from_website(website) if website else "Not available"
+            weekday_text = details_data.get("opening_hours", {}).get("weekday_text", [])
+            formatted_hours = {}
+
+            for day_entry in weekday_text:
+                try:
+                    day_name, time_range = day_entry.split(": ", 1)
+                    open_time, close_time = time_range.split("–")
+                    formatted_hours[day_name.lower()] = {
+                        "open": convert_to_ampm(open_time.strip()),
+                        "close": convert_to_ampm(close_time.strip())
+                    }
+                except Exception:
+                    continue  
+            
+            if not formatted_hours:
+                formatted_hours = hours_stub
+            details = {
+                "name": title,
+                "description": description,
+                "number": details_data.get("formatted_phone_number", "Not available"),
+                "address": address,
+                "email": email,
+                "hours": formatted_hours,
+                "rating": rating,
+                "experience": f"Visitors rate this place a {rating}/5.",
+                "city": city,
+                "website": details_data.get("website", "Not available"),
+                "images": [photo_url],
+                #"images": get_image(title)
+            }
+            if trip_id:
+                try:
+                    details["tripId"] = str(ObjectId(trip_id))
+                    print("trip id: ", details["tripId"])
+                except Exception:
+                    print("Invalid tripId provided:", trip_id)
+                    details["tripId"] = None  
+            inserted_id = activity_collection.insert_one(details).inserted_id
             result = {
-                "id": place.get("place_id"),
-                "title": place.get("name"),
-                "image": f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}" if "photos" in place else "https://via.placeholder.com/400",
-                "rating": place.get("rating", "N/A"),
-                "description": place.get("formatted_address", "No address available")
+                "title": title,
+                "context": f"This restaurant was manually added.",
+                #"weather": weather_stub,
+                "details": {
+                    **details,
+                    "_id": str(inserted_id)  
+                },
+                "activityID": str(inserted_id),
+                "activityNumber": generate_activity_number(),
+                "likes": 0,
+                "likedBy": [],
+                "dislikes": 0,
+                "dislikedBy": [],
+                # "id": place.get("place_id"),
+                # "title": place.get("name"),
+                # "image": f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}" if "photos" in place else "https://via.placeholder.com/400",
+                # "rating": place.get("rating", "N/A"),
+                # "description": place.get("formatted_address", "No address available"),
+                # "activityNumber": generate_activity_number(),
+                # "likes": 0,
+                # "likedBy": [],
+                # "dislikes":  0,
+                # "dislikedBy": [],
             }
             results.append(result)
 
@@ -2010,6 +2128,53 @@ def fetch_restaurants(city):
     methods=["POST", "OPTIONS"],
 )
 def add_activity_to_itinerary(trip_id, day):
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight passed"}), 200
+
+    itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
+    if not itinerary:
+        return jsonify({"error": "Itinerary not found"}), 404
+
+    activity = request.get_json()
+    if not activity:
+        return jsonify({"error": "No activity provided"}), 400
+
+    activity["day"] = day
+
+    if "details" in activity:
+        activity["details"]["tripId"] = ObjectId(trip_id)
+        if "activityID" not in activity and "_id" in activity["details"]:
+            activity["activityID"] = ObjectId(activity["details"]["_id"])
+        elif "activityID" in activity:
+            activity["activityID"] = ObjectId(activity["activityID"])
+            activity["details"]["_id"] = activity["activityID"]
+
+    while len(itinerary["activities"]["top_preferences"]) <= day:
+        itinerary["activities"]["top_preferences"].append([])
+
+    itinerary["activities"]["top_preferences"][day].append(activity)
+
+    itinerary_collection.update_one(
+        {"_id": ObjectId(trip_id)},
+        {
+            "$set": {
+                f"activities.top_preferences.{day}": itinerary["activities"]["top_preferences"][day]
+            }
+        },
+    )
+
+    response = jsonify({
+        "message": "Activity added to itinerary successfully",
+        "updated_itinerary": convert_objectid(itinerary),
+    })
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@app.route(
+    "/add_restaurant_to_itinerary/<trip_id>/<int:day>",
+    methods=["POST", "OPTIONS"],
+)
+def add_restaurant_to_itinerary(trip_id, day):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
 

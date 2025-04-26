@@ -150,9 +150,15 @@ const Profile = () => {
       return (
         <div style={styles.pageBackground}>
         <div style={styles.containerWrapper}>
-        <button style={styles.backButton} onClick={() => navigate("/")}>
+        <Button variant="contained" style={styles.backButton} onClick={() => navigate("/")} onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.01)";
+          e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = "scale(1)";
+          e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";}}>
           ← Back to Home
-        </button>
+        </Button>
           <div style={styles.container}>
             <div style={styles.header}>
             <div style={styles.avatarSection}>
@@ -263,15 +269,16 @@ const Profile = () => {
         position: "absolute",
         top: "0px",
         right: "0px",
-        backgroundColor: "#7f53ac",
-        color: "white",
+        backgroundColor: "#32CD32",
+        color: "#fff",
+        fontWeight: "bold",
         border: "none",
         padding: "10px 16px",
         borderRadius: "8px",
         fontSize: "0.95rem",
         cursor: "pointer",
-        transition: "background-color 0.3s",
-        boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
       },
       container: {
         maxWidth: "650px",

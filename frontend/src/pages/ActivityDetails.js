@@ -97,24 +97,24 @@ const PrevArrow = ({ onClick }) => (
   </IconButton>
 );
 
-const settings = {
-  dots: false,
-  infinite: true,
-  slidesToShow: 3,
-  slidesToScroll: 1,
-  arrows: true,
-  nextArrow: <NextArrow />, 
-  prevArrow: <PrevArrow />, 
-  centerMode: false,
-  pauseOnHover: true,
-  autoplay: true,
-  autoplaySpeed: 5000,
-  responsive: [
-    { breakpoint: 1300, settings: { slidesToShow: 3 } },
-    { breakpoint: 1000, settings: { slidesToShow: 2 } },
-    { breakpoint: 600, settings: { slidesToShow: 1 } },
-  ],
-};
+// const settings = {
+//   dots: false,
+//   infinite: true,
+//   slidesToShow: 3,
+//   slidesToScroll: 1,
+//   arrows: true,
+//   nextArrow: <NextArrow />, 
+//   prevArrow: <PrevArrow />, 
+//   centerMode: false,
+//   pauseOnHover: true,
+//   autoplay: true,
+//   autoplaySpeed: 5000,
+//   responsive: [
+//     { breakpoint: 1300, settings: { slidesToShow: 3 } },
+//     { breakpoint: 1000, settings: { slidesToShow: 2 } },
+//     { breakpoint: 600, settings: { slidesToShow: 1 } },
+//   ],
+// };
 
 const ActivityDetails = () => {
     const { activityId } = useParams();
@@ -122,6 +122,24 @@ const ActivityDetails = () => {
     const navigate = useNavigate();
     const [images, setImages] = useState([]);
 
+    const settings = {
+      dots: false,
+      infinite: images.length > 1,
+      slidesToShow: Math.min(3, images.length),
+      slidesToScroll: 1,
+      arrows: images.length > 3,
+      nextArrow: <NextArrow />, 
+      prevArrow: <PrevArrow />, 
+      centerMode: images.length == 1,
+      pauseOnHover: true,
+      autoplay: true,
+      autoplaySpeed: 5000,
+      responsive: [
+        { breakpoint: 1300, settings: { slidesToShow: Math.min(3, images.length) } },
+        { breakpoint: 1000, settings: { slidesToShow: Math.min(2, images.length) } },
+        { breakpoint: 600, settings: { slidesToShow: Math.min(1, images.length) } },
+      ],
+    };
     const itineraryDetails = (tripId) => {
       navigate(`/itinerary-details/${encodeURIComponent(tripId)}`);
     };

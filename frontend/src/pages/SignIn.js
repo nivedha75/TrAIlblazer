@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from "js-cookie";
-
+import {Button} from "@mui/material";
 
 const SignIn = ({ setIsAuthenticated }) => {
     const navigate = useNavigate();
@@ -82,16 +82,44 @@ const SignIn = ({ setIsAuthenticated }) => {
         }
     };
 
+    const inputStyle = {
+        display: "block",
+        marginBottom: "15px",
+        padding: "10px",
+        width: "100%",
+        border: "1px solid #ccc",
+        borderRadius: "5px",
+        fontSize: "1rem"
+    };
+
+    const labelStyle = {
+        fontWeight: "bold",
+        color: "#4B0082", // Dark purple
+        marginBottom: "5px"
+    };
+
     return (
-        <div style={{ textAlign: "center", marginTop: "50px" }}>
-            <h2>{isSigningUp ? "Sign Up" : "Sign In"}</h2>
+        <div style={{ display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        background: "linear-gradient(135deg, #32CD32, #800080)" }}>
+            <div style={{
+                backgroundColor: "#ffffff",
+                padding: "40px",
+                borderRadius: "15px",
+                boxShadow: "0 0 20px rgba(0, 0, 0, 0.1)",
+                width: "350px",
+                textAlign: "center"
+            }}>
+            <h2 style={{color: "#800080"}}>{isSigningUp ? "Sign Up" : "Sign In"}</h2>
             {error && <p style={{ color: "red" }}>{error}</p>}
             {message && <p style={{ color: "green" }}>{message}</p>}
 
             <form onSubmit={handleSubmit} style={{ display: "inline-block", textAlign: "left", width: "300px" }}>
                 {isSigningUp && (
                     <div>
-                        <label>Username:</label>
+                        <label style={{color: "#800080"}}>Username:</label>
                         <input
                             type="text"
                             value={username}
@@ -103,7 +131,7 @@ const SignIn = ({ setIsAuthenticated }) => {
                 )}
 
                 <div>
-                    <label>Email:</label>
+                    <label style={{color: "#800080"}}>Email:</label>
                     <input
                         type="email"
                         value={email}
@@ -113,7 +141,7 @@ const SignIn = ({ setIsAuthenticated }) => {
                     />
                 </div>
                 <div>
-                    <label>Password:</label>
+                    <label style={{color: "#800080"}}>Password:</label>
                     <input
                         type="password"
                         value={password}
@@ -125,7 +153,7 @@ const SignIn = ({ setIsAuthenticated }) => {
 
                 {isSigningUp && (
                     <div>
-                        <label>Confirm Password:</label>
+                        <label style={{color: "#800080"}}>Confirm Password:</label>
                         <input
                             type="password"
                             value={confirmPassword}
@@ -136,12 +164,17 @@ const SignIn = ({ setIsAuthenticated }) => {
                     </div>
                 )}
 
-                <button type="submit" style={{ padding: "10px", width: "100%", cursor: "pointer" }}>
+                <Button type="submit" variant="contained" style={{ padding: "10px", width: "100%", cursor: "pointer",  backgroundColor: "#32CD32",
+                    color: "#fff",
+                    fontWeight: "bold",
+                    borderRadius: "8px",
+                    fontSize: "1rem",
+                    textTransform: "none" }}>
                     {isSigningUp ? "Sign Up" : "Sign In"}
-                </button>
+                </Button>
             </form>
 
-            <p>
+            <p style={{color: "#800080"}}>
                 {isSigningUp ? "Already have an account?" : "Don't have an account?"}{" "}
                 <button
                     onClick={() => { setIsSigningUp(!isSigningUp); setError(''); setMessage(''); }}
@@ -149,6 +182,7 @@ const SignIn = ({ setIsAuthenticated }) => {
                     {isSigningUp ? "Sign In" : "Sign Up"}
                 </button>
             </p>
+            </div>
         </div>
     );
 };

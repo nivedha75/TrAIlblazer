@@ -854,7 +854,7 @@ const HomePage = () => {
         )}
       </div>
       <h2 style={{ marginLeft: "20px" }}>Want some recommendations? Look at what other users have to say:</h2>
-      <button onClick={navigateToForum} style={{ marginTop: "10px", padding: "10px", fontSize: "20px", backgroundColor: "#0000FF", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)", transition: "transform 0.2s ease, box-shadow 0.2s e", display: "flex", alignItems: "center"}} onMouseEnter={(e) => {
+      <button onClick={navigateToForum} style={{ marginTop: "10px", padding: "10px", fontSize: "20px", backgroundColor: "#32CD32", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", marginLeft: "20px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)", transition: "transform 0.2s ease, box-shadow 0.2s e", display: "flex", alignItems: "center"}} onMouseEnter={(e) => {
             e.target.style.transform = "scale(1.05)";
             e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
           }}

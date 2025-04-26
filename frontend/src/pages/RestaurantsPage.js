@@ -1,25 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { TextField, Card, CardContent, CardMedia, Typography, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import theme from "../theme";
 
 const RestaurantsPage = () => {
   const { location } = useParams();
+  const locate = useLocation();
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const itineraryId = locate.state?.tripId;
+  const daysInTrip = locate.state?.numDays;
 
   useEffect(() => {
-    fetchRestaurants(location).then(data => setRestaurants(data));
-  }, [location]);
+    console.log("Id: ", itineraryId);
+    console.log("Days: ", daysInTrip)
+    fetchRestaurants(location).then(data => {console.log("Data: ", data); setRestaurants(data)});
+  }, [location, itineraryId, daysInTrip]);
 
   const fetchRestaurants = async (loc) => {
     console.log("Location: ", loc)
     try {
-      const response = await fetch(`http://localhost:55000/api/restaurants/${loc}`, {
+      const response = await fetch(`http://localhost:55000/api/restaurants/${loc}?tripId=${itineraryId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -49,20 +54,50 @@ const RestaurantsPage = () => {
     // ];
   };
 
-  const filteredRestaurants = restaurants?.filter(restaurant =>
-    restaurant.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRestaurants = restaurants?.filter(activity =>
+    activity.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddRestaurant = (restaurant) => {
-    setSelectedRestaurant(restaurant);
-    setOpenDialog(true);
+  const handleAddRestaurant = (activity) => {
+    console.log("Activity: ", activity);
+    let day = null;
+
+    while (day === null) {
+      const userInput = prompt(`Select a day to add this restaurant. Enter a number between 1 and ${daysInTrip}:`);
+      if (userInput === null) return; 
+      if (!userInput || isNaN(userInput) || userInput < 1 || userInput > daysInTrip) {
+        alert("Invalid input. Try again.");
+        continue;
+      }
+      day = parseInt(userInput, 10) - 1;
+    }
+
+    fetch(`http://localhost:55000/add_restaurant_to_itinerary/${itineraryId}/${day}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
+        "Access-Control-Allow-Headers": "Content-Type"
+      },
+      body: JSON.stringify(activity)
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to add restaurant");
+        return res.json();
+      })
+      .then((data) => {
+        alert("Restaurant added to itinerary!");
+        navigate(`/itinerary-details/${itineraryId}`);
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Something went wrong. Try again.");
+      });
   };
 
-  const confirmAddRestaurant = () => {
-    // Logic to add activity to itinerary
-    // For example, send a POST request to your backend
-    // After adding, navigate back to the itinerary page
-    navigate(-1); // Adjust as needed
+  const confirmAddActivity = () => {
+    navigate(-1);
   };
 
   return (
@@ -93,7 +128,7 @@ const RestaurantsPage = () => {
         </button>
   
         <TextField
-          label="Search Restaurants"
+          label="Search Activities"
           variant="outlined"
           fullWidth
           value={searchTerm}
@@ -120,13 +155,13 @@ const RestaurantsPage = () => {
         </button>
       </div>
   
-        <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '20px',
-            maxWidth: 'calc(4 * 300px + 3 * 20px)',
-            margin: '0 auto',
-        }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '20px',
+        maxWidth: 'calc(4 * 300px + 3 * 20px)',
+        margin: '0 auto',
+      }}>
         {filteredRestaurants?.slice(0, 8).map(activity => (
           <Card key={activity.id} style={{ width: '300px',  backgroundColor: '#b2e59e',
           position: 'relative',
@@ -154,7 +189,7 @@ const RestaurantsPage = () => {
             <CardMedia
               component="img"
               height="140"
-              image={activity.image}
+              image={activity.details.images}
               alt={activity.title}
             />
             <CardContent>
@@ -162,10 +197,10 @@ const RestaurantsPage = () => {
                 {activity.title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Rating: {activity.rating}
+                Rating: {activity.details.rating}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {activity.description}
+                {activity.details.description}
               </Typography>
 
             </CardContent>
@@ -181,7 +216,7 @@ const RestaurantsPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={confirmAddRestaurant} color="primary">Add</Button>
+          <Button onClick={confirmAddActivity} color="primary">Add</Button>
         </DialogActions>
       </Dialog>
     </div>
