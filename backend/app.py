@@ -1336,9 +1336,10 @@ def send_message():
     user_query = (
         f"""
     You are helping a traveler with a trip to {data.get("location")} from {data.get("startDate")} to {data.get("endDate")}.
-    Use tools to answer the question as needed - for example:
-
-    When suggesting attractions and/or activities to do in a city, your response must ONLY return a JSON object (nothing else, no explanations, NO EXTRA TEXT).
+    Here is the user query: {user_message}
+    
+    If the user wants attractions and/or activities to do in a city,
+    your response must ONLY return a JSON object (nothing else, no explanations, NO EXTRA TEXT).
     Recommend 7 attractions or activities to do in the city, personalized for the user based on the following preferences: {data.get("preferences")}
     """
         + """
@@ -1408,7 +1409,10 @@ def send_message():
         ...
     ]
 
-    Remember: Output ONLY the JSON object exactly as shown. No extra text.
+    Remember: If the user wants activities/attractions, output ONLY the JSON object exactly as shown. No extra text.
+
+    However, if the user instead asks for hotels, weather, or any other information other than activities/attractions, use following tools below to answer the question as needed
+    Provide a standard text response (not a JSON object).
 
     - Use the fetch_weather_for_trip_tool if they ask about weather forecasts for every day on that trip.
       Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions for every day from the start date till the end date.
@@ -1421,8 +1425,7 @@ def send_message():
 
     - You can use multiple tools if the user asks about multiple types of data.
       For example, if they ask about both the weather and hotels, you can use both tools. However, if they ask about activities or attractions, do not combine results with something else — just give the attractions JSON and nothing else.
-
-    User query: "{data.get("message")}"
+    
     """
     )
 
