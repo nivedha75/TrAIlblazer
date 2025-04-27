@@ -33,7 +33,7 @@ IMAGE_API_KEY = os.getenv("IMAGE_API_KEY")
 IMAGE_CX = os.getenv("IMAGE_CX")
 basedir = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(basedir, "static/uploads")
-#UPLOAD_FOLDER = "static/uploads"
+# UPLOAD_FOLDER = "static/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 app = Flask(__name__)
@@ -155,7 +155,9 @@ def save_progress():
         if profile and "interests" in profile and profile["interests"]:
             current_interests = [i.strip() for i in profile["interests"].split(",")]
 
-        merged = current_interests + [i for i in new_interests if i not in current_interests]
+        merged = current_interests + [
+            i for i in new_interests if i not in current_interests
+        ]
         merged_str = ", ".join(merged)
 
         profiles.update_one(
@@ -221,7 +223,9 @@ def submit_preferences():
             if profile and "interests" in profile and profile["interests"]:
                 current_interests = [i.strip() for i in profile["interests"].split(",")]
 
-            merged = current_interests + [i for i in new_interests if i not in current_interests]
+            merged = current_interests + [
+                i for i in new_interests if i not in current_interests
+            ]
             merged_str = ", ".join(merged)
 
             profiles.update_one(
@@ -429,18 +433,19 @@ def add_user_as_collaborator(trip_id):
     print(user_id)
 
     try:
-        if str(user_id) == str(trip_collection.find_one({"_id": ObjectId(trip_id)}).get("userId")):
+        if str(user_id) == str(
+            trip_collection.find_one({"_id": ObjectId(trip_id)}).get("userId")
+        ):
             return jsonify({"message": "User already the owner"}), 200
 
-        if user_id in trip_collection.find_one({"_id": ObjectId(trip_id)}).get("collaborators", []):
+        if user_id in trip_collection.find_one({"_id": ObjectId(trip_id)}).get(
+            "collaborators", []
+        ):
             return jsonify({"message": "User already a collaborator"}), 200
 
         trip_collection.update_one(
             {"_id": ObjectId(trip_id)},
-            {"$addToSet": {
-                "collaborators": user_id,
-                "collaboratorsNames": name
-            }}
+            {"$addToSet": {"collaborators": user_id, "collaboratorsNames": name}},
         )
         return jsonify({"message": "Collaborator added successfully"}), 200
     except Exception as e:
@@ -457,7 +462,7 @@ def get_itinerary(trip_id):
             itinerary["_id"] = str(itinerary["_id"])
             # for day in itinerary["activities"]["top_preferences"]:
             #     for act in day:
-            #         if act["details"]["tripId"]: 
+            #         if act["details"]["tripId"]:
             #             act["details"]["tripId"] = str(act["details"]["tripId"])
             #         if act["details"]["_id"]:
             #             act["details"]["_id"] = str(act["details"]["_id"])
@@ -484,6 +489,7 @@ def get_itinerary(trip_id):
             return jsonify({"error": "Itinerary not found"}), 404
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -1055,25 +1061,25 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
     except Exception as e:
         print(f"Error in generate_restaurant_recommendations: {e}")
 
+
 @app.route("/api/generate_suggestions", methods=["GET", "POST", "OPTIONS"])
 def generate_suggestions():
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
 
-    try: 
+    try:
         data = request.get_json()
         print(data)
         user_id = data["user_id"]
         place = data["place"]
         place_id = data["place_id"]
-        
+
         preferences = collection.find_one(
-                {"user_id": user_id}, {"_id": 0, "user_id": 0}
-            )
+            {"user_id": user_id}, {"_id": 0, "user_id": 0}
+        )
         preferences_str = json.dumps(preferences, indent=4, sort_keys=True, default=str)
 
-        prompt = (
-            f"""
+        prompt = f"""
             I am building a travel app. Recommend 2 unique and engaging activities for the location: {place}
             personalized for the user based on the following preferences:\n{preferences_str}
             
@@ -1093,7 +1099,6 @@ def generate_suggestions():
                 ]
             }}
             """
-        )
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
         headers = {"Content-Type": "application/json"}
@@ -1127,25 +1132,29 @@ def generate_suggestions():
             activity["user_id"] = user_id
             suggestions_collection.insert_one(activity)
             activity_copy = activity.copy()
-            activity_copy.pop("_id", None) 
-            saved_activities.append(activity_copy)  
+            activity_copy.pop("_id", None)
+            saved_activities.append(activity_copy)
         return jsonify({"success": True, "activities": saved_activities}), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @app.route("/api/activities/<place_id>/<user_id>", methods=["GET", "OPTIONS"])
 def get_user_place_activities(place_id, user_id):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    
+
     try:
-        activities = list(suggestions_collection.find(
-            {"place_id": place_id, "user_id": user_id},
-            {"_id": 0}  # exclude MongoDB ObjectId
-        ))
+        activities = list(
+            suggestions_collection.find(
+                {"place_id": place_id, "user_id": user_id},
+                {"_id": 0},  # exclude MongoDB ObjectId
+            )
+        )
         return jsonify({"activities": activities}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 def send_to_gemini(user_id, username, user_message, city_data):
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
@@ -1159,14 +1168,18 @@ def send_to_gemini(user_id, username, user_message, city_data):
     Here is the real-time city data: {city_data}
 
     Use the provided structured `city_data` above — it contains real time data such as current weather, weather forecasts, and/or hotel listings for the city.
+    It also may contain activities and/or attractions in the city. If it gives some list of activities/attractions, give all activities/attractions in the chatbot response.
+    Ie. if the city_data contains 5 activities/attractions, give all activities/attractions in the chatbot response - can be longer response over 500 words if needed.
     If the user asks for activities to do on some day, make smart activity choices based on the weather
     (e.g., recommend indoor activities on rainy days, outdoor ones on sunny days).
+
     If the user asks for hotels, use the top hotels information provided in the `city_data` above.
 
     User: {user_message}
     
     Guidelines:
-    - Keep the response under 250 words.
+    - Keep the response under 250 words if they don't ask about activities or attractions
+    - Keep the response under 700 words if they ask about activities or attractions
     - Use a conversational and engaging tone.
     - Provide useful and relevant information.
     - Avoid excessive formalities.
@@ -1188,6 +1201,16 @@ def send_to_gemini(user_id, username, user_message, city_data):
     * **Item 1:** Explanation of this item goes here.
     * **Item 2:** Explanation of this item goes here.
     * **Item 3:** Explanation of this item goes here.
+
+    Example — Actvities and/or Attractions Format:
+
+    * **Space Needle:** [Description here]
+    * **Museum Of Pop Culture:** [Description here]
+    * **Pike Place Market:** [Description here]
+    * **Chihuly Garden and Glass:** [[Description here]
+    * **The Museum Of Flight:** [Description here]
+
+    Important Note: List all activities/attractions in the city_data in the response (even if they are not related to the user preferences).
 
     Example — Weather Format:
 
@@ -1297,9 +1320,82 @@ def send_message():
     messages_collection.insert_one(user_msg_entry)
 
     # Get chatbot response
-    user_query = f"""
+    user_query = (
+        f"""
         You are helping a traveler with a trip to {data.get("location")} from {data.get("startDate")} to {data.get("endDate")}.
         Use tools to answer the question as needed — for example:
+
+        When suggesting attractions and/or activities to do in a city, your response must ONLY return a JSON object (nothing else, no explanations, NO EXTRA TEXT).
+        Recommend 7 attractions or activities to do in the city, personalized for the user based on the following preferences: {data.get("preferences")}
+        """
+        + """The JSON object should have the following structure:
+
+            "activities": [
+                { 
+                    "title": "...title of the activity...",
+                    "context": "...explanation linking user preference + weather condition...",
+                    "day": "...the day number in the itinerary, starting at 0...",
+                    "weather": "...weather forecast for that day...",
+                    "details": {
+                    "name": "...same as title...",
+                    "description": "...short description of the activity...",
+                    "number": "...official phone number formatted as (xxx) xxx-xxxx...",
+                    "address": "...full Google Maps-friendly address...",
+                    "email": "...official email address or leave blank if unavailable...",
+                    "hours": {
+                        "sunday": {"open": "...", "close": "..."},
+                        "monday": {"open": "...", "close": "..."},
+                        "tuesday": {"open": "...", "close": "..."},
+                        "wednesday": {"open": "...", "close": "..."},
+                        "thursday": {"open": "...", "close": "..."},
+                        "friday": {"open": "...", "close": "..."},
+                        "saturday": {"open": "...", "close": "..."}
+                    },
+                    "rating": "...rating out of 5 with 1 decimal place...",
+                    "experience": "...what guests experience at this location...",
+                    "city": "...City, Country...",
+                    "website": "...link to the official website..."
+                },
+                ...
+                for each other activity (6 more activities)
+                ...
+            ]
+
+            Here is an example of the JSON object you should return:
+            "activities": [
+                {
+                    "title": "Shinjuku Gyoen National Garden Visit",
+                    "context": "Because you enjoy nature photography and outdoor activities, this outdoor activity is perfect.",
+                    "day": 1,
+                    "weather": "Clear skies, 22°C, light breeze.",
+                    "details": {
+                    "name": "Shinjuku Gyoen National Garden",
+                    "description": "A historic garden combining traditional Japanese, English, and French designs, famous for its cherry blossoms.",
+                    "number": "(03) 3350-0151",
+                    "address": "11 Naitomachi, Shinjuku City, Tokyo 160-0014, Japan",
+                    "email": "info@shinjukugyoen.jp",
+                    "hours": {
+                        "sunday": {"open": "9:00 AM", "close": "4:00 PM"},
+                        "monday": {"open": "9:00 AM", "close": "4:00 PM"},
+                        "tuesday": {"open": "9:00 AM", "close": "4:00 PM"},
+                        "wednesday": {"open": "9:00 AM", "close": "4:00 PM"},
+                        "thursday": {"open": "9:00 AM", "close": "4:00 PM"},
+                        "friday": {"open": "9:00 AM", "close": "4:00 PM"},
+                        "saturday": {"open": "9:00 AM", "close": "4:00 PM"}
+                    },
+                    "rating": 4.7,
+                    "experience": "Guests stroll through beautiful seasonal gardens, traditional tea houses, and wide lawns perfect for picnics.",
+                    "city": "Tokyo, Japan",
+                    "website": "https://www.env.go.jp/garden/shinjukugyoen/english/index.html"
+                },
+                ...
+                same format other activities (6 more activities)
+                ...
+
+            ]
+        
+
+        Remember: output ONLY the JSON object exactly as shown. No extra text.
         
         - Use the fetch_weather_for_trip_tool if they ask about weather forecasts for every day on that trip.
         Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions
@@ -1312,10 +1408,13 @@ def send_message():
         Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions for the current weather.
 
         - You can use mulitple tools if the user asks about multiple types of data.
-        For example, if they ask about both the weather and hotels, you can use both tools.
+        For example, if they ask about both the weather and hotels, you can use both tools. However, if they ask about activities or attractions, do not combine results with something else.
+        Just give the attractions JSON and nothing else
 
         User query: "{data.get("message")}"
         """
+    )
+
     agent = get_langchain_agent(OPENAI_API_KEY)
     try:
         city_data = agent.run(user_query)
@@ -1779,42 +1878,42 @@ def forum():
 
         except Exception as e:
             return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route("/profile/save", methods=["GET", "POST", "OPTIONS"])
 def save_profile():
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    
+
     data = request.get_json()
 
     username = data.get("username")
     if not username:
         return jsonify({"message": "Username is required"}), 400
 
-    result = profiles.update_one(
-        {"username": username},
-        {"$set": data},
-        upsert=True
-    )
+    result = profiles.update_one({"username": username}, {"$set": data}, upsert=True)
 
     return jsonify({"message": "Profile saved successfully"}), 200
 
+
 @app.route("/profile/<userId>", methods=["GET"])
 def get_profile(userId):
-    profile = profiles.find_one({"userId": userId}, {"_id": 0}) 
+    profile = profiles.find_one({"userId": userId}, {"_id": 0})
     if profile:
         return jsonify(profile), 200
     else:
         return jsonify({"message": "Profile not found"}), 404
 
+
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route("/api/upload-profile-pic/<username>", methods=["POST", "GET", "OPTIONS"])
 def upload_profile_pic(username):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    
+
     print("FILES:", request.files)
     print("FORM:", request.form)
     if "file" not in request.files:
@@ -1831,9 +1930,17 @@ def upload_profile_pic(username):
         profiles.update_one(
             {"username": username},
             {"$set": {"profile_pic": f"/static/uploads/{filename}"}},
-            upsert=True
+            upsert=True,
         )
-        return jsonify({"message": "File uploaded successfully", "filepath": f"/static/uploads/{filename}"}), 200
+        return (
+            jsonify(
+                {
+                    "message": "File uploaded successfully",
+                    "filepath": f"/static/uploads/{filename}",
+                }
+            ),
+            200,
+        )
     return jsonify({"error": "File type not allowed"}), 400
 
 
@@ -1841,22 +1948,24 @@ def upload_profile_pic(username):
 def serve_image(filename):
     return send_from_directory("static/uploads", filename)
 
+
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
 
 def extract_email_from_website(url):
     try:
         response = requests.get(url, timeout=5)
         domain = urlparse(url).netloc
         possible_emails = re.findall(
-            r"[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}", 
-            response.text
+            r"[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}", response.text
         )
         print(f"URL: {url}")
         print(f"Possible emails found: {possible_emails}")
         filtered_emails = [
-        email for email in possible_emails 
-            if not email.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.svg'))
+            email
+            for email in possible_emails
+            if not email.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".svg"))
         ]
         print(f"Filtered emails: {filtered_emails}")
         return filtered_emails[0] if filtered_emails else "Not available"
@@ -1864,32 +1973,34 @@ def extract_email_from_website(url):
         print(f"Email extraction failed from {url}: {e}")
         return "Not available"
 
+
 def convert_to_ampm(time_str):
     try:
         if "AM" in time_str.upper() or "PM" in time_str.upper():
             return time_str.strip()
         time_obj = datetime.strptime(time_str.strip(), "%H:%M")
-        return time_obj.strftime("%I:%M %p").lstrip("0") 
+        return time_obj.strftime("%I:%M %p").lstrip("0")
     except Exception as e:
         print(f"Error parsing time: {time_str} - {e}")
-        return time_str 
-       
+        return time_str
+
+
 @app.route("/api/remove-profile-pic/<username>", methods=["GET", "POST", "OPTIONS"])
 def remove_profile_pic(username):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    
+
     user = profiles.find_one({"username": username})
     if not user or "profile_pic" not in user:
         return jsonify({"error": "Profile picture not found"}), 404
 
     pic_path = os.path.join(app.root_path, user["profile_pic"].lstrip("/"))
-    
+
     if os.path.exists(pic_path):
         os.remove(pic_path)
 
     profiles.update_one({"username": username}, {"$unset": {"profile_pic": ""}})
-    
+
     return jsonify({"message": "Profile picture removed"}), 200
 
 
@@ -1897,7 +2008,7 @@ def remove_profile_pic(username):
 def fetch_activities(city):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    trip_id = request.args.get("tripId") 
+    trip_id = request.args.get("tripId")
     try:
         user_interest = "Photography"
         target_date = "April 25, 2025"
@@ -1906,7 +2017,7 @@ def fetch_activities(city):
             "feels_like": "65.43°F",
             "humidity": "46%",
             "wind_speed": "17.56 mph",
-            "condition": "scattered clouds"
+            "condition": "scattered clouds",
         }
         hours_stub = {
             "sunday": {"open": "9:00 AM", "close": "11:00 PM"},
@@ -1934,11 +2045,16 @@ def fetch_activities(city):
             photo_url = (
                 f"https://maps.googleapis.com/maps/api/place/photo"
                 f"?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}"
-                if "photos" in place else "https://via.placeholder.com/400"
+                if "photos" in place
+                else "https://via.placeholder.com/400"
             )
             place_types = place.get("types", [])
             editorial = details_data.get("editorial_summary", {}).get("overview")
-            description = editorial if editorial else f"This is a popular {place_types[0].replace('_', ' ')} in {city}."
+            description = (
+                editorial
+                if editorial
+                else f"This is a popular {place_types[0].replace('_', ' ')} in {city}."
+            )
             website = details_data.get("website", None)
             email = extract_email_from_website(website) if website else "Not available"
             weekday_text = details_data.get("opening_hours", {}).get("weekday_text", [])
@@ -1950,11 +2066,11 @@ def fetch_activities(city):
                     open_time, close_time = time_range.split("–")
                     formatted_hours[day_name.lower()] = {
                         "open": convert_to_ampm(open_time.strip()),
-                        "close": convert_to_ampm(close_time.strip())
+                        "close": convert_to_ampm(close_time.strip()),
                     }
                 except Exception:
-                    continue  
-            
+                    continue
+
             if not formatted_hours:
                 formatted_hours = hours_stub
             details = {
@@ -1969,7 +2085,7 @@ def fetch_activities(city):
                 "city": city,
                 "website": details_data.get("website", "Not available"),
                 "images": [photo_url],
-                #"images": get_image(title)
+                # "images": get_image(title)
             }
             if trip_id:
                 try:
@@ -1977,16 +2093,13 @@ def fetch_activities(city):
                     print("trip id: ", details["tripId"])
                 except Exception:
                     print("Invalid tripId provided:", trip_id)
-                    details["tripId"] = None  
+                    details["tripId"] = None
             inserted_id = activity_collection.insert_one(details).inserted_id
             result = {
                 "title": title,
                 "context": f"This activity was manually added.",
-                #"weather": weather_stub,
-                "details": {
-                    **details,
-                    "_id": str(inserted_id) 
-                },
+                # "weather": weather_stub,
+                "details": {**details, "_id": str(inserted_id)},
                 "activityID": str(inserted_id),
                 "activityNumber": generate_activity_number(),
                 "likes": 0,
@@ -2012,12 +2125,13 @@ def fetch_activities(city):
         print("Error fetching activities:", e)
         return jsonify({"error": "Failed to fetch activities"}), 500
 
+
 @app.route("/api/restaurants/<city>", methods=["GET", "OPTIONS"])
 def fetch_restaurants(city):
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
-    
-    trip_id = request.args.get("tripId")  
+
+    trip_id = request.args.get("tripId")
     try:
         hours_stub = {
             "sunday": {"open": "9:00 AM", "close": "11:00 PM"},
@@ -2045,11 +2159,16 @@ def fetch_restaurants(city):
             photo_url = (
                 f"https://maps.googleapis.com/maps/api/place/photo"
                 f"?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_API_KEY}"
-                if "photos" in place else "https://via.placeholder.com/400"
+                if "photos" in place
+                else "https://via.placeholder.com/400"
             )
             place_types = place.get("types", [])
             editorial = details_data.get("editorial_summary", {}).get("overview")
-            description = editorial if editorial else f"This is a popular {place_types[0].replace('_', ' ')} in {city}."
+            description = (
+                editorial
+                if editorial
+                else f"This is a popular {place_types[0].replace('_', ' ')} in {city}."
+            )
             website = details_data.get("website", None)
             email = extract_email_from_website(website) if website else "Not available"
             weekday_text = details_data.get("opening_hours", {}).get("weekday_text", [])
@@ -2061,11 +2180,11 @@ def fetch_restaurants(city):
                     open_time, close_time = time_range.split("–")
                     formatted_hours[day_name.lower()] = {
                         "open": convert_to_ampm(open_time.strip()),
-                        "close": convert_to_ampm(close_time.strip())
+                        "close": convert_to_ampm(close_time.strip()),
                     }
                 except Exception:
-                    continue  
-            
+                    continue
+
             if not formatted_hours:
                 formatted_hours = hours_stub
             details = {
@@ -2080,7 +2199,7 @@ def fetch_restaurants(city):
                 "city": city,
                 "website": details_data.get("website", "Not available"),
                 "images": [photo_url],
-                #"images": get_image(title)
+                # "images": get_image(title)
             }
             if trip_id:
                 try:
@@ -2088,16 +2207,13 @@ def fetch_restaurants(city):
                     print("trip id: ", details["tripId"])
                 except Exception:
                     print("Invalid tripId provided:", trip_id)
-                    details["tripId"] = None  
+                    details["tripId"] = None
             inserted_id = activity_collection.insert_one(details).inserted_id
             result = {
                 "title": title,
                 "context": f"This restaurant was manually added.",
-                #"weather": weather_stub,
-                "details": {
-                    **details,
-                    "_id": str(inserted_id)  
-                },
+                # "weather": weather_stub,
+                "details": {**details, "_id": str(inserted_id)},
                 "activityID": str(inserted_id),
                 "activityNumber": generate_activity_number(),
                 "likes": 0,
@@ -2122,6 +2238,7 @@ def fetch_restaurants(city):
     except Exception as e:
         print("Error fetching activities:", e)
         return jsonify({"error": "Failed to fetch activities"}), 500
+
 
 @app.route(
     "/add_activity_to_itinerary/<trip_id>/<int:day>",
@@ -2158,17 +2275,22 @@ def add_activity_to_itinerary(trip_id, day):
         {"_id": ObjectId(trip_id)},
         {
             "$set": {
-                f"activities.top_preferences.{day}": itinerary["activities"]["top_preferences"][day]
+                f"activities.top_preferences.{day}": itinerary["activities"][
+                    "top_preferences"
+                ][day]
             }
         },
     )
 
-    response = jsonify({
-        "message": "Activity added to itinerary successfully",
-        "updated_itinerary": convert_objectid(itinerary),
-    })
+    response = jsonify(
+        {
+            "message": "Activity added to itinerary successfully",
+            "updated_itinerary": convert_objectid(itinerary),
+        }
+    )
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
+
 
 @app.route(
     "/add_restaurant_to_itinerary/<trip_id>/<int:day>",
@@ -2205,17 +2327,22 @@ def add_restaurant_to_itinerary(trip_id, day):
         {"_id": ObjectId(trip_id)},
         {
             "$set": {
-                f"activities.top_preferences.{day}": itinerary["activities"]["top_preferences"][day]
+                f"activities.top_preferences.{day}": itinerary["activities"][
+                    "top_preferences"
+                ][day]
             }
         },
     )
 
-    response = jsonify({
-        "message": "Activity added to itinerary successfully",
-        "updated_itinerary": convert_objectid(itinerary),
-    })
+    response = jsonify(
+        {
+            "message": "Activity added to itinerary successfully",
+            "updated_itinerary": convert_objectid(itinerary),
+        }
+    )
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
+
 
 if __name__ == "__main__":
     app.run(port=PORT, debug=True)

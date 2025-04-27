@@ -60,8 +60,8 @@ def fetch_weather_for_trip_tool(query: str):
 
 @tool
 def fetch_attractions_tool(city: str):
-    """Fetch top tourist attractions in a city."""
-    print(f"Fetching attractions for city: {city}\n")
+    """Fetch top tourist attractions and activities in a city."""
+    print(f"Fetching attractions and activities for city: {city}\n")
     key = f"attractions_{city}"
     # if (cached := get_cached(key)):
     #     return cached
