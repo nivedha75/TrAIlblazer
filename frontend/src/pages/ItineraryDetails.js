@@ -927,11 +927,11 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             ? `${tripDetails?.location} and ${tripDetails?.secondaryLocation}`
             : tripDetails?.location}
         </h3>
-        <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
+        <h3 style={{ color: "#333", fontSize: "22px" }}>
           Owner: {tripDetails?.name}
         </h3>
         {tripDetails?.collaboratorsNames?.length > 0 && (
-          <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
+          <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "30px" }}>
             Collaborators: {tripDetails.collaboratorsNames.join(", ")}
           </h3>
         )}
