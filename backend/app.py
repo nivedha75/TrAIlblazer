@@ -1308,6 +1308,20 @@ def send_message():
     if not user_id or not user_message:
         return jsonify({"error": "Missing user_id or message"}), 404
 
+    user_message_lower = user_message.lower()
+
+    is_about_activities = any(
+        keyword in user_message_lower
+        for keyword in [
+            "activities",
+            "attractions",
+            "things to do",
+            "places to visit",
+            "attraction",
+            "activity",
+        ]
+    )
+
     # Save user message
     user_msg_entry = {
         "user_id": user_id,
@@ -1319,100 +1333,100 @@ def send_message():
     }
     messages_collection.insert_one(user_msg_entry)
 
-    # Get chatbot response
     user_query = (
         f"""
-        You are helping a traveler with a trip to {data.get("location")} from {data.get("startDate")} to {data.get("endDate")}.
-        Use tools to answer the question as needed — for example:
+    You are helping a traveler with a trip to {data.get("location")} from {data.get("startDate")} to {data.get("endDate")}.
+    Here is the user query: {user_message}
+    
+    If the user wants attractions and/or activities to do in a city,
+    your response must ONLY return a JSON object (nothing else, no explanations, NO EXTRA TEXT).
+    Recommend 7 attractions or activities to do in the city, personalized for the user based on the following preferences: {data.get("preferences")}
+    """
+        + """
+    The JSON object should have the following structure:
 
-        When suggesting attractions and/or activities to do in a city, your response must ONLY return a JSON object (nothing else, no explanations, NO EXTRA TEXT).
-        Recommend 7 attractions or activities to do in the city, personalized for the user based on the following preferences: {data.get("preferences")}
-        """
-        + """The JSON object should have the following structure:
-
-            "activities": [
-                { 
-                    "title": "...title of the activity...",
-                    "context": "...explanation linking user preference + weather condition...",
-                    "day": "...the day number in the itinerary, starting at 0...",
-                    "weather": "...weather forecast for that day...",
-                    "details": {
-                    "name": "...same as title...",
-                    "description": "...short description of the activity...",
-                    "number": "...official phone number formatted as (xxx) xxx-xxxx...",
-                    "address": "...full Google Maps-friendly address...",
-                    "email": "...official email address or leave blank if unavailable...",
-                    "hours": {
-                        "sunday": {"open": "...", "close": "..."},
-                        "monday": {"open": "...", "close": "..."},
-                        "tuesday": {"open": "...", "close": "..."},
-                        "wednesday": {"open": "...", "close": "..."},
-                        "thursday": {"open": "...", "close": "..."},
-                        "friday": {"open": "...", "close": "..."},
-                        "saturday": {"open": "...", "close": "..."}
-                    },
-                    "rating": "...rating out of 5 with 1 decimal place...",
-                    "experience": "...what guests experience at this location...",
-                    "city": "...City, Country...",
-                    "website": "...link to the official website..."
+    "activities": [
+        {
+            "title": "...title of the activity...",
+            "context": "...explanation linking user preference + weather condition...",
+            "day": "...the day number in the itinerary, starting at 0...",
+            "weather": "...weather forecast for that day...",
+            "details": {
+                "name": "...same as title...",
+                "description": "...short description of the activity...",
+                "number": "...official phone number formatted as (xxx) xxx-xxxx...",
+                "address": "...full Google Maps-friendly address...",
+                "email": "...official email address or leave blank if unavailable...",
+                "hours": {
+                    "sunday": {"open": "...", "close": "..."},
+                    "monday": {"open": "...", "close": "..."},
+                    "tuesday": {"open": "...", "close": "..."},
+                    "wednesday": {"open": "...", "close": "..."},
+                    "thursday": {"open": "...", "close": "..."},
+                    "friday": {"open": "...", "close": "..."},
+                    "saturday": {"open": "...", "close": "..."}
                 },
-                ...
-                for each other activity (6 more activities)
-                ...
-            ]
+                "rating": "...rating out of 5 with 1 decimal place...",
+                "experience": "...what guests experience at this location...",
+                "city": "...City, Country...",
+                "website": "...link to the official website..."
+            }
+        },
+        ... for each other activity (6 more activities) ...
+    ]
 
-            Here is an example of the JSON object you should return:
-            "activities": [
-                {
-                    "title": "Shinjuku Gyoen National Garden Visit",
-                    "context": "Because you enjoy nature photography and outdoor activities, this outdoor activity is perfect.",
-                    "day": 1,
-                    "weather": "Clear skies, 22°C, light breeze.",
-                    "details": {
-                    "name": "Shinjuku Gyoen National Garden",
-                    "description": "A historic garden combining traditional Japanese, English, and French designs, famous for its cherry blossoms.",
-                    "number": "(03) 3350-0151",
-                    "address": "11 Naitomachi, Shinjuku City, Tokyo 160-0014, Japan",
-                    "email": "info@shinjukugyoen.jp",
-                    "hours": {
-                        "sunday": {"open": "9:00 AM", "close": "4:00 PM"},
-                        "monday": {"open": "9:00 AM", "close": "4:00 PM"},
-                        "tuesday": {"open": "9:00 AM", "close": "4:00 PM"},
-                        "wednesday": {"open": "9:00 AM", "close": "4:00 PM"},
-                        "thursday": {"open": "9:00 AM", "close": "4:00 PM"},
-                        "friday": {"open": "9:00 AM", "close": "4:00 PM"},
-                        "saturday": {"open": "9:00 AM", "close": "4:00 PM"}
-                    },
-                    "rating": 4.7,
-                    "experience": "Guests stroll through beautiful seasonal gardens, traditional tea houses, and wide lawns perfect for picnics.",
-                    "city": "Tokyo, Japan",
-                    "website": "https://www.env.go.jp/garden/shinjukugyoen/english/index.html"
+    Here is an example of the JSON object you should return:
+
+    "activities": [
+        {
+            "title": "Shinjuku Gyoen National Garden Visit",
+            "context": "Because you enjoy nature photography and outdoor activities, this outdoor activity is perfect.",
+            "day": 1,
+            "weather": "Clear skies, 22°C, light breeze.",
+            "details": {
+                "name": "Shinjuku Gyoen National Garden",
+                "description": "A historic garden combining traditional Japanese, English, and French designs, famous for its cherry blossoms.",
+                "number": "(03) 3350-0151",
+                "address": "11 Naitomachi, Shinjuku City, Tokyo 160-0014, Japan",
+                "email": "info@shinjukugyoen.jp",
+                "hours": {
+                    "sunday": {"open": "9:00 AM", "close": "4:00 PM"},
+                    "monday": {"open": "9:00 AM", "close": "4:00 PM"},
+                    "tuesday": {"open": "9:00 AM", "close": "4:00 PM"},
+                    "wednesday": {"open": "9:00 AM", "close": "4:00 PM"},
+                    "thursday": {"open": "9:00 AM", "close": "4:00 PM"},
+                    "friday": {"open": "9:00 AM", "close": "4:00 PM"},
+                    "saturday": {"open": "9:00 AM", "close": "4:00 PM"}
                 },
-                ...
-                same format other activities (6 more activities)
-                ...
+                "rating": 4.7,
+                "experience": "Guests stroll through beautiful seasonal gardens, traditional tea houses, and wide lawns perfect for picnics.",
+                "city": "Tokyo, Japan",
+                "website": "https://www.env.go.jp/garden/shinjukugyoen/english/index.html"
+            }
+        },
+        ...
+        same format other activities (6 more activities)
+        ...
+    ]
 
-            ]
-        
+    Remember: If the user wants activities/attractions, output ONLY the JSON object exactly as shown. No extra text.
 
-        Remember: output ONLY the JSON object exactly as shown. No extra text.
-        
-        - Use the fetch_weather_for_trip_tool if they ask about weather forecasts for every day on that trip.
-        Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions
-        for every day from the start date till the end date.
-        
-        - Use the fetch_hotels_tool if they ask about the hotels in a city.
-        Specifically describe the name, rating, and price of hotels in the city.
+    However, if the user instead asks for hotels, weather, or any other information other than activities/attractions, use following tools below to answer the question as needed
+    Provide a standard text response (not a JSON object).
 
-        - Use the fetch_current_weather_tool if they ask about the current weather.
-        Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions for the current weather.
+    - Use the fetch_weather_for_trip_tool if they ask about weather forecasts for every day on that trip.
+      Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions for every day from the start date till the end date.
+    
+    - Use the fetch_hotels_tool if they ask about the hotels in a city.
+      Specifically describe the name, rating, and price of hotels in the city.
 
-        - You can use mulitple tools if the user asks about multiple types of data.
-        For example, if they ask about both the weather and hotels, you can use both tools. However, if they ask about activities or attractions, do not combine results with something else.
-        Just give the attractions JSON and nothing else
+    - Use the fetch_current_weather_tool if they ask about the current weather.
+      Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions for the current weather.
 
-        User query: "{data.get("message")}"
-        """
+    - You can use multiple tools if the user asks about multiple types of data.
+      For example, if they ask about both the weather and hotels, you can use both tools. However, if they ask about activities or attractions, do not combine results with something else — just give the attractions JSON and nothing else.
+    
+    """
     )
 
     agent = get_langchain_agent(OPENAI_API_KEY)
@@ -1435,9 +1449,13 @@ def send_message():
         "receiver": username,
         "message": chatbot_response,
         "timestamp": datetime.now(),
+        "is_about_activities": is_about_activities,  # new field
     }
     messages_collection.insert_one(chatbot_msg_entry)
-    response = jsonify({"response": chatbot_response})
+    response = jsonify(
+        {"response": chatbot_response, "is_about_activities": is_about_activities}
+    )
+
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response, 200
 
