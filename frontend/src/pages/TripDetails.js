@@ -47,11 +47,20 @@ const TripDetails = () => {
       <div style={{
         maxWidth: "1500px",
         margin: "auto",
+        padding: "40px 20px",
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        background: "linear-gradient(135deg, #800080, #32CD32)",
+        color: "white",
+        borderRadius: "16px",
+        boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
         textAlign: "center",
-        backgroundColor: "#f9f9f9"
       }}>
-        <h1 style={{textAlign: "center", color: "#333", marginBottom: "10px" }}>Trip Details</h1>
-        <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>{trip.location}</h3>
+        <h1 style={{color: "#32CD32",
+                fontSize: "36px",
+                marginBottom: "10px", }}>Trip Details</h1>
+        <h3 style={{color: "#32CD32",
+                fontSize: "26px",
+                marginBottom: "30px",}}>{trip.location}</h3>
         {imageUrl && (
         <img 
           src={imageUrl} 
@@ -64,20 +73,32 @@ const TripDetails = () => {
           }} 
         />
       )}
+      <div style={{
+          fontSize: "18px",
+          lineHeight: "1.6",
+          backgroundColor: "rgba(255, 255, 255, 0.1)",
+          padding: "20px",
+          borderRadius: "8px",
+          marginBottom: "30px",
+            }}>
         <p style={{ fontSize: "18px", margin: "5px 0" }}><strong>Start Date:</strong> {trip.startDate}</p>
         <p style={{ fontSize: "18px", margin: "5px 0" }}><strong>End Date:</strong> {trip.endDate}</p>
         <p style={{ fontSize: "18px", margin: "5px 0" }}><strong>Number of people on trip:</strong> {trip.people}</p>
-        <h4 style={{ marginTop: "15px", fontSize: "20px", color: "#444" }}>Time Ranges:</h4>
+        </div>
+        <h4 style={{ fontSize: "24px",
+                marginBottom: "20px",
+                color: "white", }}>Time Ranges:</h4>
         <div style={{
-        backgroundColor: "#fff",
-        padding: "10px",
-        borderRadius: "5px",
-        textAlign: "left",
-        fontSize: "16px",
-        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-        width: "fit-content",
-        margin: "0 auto"
-      }}>
+            backgroundColor: "white",
+            color: "black",
+            padding: "20px",
+            borderRadius: "12px",
+            boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
+            width: "fit-content",
+            margin: "0 auto",
+            textAlign: "left",
+            fontSize: "16px",
+        }}>
         {trip.timeRanges &&
           Object.entries(trip.timeRanges).map(([day, times]) => (
             <p key={day} style={{ margin: "5px 0" }}>
@@ -89,19 +110,24 @@ const TripDetails = () => {
       <button 
         onClick={() => navigate("/")} 
         style={{
-          marginTop: "20px",
-          padding: "10px 20px",
+          backgroundColor: "#32CD32",
+          color: "#fff",
+          padding: "12px 24px",
           fontSize: "18px",
-          backgroundColor: "#007bff",
-          color: "white",
           border: "none",
-          borderRadius: "5px",
+          borderRadius: "8px",
           cursor: "pointer",
-          transition: "0.3s",
-          boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)"
+          transition: "background-color 0.3s ease, transform 0.2s ease",
+          marginTop: "40px"
         }}
-        onMouseEnter={(e) => e.target.style.backgroundColor = "#0056b3"}
-        onMouseLeave={(e) => e.target.style.backgroundColor = "#007bff"}
+        onMouseOver={(e) => {
+          e.currentTarget.style.backgroundColor = "#2eb82e";
+          e.currentTarget.style.transform = "translateY(-2px)";
+      }}
+      onMouseOut={(e) => {
+          e.currentTarget.style.backgroundColor = "#32CD32";
+          e.currentTarget.style.transform = "translateY(0)";
+      }}
       >
         Back to Home
       </button>

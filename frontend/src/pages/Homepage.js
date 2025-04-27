@@ -645,7 +645,7 @@ const HomePage = () => {
             style={{
               padding: "10px 15px",
               border: "none",
-              backgroundColor: "#0066CC",
+              backgroundColor: "#228B22",
               color: "white",
               borderRadius: "5px",
               cursor: "pointer",
