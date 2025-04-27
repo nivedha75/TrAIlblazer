@@ -13,7 +13,8 @@ import {
   Select,
   Typography,
   Snackbar,
-  Alert
+  Alert,
+  IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SwapVertIcon from '@mui/icons-material/SwapVert';
@@ -30,6 +31,8 @@ import { motion } from "framer-motion";
 import { FaPaperPlane, FaThumbsUp } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import SwapVert from "@mui/icons-material/SwapVert";
+import AddIcon from '@mui/icons-material/Add';
+
 // import { Input } from "@/components/ui/input";
 // import { Button as ChatButton} from "@/components/ui/button";
 
@@ -811,13 +814,31 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                   <strong>
                     {msg?.sender === "chatbot" ? "Chatbot" : "Me"}:
                   </strong>{" "}
-                  <ReactMarkdown
-                    components={{
-                      p: ({ node, ...props }) => <span {...props} />, // prevent extra <p> tags
-                    }}
-                  >
-                    {msg?.message}
-                  </ReactMarkdown>
+                  <div>
+                    {msg?.message.split('\n').map((line, i) => {
+                      const isBullet = line.trim().startsWith('* **');
+                      return (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                          <ReactMarkdown
+                            components={{
+                              p: ({ node, ...props }) => <span {...props} />, // prevent extra <p> tags
+                            }}
+                          >
+                            {line}
+                          </ReactMarkdown>
+                          {isBullet && (
+                            <IconButton
+                              size="small"
+                              style={{ marginLeft: '8px' }}
+                              onClick={() => handleAddActivityClick(line)}
+                            >
+                              <AddIcon />
+                            </IconButton>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                   {/* <ReactMarkdown
                     components={{
                       p: ({ node, ...props }) => (
