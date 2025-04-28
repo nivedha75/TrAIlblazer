@@ -622,19 +622,19 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       <Button variant="contained" onClick={() => bookActivity(activity)}
           sx={{ textTransform: "none", width: "150px", backgroundColor: theme.palette.purple.main, color: "white",
-          "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
+          "&:hover": { backgroundColor: "#240E8B"}, fontSize: "1rem",
           boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
           Book
       </Button>
       <Button variant="contained" onClick={() => activityDetails(activity.details._id)}
           sx={{ textTransform: "none", width: "150px", backgroundColor: theme.palette.apple.main, color: "white",
-          "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
+          "&:hover": { backgroundColor: "#240E8B"}, fontSize: "1rem",
           boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
           More Details
       </Button>
       <Button variant="contained" onClick={() => mapDetails(activity.details._id)}
           sx={{ textTransform: "none", width: "150px", backgroundColor: theme.palette.purple.main, color: "white",
-          "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
+          "&:hover": { backgroundColor: "#240E8B"}, fontSize: "1rem",
           boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
           View in Map
       </Button>
@@ -718,7 +718,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             marginTop: "20px",
             padding: "10px 20px",
             fontSize: "18px",
-            backgroundColor: "#007bff",
+            backgroundColor: theme.palette.purple.main,
             color: "white",
             border: "none",
             borderRadius: "5px",
@@ -726,8 +726,8 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             transition: "0.3s",
             boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = "#007bff")}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = theme.palette.apple.main)}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = theme.palette.purple.main)}
         >
           Back to Home
         </button>
@@ -750,10 +750,10 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
           flexDirection: "column",
           justifyContent: "space-between",
           overflowY: "auto",
-          position: "fixed", // Keeps the chat fixed even while scrolling
-          top: "0", // Adjust the vertical position as needed
+          position: "fixed", 
+          top: "0", 
           left: "0",
-          height: "calc(100vh - 40px)", //
+          height: "calc(100vh - 40px)", 
           zIndex: 9999,
         }}
       >
@@ -803,7 +803,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                     wordWrap: "break-word",
                     textAlign: msg?.sender === "chatbot" ? "left" : "right",
                     backgroundColor:
-                      msg?.sender === "chatbot" ? "#e0e0e0" : "#007bff",
+                      msg?.sender === "chatbot" ? "#e0e0e0" : theme.palette.purple.main,
                     color: msg?.sender === "chatbot" ? "#000" : "#fff",
                     whiteSpace: "pre-wrap", // Preserve line breaks
                   }}
@@ -864,7 +864,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             style={{
               marginLeft: "10px",
               padding: "10px",
-              backgroundColor: "#007bff",
+              backgroundColor: theme.palette.purple.main,
               color: "white",
               border: "none",
               borderRadius: "5px",
@@ -941,7 +941,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
               <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>Day {index+1}</h3>
               <Button variant="contained" onClick={() => navigateToRouteDetails(index)}
                 sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
-                "&:hover": { backgroundColor: "#0000FF"}, fontSize: "1rem",
+                "&:hover": { backgroundColor: theme.palette.apple.main}, fontSize: "1rem",
                 boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
                 View Route
               </Button>
@@ -1155,7 +1155,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             marginTop: "20px",
             padding: "10px 20px",
             fontSize: "18px",
-            backgroundColor: "#007bff",
+            backgroundColor: theme.palette.purple.main,
             color: "white",
             border: "none",
             borderRadius: "5px",
@@ -1165,8 +1165,8 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             position: "relative",
             top:"-10px"
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = "#007bff")}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = theme.palette.apple.main)}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = theme.palette.purple.main)}
         >
           Back to Home
         </button>
@@ -1208,17 +1208,21 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
               )} */}
               <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
               <AddCircleIcon
-                style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
-                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`)}
+                style={{ fontSize: "50px", color: "#32CD32", cursor: "pointer" }}
+                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`, {
+                  state: { tripId, numDays: trip.activities.top_preferences.length }
+                })}
                 //onClick={addSearch} 
                 />
               <span
                 //onClick={addSearch}
-                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`)}
+                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`, {
+                  state: { tripId, numDays: trip.activities.top_preferences.length }
+                })}
                 style={{
                   fontSize: "18px",
                   marginLeft: "2px",
-                  color: "#007bff",
+                  color: "#32CD32",
                   fontWeight: "bold",
                   cursor: "pointer",
                 }}
@@ -1230,7 +1234,7 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             </div>
             <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
             <AddCircleIcon
-              style={{ fontSize: "50px", color: "#007bff", cursor: "pointer" }}
+              style={{ fontSize: "50px", color: "#32CD32", cursor: "pointer" }}
               onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`, {
                 state: { tripId, numDays: trip.activities.top_preferences.length },
 
@@ -1241,9 +1245,9 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                 state: { tripId, numDays: trip.activities.top_preferences.length },
               })}
               style={{
-                fontSize: "15px",
+                fontSize: "18px",
                 marginLeft: "2px",
-                color: "#007bff",
+                color: "#32CD32",
                 fontWeight: "bold",
                 cursor: "pointer",
               }}
@@ -1253,14 +1257,14 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             </div>
             <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
                 <AddCircleIcon
-                  style={{ fontSize: "50px", color: "#007bff" }}
+                  style={{ fontSize: "50px", color: "#32CD32" }}
                   onClick={handleAddClick} />
                 <span
                   onClick={handleAddClick}
                   style={{
                     fontSize: "18px",
                     marginLeft: "2px",
-                    color: "#007bff",
+                    color: "#32CD32",
                     fontWeight: "bold",
                   }}
                 >

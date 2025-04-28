@@ -110,12 +110,12 @@ const Forum = () => {
         flexDirection: "column",
         alignItems: "center",
         minHeight: "100vh",
-        background: "gray",
+        background: "linear-gradient(135deg, #800080, #32CD32)",
         color: "white",
         paddingBottom: "50px",
       }}
     >
-      <h1 style={{ color: "#800080" }}>Forum - Share Your Trip Recommendations</h1>
+      <h1 style={{ color: "#32CD32" }}>Forum - Share Your Trip Recommendations</h1>
       <Box display="flex" justifyContent="center" sx={{ mt: 4 }}>
         <Button variant="contained" sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white", marginBottom: "30px",
                         "&:hover": { backgroundColor: "#4BAF36"}, fontSize: "1rem", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}
