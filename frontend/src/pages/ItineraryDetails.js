@@ -13,12 +13,14 @@ import {
   Select,
   Typography,
   Snackbar,
-  Alert
+  Alert,
+  IconButton,
+  Fab,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import SwapVertIcon from '@mui/icons-material/SwapVert';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import SwapVertIcon from "@mui/icons-material/SwapVert";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import Bot from "../assets/Bot.avif";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -30,6 +32,8 @@ import { motion } from "framer-motion";
 import { FaPaperPlane, FaThumbsUp } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import SwapVert from "@mui/icons-material/SwapVert";
+import AddIcon from "@mui/icons-material/Add";
+
 // import { Input } from "@/components/ui/input";
 // import { Button as ChatButton} from "@/components/ui/button";
 
@@ -87,8 +91,8 @@ const ItineraryDetails = () => {
   const [openDays, setOpenDays] = useState(false);
   const [selectedNewDay, setSelectedNewDay] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [tooltipText, setTooltipText] = useState("Open Link in New Tab");
   const [openBook, setOpenBook] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
@@ -116,7 +120,7 @@ const ItineraryDetails = () => {
 
   const navigateToRouteDetails = (day) => {
     navigate(`/route-details/${tripId}/${day}`);
-  }
+  };
 
   // const bookActivity = (activityId) => { };
 
@@ -322,8 +326,8 @@ const ItineraryDetails = () => {
       //console.log("Msg: ", data.botResponse?.message);
       setChatMessages((prev) =>
         prev.map((msg, index) =>
-          index === prev.length - 1 // Only replace the latest chatbot message
-            ? { sender: "chatbot", message: data.response }
+          index === prev.length - 1
+            ? { sender: "chatbot", message: data.response, is_about_activities: data.is_about_activities }
             : msg
         )
       );
@@ -332,30 +336,29 @@ const ItineraryDetails = () => {
     }
   };
 
-//   function confirmDelete(tripId, activityId) {
-//     fetch(`http://localhost:55000/delete_itinerary_activity/${tripId}/${activityId}`, {
-//       method: "DELETE",
-//     })
-//     .then(response => {
-//         if (response.ok) {
-//             setTrip(prevItinerary => ({
-//                 ...prevItinerary,
-//                 activities: {
-//                     top_preferences: prevItinerary.activities.top_preferences.map(day =>
-//                       day.filter(activity => activity.details._id !== activityId)
-//                     ),
-//                     next_best_preferences: prevItinerary.activities.next_best_preferences.map(day =>
-//                       day.filter(activity => activity.details._id !== activityId)
-//                     )
-//                 }
-//             }));
-//         } else {
-//             console.error("Failed to delete activity");
-//         }
-//     })
-//     .catch(error => console.error("Error:", error));
-// }
-
+  //   function confirmDelete(tripId, activityId) {
+  //     fetch(`http://localhost:55000/delete_itinerary_activity/${tripId}/${activityId}`, {
+  //       method: "DELETE",
+  //     })
+  //     .then(response => {
+  //         if (response.ok) {
+  //             setTrip(prevItinerary => ({
+  //                 ...prevItinerary,
+  //                 activities: {
+  //                     top_preferences: prevItinerary.activities.top_preferences.map(day =>
+  //                       day.filter(activity => activity.details._id !== activityId)
+  //                     ),
+  //                     next_best_preferences: prevItinerary.activities.next_best_preferences.map(day =>
+  //                       day.filter(activity => activity.details._id !== activityId)
+  //                     )
+  //                 }
+  //             }));
+  //         } else {
+  //             console.error("Failed to delete activity");
+  //         }
+  //     })
+  //     .catch(error => console.error("Error:", error));
+  // }
 
   const bookActivity = (activity) => {
     setSelectedActivity(activity);
@@ -377,22 +380,22 @@ const ItineraryDetails = () => {
     if (isLike && !activity.likedBy.includes(userId)) {
       if (activity.dislikedBy.includes(userId)) {
         activity.dislikes--;
-        activity.dislikedBy = activity.dislikedBy.filter(id => id !== userId);
+        activity.dislikedBy = activity.dislikedBy.filter((id) => id !== userId);
       }
       activity.likes++;
       activity.likedBy = [...(activity.likedBy || []), userId];
     } else if (!isLike && !activity.dislikedBy.includes(userId)) {
       if (activity.likedBy.includes(userId)) {
         activity.likes--;
-        activity.likedBy = activity.likedBy.filter(id => id !== userId);
+        activity.likedBy = activity.likedBy.filter((id) => id !== userId);
       }
       activity.dislikes++;
       activity.dislikedBy = [...(activity.dislikedBy || []), userId];
     } else return;
     setTrip((prevTrip) => {
       const dayIndex = activity?.day;
-      const newOrder = prevTrip.activities.top_preferences[dayIndex].map((act, i) => 
-        act.details._id === activity?.details._id ? activity : act
+      const newOrder = prevTrip.activities.top_preferences[dayIndex].map(
+        (act, i) => (act.details._id === activity?.details._id ? activity : act)
       );
       saveActivityOrder(activity?.details.tripId, newOrder, activity?.day);
       return {
@@ -416,43 +419,46 @@ const ItineraryDetails = () => {
   };
 
   function handleSelectActivity(tripId, activity) {
-    fetch(`http://localhost:55000/move_itinerary_activity/${tripId}/${activity.activityNumber}`, {
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://localhost:3000",
-        "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
-        "Access-Control-Allow-Headers": "Content-Type"
+    fetch(
+      `http://localhost:55000/move_itinerary_activity/${tripId}/${activity.activityNumber}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
       }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.message === "Activity moved successfully") {
-        setTrip((prevTrip) => {
-          const dayIndex = activity.day;
-  
-          return {
-            ...prevTrip,
-            activities: {
-              ...prevTrip.activities,
-              next_best_preferences: prevTrip.activities.next_best_preferences.map(
-                (day, index) =>
-                  index === dayIndex
-                    ? day.filter((a) => a.activityNumber !== activity.activityNumber) 
-                    : day
-              ),
-              top_preferences: prevTrip.activities.top_preferences.map(
-                (day, index) =>
-                  index === dayIndex
-                    ? [...day, { ...activity }]
-                    : [...day]
-              ),
-            },
-          };
-        });
-      }
-    })
-    .catch(error => console.error("Error:", error));
-  
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.message === "Activity moved successfully") {
+          setTrip((prevTrip) => {
+            const dayIndex = activity.day;
+
+            return {
+              ...prevTrip,
+              activities: {
+                ...prevTrip.activities,
+                next_best_preferences:
+                  prevTrip.activities.next_best_preferences.map((day, index) =>
+                    index === dayIndex
+                      ? day.filter(
+                          (a) => a.activityNumber !== activity.activityNumber
+                        )
+                      : day
+                  ),
+                top_preferences: prevTrip.activities.top_preferences.map(
+                  (day, index) =>
+                    index === dayIndex ? [...day, { ...activity }] : [...day]
+                ),
+              },
+            };
+          });
+        }
+      })
+      .catch((error) => console.error("Error:", error));
+
     handleClose();
   }
 
@@ -460,66 +466,80 @@ const ItineraryDetails = () => {
     const daysInTrip = trip.activities.top_preferences.length;
     setShowSearch(false);
     setTimeout(() => {
-    let day = null;
-    //if (day === null) {
-    while (day === null) {
-      const userInput = prompt(`Select a day that you would like to go to this restaurant. (Since you are planning on going on a ${daysInTrip} day trip, input a number between 1 to ${daysInTrip}):`);
-      if (userInput === null) return;
-      if (!userInput || isNaN(userInput) || userInput < 1 || userInput > daysInTrip) {
-        alert("Invalid input. Try again.");
-        continue; 
+      let day = null;
+      //if (day === null) {
+      while (day === null) {
+        const userInput = prompt(
+          `Select a day that you would like to go to this restaurant. (Since you are planning on going on a ${daysInTrip} day trip, input a number between 1 to ${daysInTrip}):`
+        );
+        if (userInput === null) return;
+        if (
+          !userInput ||
+          isNaN(userInput) ||
+          userInput < 1 ||
+          userInput > daysInTrip
+        ) {
+          alert("Invalid input. Try again.");
+          continue;
+        }
+        day = parseInt(userInput, 10) - 1;
       }
-      day = parseInt(userInput, 10) - 1;
-    }
 
-    
-    if (day === null) {
+      if (day === null) {
         console.error("Invalid day selected.");
         return;
-    }
-    fetch(`http://localhost:55000/move_restaurant_activity/${tripId}/${activity.activityNumber}/${day}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://localhost:3000",
-        "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
-        "Access-Control-Allow-Headers": "Content-Type"
       }
-  })
-  .then(response => {
-    if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    return response.json();
-})
-  .then(data => {
-      if (data.message === "Activity moved successfully") {
-        // setTrip((prevTrip) => ({
-        //   ...prevTrip,
-        //   activities: {
-        //     ...prevTrip.activities,
-        //     top_preferences: [...prevTrip.activities.top_preferences, activity],
-        //   },
-        // }));
-        setTrip((prevTrip) => {
-          const newTopPreferences = [...prevTrip.activities.top_preferences];
-          newTopPreferences[day] = [...newTopPreferences[day], { ...activity, day }];
-          
-          return {
-            ...prevTrip,
-            activities: {
-              ...prevTrip.activities,
-              top_preferences: newTopPreferences,
-            },
-          };
-        });
-      }
-  })
-  .catch(error => console.error("Error:", error));
-  setSearchTerm("");
-  }, 0);
-  };
-  
+      fetch(
+        `http://localhost:55000/move_restaurant_activity/${tripId}/${activity.activityNumber}/${day}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "http://localhost:3000",
+            "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
+      )
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data.message === "Activity moved successfully") {
+            // setTrip((prevTrip) => ({
+            //   ...prevTrip,
+            //   activities: {
+            //     ...prevTrip.activities,
+            //     top_preferences: [...prevTrip.activities.top_preferences, activity],
+            //   },
+            // }));
+            setTrip((prevTrip) => {
+              const newTopPreferences = [
+                ...prevTrip.activities.top_preferences,
+              ];
+              newTopPreferences[day] = [
+                ...newTopPreferences[day],
+                { ...activity, day },
+              ];
+
+              return {
+                ...prevTrip,
+                activities: {
+                  ...prevTrip.activities,
+                  top_preferences: newTopPreferences,
+                },
+              };
+            });
+          }
+        })
+        .catch((error) => console.error("Error:", error));
+      setSearchTerm("");
+    }, 0);
+  }
+
   const saveTopOrder = (tripId, newTop) => {
     fetch(`http://localhost:55000/update_top_order/${tripId}`, {
       method: "POST",
@@ -543,7 +563,9 @@ const ItineraryDetails = () => {
           }));
         }
       })
-      .catch((error) => console.error("Error saving top preferences order:", error));
+      .catch((error) =>
+        console.error("Error saving top preferences order:", error)
+      );
   };
 
   const saveActivityOrder = (tripId, newOrder, index) => {
@@ -584,28 +606,35 @@ const ItineraryDetails = () => {
       restaurant.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick, handleMoveDaysClick, signedIn, handleLike }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  return <div
-    style={{
-      backgroundColor: isHovered ? "#e0e0e0" : "#fff",
-      minHeight: "50px",
-      padding: "15px",
-      marginBottom: "20px",
-      borderRadius: "10px",
-      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      transition: "background-color 0.2s ease-in-out",
-      cursor: "grab",
-    }}
-    onMouseEnter={() => setIsHovered(true)}
-    onMouseLeave={() => setIsHovered(false)}
-
-
-    >
-              {/* <p style={{ fontSize: "18px", margin: "5px 0" }}>
+  const SortableItem = SortableElement(
+    ({
+      activity,
+      deleteMode,
+      handleDeleteClick,
+      handleMoveDaysClick,
+      signedIn,
+      handleLike,
+    }) => {
+      const [isHovered, setIsHovered] = useState(false);
+      return (
+        <div
+          style={{
+            backgroundColor: isHovered ? "#e0e0e0" : "#fff",
+            minHeight: "50px",
+            padding: "15px",
+            marginBottom: "20px",
+            borderRadius: "10px",
+            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            transition: "background-color 0.2s ease-in-out",
+            cursor: "grab",
+          }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* <p style={{ fontSize: "18px", margin: "5px 0" }}>
         <strong>Description:</strong> {activity.description}
       </p>
       <img src={activity.image} width="500" height="500" alt={activity.title} />
@@ -668,10 +697,18 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
       />
     )}
   </div>
-});
+    );
+    });
 
   const SortableList = SortableContainer(
-    ({ activities, deleteMode, handleDeleteClick, handleMoveDaysClick, signedIn, handleLike }) => (
+    ({
+      activities,
+      deleteMode,
+      handleDeleteClick,
+      handleMoveDaysClick,
+      signedIn,
+      handleLike,
+    }) => (
       <div>
         {activities.length > 0 ? (
           activities.map((activity, index) => (
@@ -774,71 +811,124 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             />
           </h2>
         </div>
+
+        <div
+  style={{
+    flexGrow: 1,
+    overflowY: "auto",
+    padding: "10px",
+    backgroundColor: "#fff",
+    borderRadius: "5px",
+  }}
+>
+  {chatMessages.length > 0 ? (
+    chatMessages.map((msg, index) => (
+      <div
+        key={index}
+        style={{
+          display: "flex",
+          justifyContent: msg.sender === "chatbot" ? "flex-start" : "flex-end",
+          marginBottom: "8px",
+        }}
+      >
         <div
           style={{
-            flexGrow: 1,
-            overflowY: "auto",
-            padding: "10px",
-            backgroundColor: "#fff",
-            borderRadius: "5px",
-            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+            padding: "8px 12px",
+            borderRadius: "10px",
+            maxWidth: msg.is_about_activities ? "85%" : "70%",
+            backgroundColor: msg.sender === "chatbot" ? "#e0e0e0" : theme.palette.purple.main,
+            color: msg.sender === "chatbot" ? "#000" : "#fff",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+            textAlign: "left",
           }}
         >
-          {chatMessages.length > 0 ? (
-            chatMessages.map((msg, index) => (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  justifyContent:
-                    msg?.sender === "chatbot" ? "flex-start" : "flex-end",
-                  marginBottom: "8px",
-                }}
-              >
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "10px",
-                    maxWidth: "70%",
-                    wordWrap: "break-word",
-                    textAlign: msg?.sender === "chatbot" ? "left" : "right",
-                    backgroundColor:
-                      msg?.sender === "chatbot" ? "#e0e0e0" : theme.palette.purple.main,
-                    color: msg?.sender === "chatbot" ? "#000" : "#fff",
-                    whiteSpace: "pre-wrap", // Preserve line breaks
+          {msg.sender !== "chatbot" ? (
+            <ReactMarkdown
+              components={{
+                p: ({ node, ...props }) => <span {...props} />
+              }}
+            >
+              {`**Me:** ${msg.message}`}
+            </ReactMarkdown>
+          ) : (
+            <>
+              {msg.is_about_activities ? (
+                <>
+                  {msg.message.split("\n").map((line, i) => {
+                    const isBullet = /^[\*\-]\s+\*\*/.test(line.trim());
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          marginBottom: "12px",
+                          gap: "8px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            flexGrow: 1,
+                            maxWidth: "85%",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          <ReactMarkdown
+                            components={{
+                              p: ({ node, ...props }) => <span {...props} />
+                            }}
+                          >
+                            {i === 0 ? `**Chatbot:** ${line}` : line}
+                          </ReactMarkdown>
+                        </div>
+
+                        {isBullet && (
+                          <Tooltip title="Add Activity To Itinerary" arrow>
+                            <Fab
+                              size="small"
+                              color="success"
+                              aria-label="add"
+                              style={{
+                                width: "40px",
+                                height: "40px",
+                                minHeight: "40px",
+                                flexShrink: 0,
+                              }}
+                              onClick={() => handleAddActivityClick(line)}
+                            >
+                              <AddIcon style={{ color: "white" }} />
+                            </Fab>
+                          </Tooltip>
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
+              ) : (
+                <ReactMarkdown
+                  components={{
+                    p: ({ node, ...props }) => <span {...props} />
                   }}
                 >
-                  <strong>
-                    {msg?.sender === "chatbot" ? "Chatbot" : "Me"}:
-                  </strong>{" "}
-                  <ReactMarkdown
-                    components={{
-                      p: ({ node, ...props }) => <span {...props} />, // prevent extra <p> tags
-                    }}
-                  >
-                    {msg?.message}
-                  </ReactMarkdown>
-                  {/* <ReactMarkdown
-                    components={{
-                      p: ({ node, ...props }) => (
-                        <p
-                          style={{ marginBottom: "12px", lineHeight: "1.5" }}
-                          {...props}
-                        />
-                      ),
-                    }}
-                  >
-                    {msg?.message}
-                  </ReactMarkdown> */}
-                </div>
-              </div>
-            ))
-          ) : (
-            <p style={{ textAlign: "center", color: "#888" }}>
-              No messages yet
-            </p>
+                  {`**Chatbot:** ${msg.message}`}
+                </ReactMarkdown>
+              )}
+            </>
           )}
         </div>
+      </div>
+    ))
+  ) : (
+    <p style={{ textAlign: "center", color: "#888" }}>
+      No messages yet
+    </p>
+  )}
+</div>
+
+
         <div style={{ display: "flex", marginTop: "10px" }}>
           <input
             type="text"
@@ -906,11 +996,11 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             ? `${tripDetails?.location} and ${tripDetails?.secondaryLocation}`
             : tripDetails?.location}
         </h3>
-        <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
+        <h3 style={{ color: "#333", fontSize: "22px" }}>
           Owner: {tripDetails?.name}
         </h3>
         {tripDetails?.collaboratorsNames?.length > 0 && (
-          <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
+          <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "30px" }}>
             Collaborators: {tripDetails.collaboratorsNames.join(", ")}
           </h3>
         )}
@@ -975,62 +1065,118 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
         )}
         {/* The Booking Pop-up */}
         <Dialog open={openBook} onClose={() => setOpenBook(false)}>
-        <DialogTitle>Book Activity</DialogTitle>
-        <DialogContent>Would you like to book this activity with an external website?</DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenBook(false)} color="error">Cancel</Button>
-          <Tooltip title={tooltipText} arrow>
-            <Button onClick={() => {
-              try {
-                window.open(`https://www.google.com/search?q=${encodeURIComponent(selectedActivity?.title)} booking`, "_blank");
-                setTooltipText("Opened!");
-                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
-              } catch (error) {
-                console.error("Failed to open:", error);
-                setTooltipText("Failed to open");
-              }
-            }} color="secondary">Google</Button>
-          </Tooltip>
-          <Tooltip title={tooltipText} arrow>
-            <Button onClick={() => {
-              try {
-                window.open(`https://www.viator.com/searchResults/all?text=${encodeURIComponent(selectedActivity?.title)}`, "_blank");
-                setTooltipText("Opened!");
-                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
-              } catch (error) {
-                console.error("Failed to open:", error);
-                setTooltipText("Failed to open");
-              }
-            }} color="primary">Viator</Button>
-          </Tooltip>
-          <Tooltip title={tooltipText} arrow>
-            <Button onClick={() => {
-              try {
-                window.open(`https://www.tripadvisor.com/Search?q=${encodeURIComponent(selectedActivity?.title)}`, "_blank");
-                setTooltipText("Opened!");
-                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
-              } catch (error) {
-                console.error("Failed to open:", error);
-                setTooltipText("Failed to open");
-              }
-            }} color="secondary">Trip Advisor</Button>
-          </Tooltip>
-          <Tooltip title={tooltipText} arrow>
-            <Button onClick={() => {
-              try {
-                window.open(`https://www.klook.com/en-US/search/?query=${encodeURIComponent(selectedActivity?.title)}`, "_blank");
-                setTooltipText("Opened!");
-                setTimeout(() => setTooltipText("Open Link in New Tab"), 1000); // Reset tooltip text after 1s
-              } catch (error) {
-                console.error("Failed to open:", error);
-                setTooltipText("Failed to open");
-              }
-            }} color="primary">Klook</Button>
-          </Tooltip>
-        </DialogActions>
+          <DialogTitle>Book Activity</DialogTitle>
+          <DialogContent>
+            Would you like to book this activity with an external website?
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenBook(false)} color="error">
+              Cancel
+            </Button>
+            <Tooltip title={tooltipText} arrow>
+              <Button
+                onClick={() => {
+                  try {
+                    window.open(
+                      `https://www.google.com/search?q=${encodeURIComponent(
+                        selectedActivity?.title
+                      )} booking`,
+                      "_blank"
+                    );
+                    setTooltipText("Opened!");
+                    setTimeout(
+                      () => setTooltipText("Open Link in New Tab"),
+                      1000
+                    ); // Reset tooltip text after 1s
+                  } catch (error) {
+                    console.error("Failed to open:", error);
+                    setTooltipText("Failed to open");
+                  }
+                }}
+                color="secondary"
+              >
+                Google
+              </Button>
+            </Tooltip>
+            <Tooltip title={tooltipText} arrow>
+              <Button
+                onClick={() => {
+                  try {
+                    window.open(
+                      `https://www.viator.com/searchResults/all?text=${encodeURIComponent(
+                        selectedActivity?.title
+                      )}`,
+                      "_blank"
+                    );
+                    setTooltipText("Opened!");
+                    setTimeout(
+                      () => setTooltipText("Open Link in New Tab"),
+                      1000
+                    ); // Reset tooltip text after 1s
+                  } catch (error) {
+                    console.error("Failed to open:", error);
+                    setTooltipText("Failed to open");
+                  }
+                }}
+                color="primary"
+              >
+                Viator
+              </Button>
+            </Tooltip>
+            <Tooltip title={tooltipText} arrow>
+              <Button
+                onClick={() => {
+                  try {
+                    window.open(
+                      `https://www.tripadvisor.com/Search?q=${encodeURIComponent(
+                        selectedActivity?.title
+                      )}`,
+                      "_blank"
+                    );
+                    setTooltipText("Opened!");
+                    setTimeout(
+                      () => setTooltipText("Open Link in New Tab"),
+                      1000
+                    ); // Reset tooltip text after 1s
+                  } catch (error) {
+                    console.error("Failed to open:", error);
+                    setTooltipText("Failed to open");
+                  }
+                }}
+                color="secondary"
+              >
+                Trip Advisor
+              </Button>
+            </Tooltip>
+            <Tooltip title={tooltipText} arrow>
+              <Button
+                onClick={() => {
+                  try {
+                    window.open(
+                      `https://www.klook.com/en-US/search/?query=${encodeURIComponent(
+                        selectedActivity?.title
+                      )}`,
+                      "_blank"
+                    );
+                    setTooltipText("Opened!");
+                    setTimeout(
+                      () => setTooltipText("Open Link in New Tab"),
+                      1000
+                    ); // Reset tooltip text after 1s
+                  } catch (error) {
+                    console.error("Failed to open:", error);
+                    setTooltipText("Failed to open");
+                  }
+                }}
+                color="primary"
+              >
+                Klook
+              </Button>
+            </Tooltip>
+          </DialogActions>
         </Dialog>
         {/* The Delete Warning */}
-         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Confirm</DialogTitle>
           <DialogContent>
             Are you sure you want to delete the activity "
@@ -1038,23 +1184,36 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-            <Button onClick={() => {
+            <Button
+              onClick={() => {
                 setTrip((prevTrip) => {
                   const dayIndex = selectedActivity?.day;
-                  const newOrder = prevTrip.activities.top_preferences[dayIndex].filter((act) => act.details._id !== selectedActivity?.details._id);
-                  saveActivityOrder(selectedActivity?.details.tripId, newOrder, selectedActivity?.day);
+                  const newOrder = prevTrip.activities.top_preferences[
+                    dayIndex
+                  ].filter(
+                    (act) => act.details._id !== selectedActivity?.details._id
+                  );
+                  saveActivityOrder(
+                    selectedActivity?.details.tripId,
+                    newOrder,
+                    selectedActivity?.day
+                  );
                   return {
-                  ...prevTrip,
-                  activities: {
-                    ...prevTrip.activities,
-                    top_preferences: prevTrip.activities.top_preferences.map((day, i) =>
-                      i === dayIndex ? newOrder : day
-                    ),
-                  },
-                };
-              });
-              setOpenDialog(false);
-        }} color="error">Delete</Button>
+                    ...prevTrip,
+                    activities: {
+                      ...prevTrip.activities,
+                      top_preferences: prevTrip.activities.top_preferences.map(
+                        (day, i) => (i === dayIndex ? newOrder : day)
+                      ),
+                    },
+                  };
+                });
+                setOpenDialog(false);
+              }}
+              color="error"
+            >
+              Delete
+            </Button>
           </DialogActions>
         </Dialog>
         {/* The Move Days Popup */}
@@ -1078,18 +1237,26 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
             </Select>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => { setOpenDays(false); setSelectedNewDay(null); }}>Cancel</Button>
-            <Button onClick={() => {
+            <Button
+              onClick={() => {
+                setOpenDays(false);
+                setSelectedNewDay(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
                 if (selectedNewDay === null) {
-                  setSnackbarMessage('Select a day to move this activity to.');
-                  setSnackbarSeverity('error');
+                  setSnackbarMessage("Select a day to move this activity to.");
+                  setSnackbarSeverity("error");
                   setSnackbarOpen(true);
                   return;
                 }
 
                 if (selectedNewDay === selectedActivity.day) {
-                  setSnackbarMessage('The activity is already in this day.');
-                  setSnackbarSeverity('error');
+                  setSnackbarMessage("The activity is already in this day.");
+                  setSnackbarSeverity("error");
                   setSnackbarOpen(true);
                   return;
                 }
@@ -1098,17 +1265,27 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                   const oldDayIndex = selectedActivity?.day;
                   const newDayIndex = selectedNewDay;
 
-                  const newTopPreferences = prevTrip.activities.top_preferences.map((day, i) => {
-                    if (i === oldDayIndex) {
-                      return day.filter((act) => act.details._id !== selectedActivity.details._id);
-                    }
-                    if (i === newDayIndex) {
-                      return [...day, { ...selectedActivity, day: newDayIndex }];
-                    }
-                    return day;
-                  });
+                  const newTopPreferences =
+                    prevTrip.activities.top_preferences.map((day, i) => {
+                      if (i === oldDayIndex) {
+                        return day.filter(
+                          (act) =>
+                            act.details._id !== selectedActivity.details._id
+                        );
+                      }
+                      if (i === newDayIndex) {
+                        return [
+                          ...day,
+                          { ...selectedActivity, day: newDayIndex },
+                        ];
+                      }
+                      return day;
+                    });
 
-                  saveTopOrder(selectedActivity?.details.tripId, newTopPreferences);
+                  saveTopOrder(
+                    selectedActivity?.details.tripId,
+                    newTopPreferences
+                  );
 
                   return {
                     ...prevTrip,
@@ -1117,23 +1294,27 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                       top_preferences: newTopPreferences,
                     },
                   };
-              });
-              setOpenDays(false);
-              setSelectedNewDay(null);
-            }} color="secondary">Confirm</Button>
+                });
+                setOpenDays(false);
+                setSelectedNewDay(null);
+              }}
+              color="secondary"
+            >
+              Confirm
+            </Button>
           </DialogActions>
-           {/* For collaboration confirmation message */}
+          {/* For collaboration confirmation message */}
           <Snackbar
             open={snackbarOpen}
             autoHideDuration={4000}
             onClose={() => setSnackbarOpen(false)}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           >
             <Alert
               onClose={() => setSnackbarOpen(false)}
               severity={snackbarSeverity}
               variant="filled"
-              sx={{ width: '100%' }}
+              sx={{ width: "100%" }}
             >
               {snackbarMessage}
             </Alert>
@@ -1283,16 +1464,22 @@ const SortableItem = SortableElement(({ activity, deleteMode, handleDeleteClick,
                   {trip.activities.next_best_preferences.map(function (day) {
                     return day.map(function (activity) {
                       return (
-                        <MenuItem key={activity.activityNumber} onClick={() => handleSelectActivity(trip._id, activity)}>
+                        <MenuItem
+                          key={activity.activityNumber}
+                          onClick={() =>
+                            handleSelectActivity(trip._id, activity)
+                          }
+                        >
                           {activity.title}
                         </MenuItem>
                       );
                     });
                   })}
                 </Menu>
-              </div></> 
-    )}
-    </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -481,11 +481,12 @@ const HomePage = () => {
           <Button onClick={() => handleConfirmDelete(tripId)} color="error">Delete</Button>
         </DialogActions>
       </Dialog>
+      {(type !== "discover" && type !== "shared") && (
       <IconButton 
         onClick={handleCollabClick} 
         sx={{
           position: "absolute",
-          bottom: "100px",  // Moved out of way of travelers text
+          top: "10px",
           left: "10px",
           color: "gray",
           backgroundColor: "rgba(255, 255, 255, 0.7)",
@@ -495,6 +496,7 @@ const HomePage = () => {
       >
         <GroupAddIcon />
       </IconButton> 
+      )}
       <Dialog
         open={clb}
         onClose={(event, reason) => {
@@ -559,6 +561,7 @@ const HomePage = () => {
           </Alert>
         </Snackbar>
       </Dialog>
+      {(type !== "discover" && type !== "shared") && (
       <IconButton 
         onClick={handleShareClick} 
         sx={{
@@ -573,6 +576,7 @@ const HomePage = () => {
       >
         <Share />
       </IconButton> 
+      )}
       <Dialog open={shr} onClose={() => setShare(false)}  BackdropProps={{
     style: { backgroundColor: "rgba(0, 0, 0, 0.5)" }
   }}>
