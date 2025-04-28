@@ -10,6 +10,7 @@ import { Button, Box } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "../theme"
 import Cookies from "js-cookie";
+import { LayeredLightPanelless } from "survey-core/themes";
 
 // This variable controls if all questions are required or not
 const REQUIRE_QUESTIONS = false; // Toggle this to true/false as needed
@@ -723,7 +724,7 @@ const PreferenceSurvey = () => {
 
   // Persist survey instance between renders
   const [survey] = useState(() => new Model(surveyJson));
-
+  survey.applyTheme(LayeredLightPanelless);
   // Fetch saved progress
   const fetchSavedProgress = async () => {
     try {
