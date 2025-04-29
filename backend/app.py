@@ -1161,6 +1161,7 @@ def send_to_gemini(user_id, username, user_message, city_data):
     preferences_str_format = json.dumps(
         preferences, indent=4, sort_keys=True, default=str
     )
+    print("Inside send_to_gemini function")
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
     prompt = f"""
     You are a helpful AI chatbot assisting users in a chat interface. Respond to the following user message from the user {username} in a friendly and informative manner.
@@ -1246,6 +1247,8 @@ def send_to_gemini(user_id, username, user_message, city_data):
     headers = {"Content-Type": "application/json"}
 
     response = requests.post(url, headers=headers, json=data)
+
+    print(f"Gemini chatbot response: {response.json()}\n\n")
 
     # Extract raw response text
     raw_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
@@ -1340,7 +1343,7 @@ def send_message():
     
     If the user wants attractions and/or activities to do in a city,
     your response must ONLY return a JSON object (nothing else, no explanations, NO EXTRA TEXT).
-    Recommend 7 attractions or activities to do in the city, personalized for the user based on the following preferences: {data.get("preferences")}
+    Recommend 3 attractions or activities to do in the city, personalized for the user based on the following preferences: {data.get("preferences")}
     """
         + """
     The JSON object should have the following structure:
@@ -1372,7 +1375,7 @@ def send_message():
                 "website": "...link to the official website..."
             }
         },
-        ... for each other activity (6 more activities) ...
+        ... for each other activity (2 more activities) ...
     ]
 
     Here is an example of the JSON object you should return:
@@ -1405,7 +1408,7 @@ def send_message():
             }
         },
         ...
-        same format other activities (6 more activities)
+        same format other activities (2 more activities)
         ...
     ]
 
@@ -1437,6 +1440,9 @@ def send_message():
         city_data = "Error: Too much input data or agent failed."
 
     print("\n\nCity data for chatbot:", city_data)
+    print("\n\nuser_message:", user_message)
+    print("\n\nuser_id:", user_id)
+    print("\n\nusername:", username)
 
     chatbot_response = send_to_gemini(user_id, username, user_message, city_data)
     # print(f"Gemini chatbot response: {chatbot_response}\n\n")
@@ -1452,9 +1458,34 @@ def send_message():
         "is_about_activities": is_about_activities,  # new field
     }
     messages_collection.insert_one(chatbot_msg_entry)
-    response = jsonify(
-        {"response": chatbot_response, "is_about_activities": is_about_activities}
-    )
+    # Previous code:
+    # response = jsonify(
+    #     {"response": chatbot_response, "is_about_activities": is_about_activities}
+    # )
+    response_payload = {
+        "response": chatbot_response,
+        "is_about_activities": is_about_activities,
+    }
+
+    # Before using city_data, parse it if needed
+    if isinstance(city_data, str):
+        try:
+            city_data = json.loads(city_data)
+            print("Parsed city_data as dict")
+        except json.JSONDecodeError:
+            print("Failed to parse city_data as JSON")
+            city_data = {}
+
+    # If city_data contains activities, include them
+    print(f"City data: {city_data}")
+    print(f"Type of city_data: {type(city_data)}")
+    print(f"City data is dict: {isinstance(city_data, dict)}")
+    print(f"City data has activities: {'activities' in city_data}")
+    if city_data and "activities" in city_data:
+        response_payload["activities"] = city_data["activities"]
+
+    print(f"Response payload: {response_payload}")
+    response = jsonify(response_payload)
 
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response, 200

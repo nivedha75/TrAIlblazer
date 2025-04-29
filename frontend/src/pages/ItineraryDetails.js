@@ -16,6 +16,7 @@ import {
   Alert,
   IconButton,
   Fab,
+  TextField
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
@@ -103,6 +104,11 @@ const ItineraryDetails = () => {
   const [username, setUsername] = useState("");
   const dropdownRef = useRef(null);
   const [selectedDay, setSelectedDay] = useState(null);
+  //Hooks for adding activity
+  const [openAddActivityDialog, setOpenAddActivityDialog] = useState(false);
+  const [selectedActivityTitle, setSelectedActivityTitle] = useState(null);
+  const [selectedDayForAdd, setSelectedDayForAdd] = useState("");
+  const [chatbotActivities, setChatbotActivities] = useState([]);
 
   const navigate = useNavigate();
 
@@ -324,17 +330,77 @@ const ItineraryDetails = () => {
 
       // Update the "Thinking..." message with actual chatbot response
       //console.log("Msg: ", data.botResponse?.message);
+      // setChatMessages((prev) =>
+      //   prev.map((msg, index) =>
+      //     index === prev.length - 1
+      //       ? {
+      //           sender: "chatbot",
+      //           message: data.response,
+      //           is_about_activities: data.is_about_activities,
+      //         }
+      //       : msg
+      //   )
+      // );
       setChatMessages((prev) =>
         prev.map((msg, index) =>
           index === prev.length - 1
-            ? { sender: "chatbot", message: data.response, is_about_activities: data.is_about_activities }
+            ? {
+                sender: "chatbot",
+                message: data.response,
+                is_about_activities: data.is_about_activities,
+                activities: data.activities || [], // store activities if they exist
+              }
             : msg
         )
       );
+
+      // Save activities JSON separately
+      if (data.activities) {
+        setChatbotActivities(data.activities);
+      }
+      console.log("Data returned from the backend: " + data + "\n");
+      console.log("data.activities: " + data.activities + "\n");
+      console.log("Chatbot Activities: " + chatbotActivities + "\n");
+      console.log("\n\n");
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
+
+  // Needed for adding activity from the chatbot to the itinerary
+
+  const addActivityToItinerary = async (tripId, day, activity) => {
+    try {
+      const response = await fetch(`http://localhost:55000/add_activity_to_itinerary/${tripId}/${day}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+        },
+        body: JSON.stringify(activity),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to add activity to itinerary");
+      }
+  
+      const data = await response.json();
+      console.log("Activity added:", data);
+  
+      // Update frontend immediately
+      setTrip((prevTrip) => {
+        const updatedTrip = { ...prevTrip };
+        updatedTrip.activities.top_preferences[day] = [
+          ...updatedTrip.activities.top_preferences[day],
+          activity,
+        ];
+        return updatedTrip;
+      });
+    } catch (error) {
+      console.error("Error adding activity to itinerary:", error);
+    }
+  };
+  
 
   //   function confirmDelete(tripId, activityId) {
   //     fetch(`http://localhost:55000/delete_itinerary_activity/${tripId}/${activityId}`, {
@@ -374,6 +440,20 @@ const ItineraryDetails = () => {
     setSelectedActivity(activity);
     setOpenDays(true);
   };
+
+  //needed for adding activity from the chatbot to the itinerary
+
+  const handleAddActivityClick = (line) => {
+    const match = line.match(/\*\*(.*?)\*\*/); // extract bold text
+    let extractedTitle = match ? match[1] : line;
+    extractedTitle = extractedTitle.trim().replace(/:$/, ""); // remove colon if present
+  
+    setSelectedActivityTitle(extractedTitle);
+    setOpenAddActivityDialog(true);
+  };
+  
+  
+  
 
   const handleLike = (activity, isLike) => {
     const userId = Cookies.get("user_id");
@@ -813,121 +893,131 @@ const ItineraryDetails = () => {
         </div>
 
         <div
-  style={{
-    flexGrow: 1,
-    overflowY: "auto",
-    padding: "10px",
-    backgroundColor: "#fff",
-    borderRadius: "5px",
-  }}
->
-  {chatMessages.length > 0 ? (
-    chatMessages.map((msg, index) => (
-      <div
-        key={index}
-        style={{
-          display: "flex",
-          justifyContent: msg.sender === "chatbot" ? "flex-start" : "flex-end",
-          marginBottom: "8px",
-        }}
-      >
-        <div
           style={{
-            padding: "8px 12px",
-            borderRadius: "10px",
-            maxWidth: msg.is_about_activities ? "85%" : "70%",
-            backgroundColor: msg.sender === "chatbot" ? "#e0e0e0" : theme.palette.purple.main,
-            color: msg.sender === "chatbot" ? "#000" : "#fff",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            overflowWrap: "break-word",
-            textAlign: "left",
+            flexGrow: 1,
+            overflowY: "auto",
+            padding: "10px",
+            backgroundColor: "#fff",
+            borderRadius: "5px",
           }}
         >
-          {msg.sender !== "chatbot" ? (
-            <ReactMarkdown
-              components={{
-                p: ({ node, ...props }) => <span {...props} />
-              }}
-            >
-              {`**Me:** ${msg.message}`}
-            </ReactMarkdown>
-          ) : (
-            <>
-              {msg.is_about_activities ? (
-                <>
-                  {msg.message.split("\n").map((line, i) => {
-                    const isBullet = /^[\*\-]\s+\*\*/.test(line.trim());
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          marginBottom: "12px",
-                          gap: "8px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            flexGrow: 1,
-                            maxWidth: "85%",
-                            wordBreak: "break-word",
-                          }}
-                        >
-                          <ReactMarkdown
-                            components={{
-                              p: ({ node, ...props }) => <span {...props} />
-                            }}
-                          >
-                            {i === 0 ? `**Chatbot:** ${line}` : line}
-                          </ReactMarkdown>
-                        </div>
-
-                        {isBullet && (
-                          <Tooltip title="Add Activity To Itinerary" arrow>
-                            <Fab
-                              size="small"
-                              color="success"
-                              aria-label="add"
-                              style={{
-                                width: "40px",
-                                height: "40px",
-                                minHeight: "40px",
-                                flexShrink: 0,
-                              }}
-                              onClick={() => handleAddActivityClick(line)}
-                            >
-                              <AddIcon style={{ color: "white" }} />
-                            </Fab>
-                          </Tooltip>
-                        )}
-                      </div>
-                    );
-                  })}
-                </>
-              ) : (
-                <ReactMarkdown
-                  components={{
-                    p: ({ node, ...props }) => <span {...props} />
+          {chatMessages.length > 0 ? (
+            chatMessages.map((msg, index) => (
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  justifyContent:
+                    msg.sender === "chatbot" ? "flex-start" : "flex-end",
+                  marginBottom: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    maxWidth: msg.is_about_activities ? "85%" : "70%",
+                    backgroundColor:
+                      msg.sender === "chatbot" ? "#e0e0e0" : theme.palette.purple.main,
+                    color: msg.sender === "chatbot" ? "#000" : "#fff",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    textAlign: "left",
                   }}
                 >
-                  {`**Chatbot:** ${msg.message}`}
-                </ReactMarkdown>
-              )}
-            </>
+                  {msg.sender !== "chatbot" ? (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ node, ...props }) => <span {...props} />,
+                      }}
+                    >
+                      {`**Me:** ${msg.message}`}
+                    </ReactMarkdown>
+                  ) : (
+                    <>
+                      {msg.is_about_activities ? (
+                        <>
+                          {msg.message.split("\n").map((line, i) => {
+                            const isBullet = /^[\*\-]\s+\*\*/.test(line.trim());
+                            return (
+                              <div
+                                key={i}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  marginBottom: "12px",
+                                  gap: "8px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    flexGrow: 1,
+                                    maxWidth: "85%",
+                                    wordBreak: "break-word",
+                                  }}
+                                >
+                                  <ReactMarkdown
+                                    components={{
+                                      p: ({ node, ...props }) => (
+                                        <span {...props} />
+                                      ),
+                                    }}
+                                  >
+                                    {i === 0 ? `**Chatbot:** ${line}` : line}
+                                  </ReactMarkdown>
+                                </div>
+
+                                {isBullet && (
+                                  <Tooltip
+                                    title="Add Activity To Itinerary"
+                                    arrow
+                                    enterTouchDelay={0}
+                                    disableInteractive={false}
+                                  >
+                                    <Fab
+                                      size="small"
+                                      color="success"
+                                      aria-label="add"
+                                      style={{
+                                        width: "40px",
+                                        height: "40px",
+                                        minHeight: "40px",
+                                        flexShrink: 0,
+                                      }}
+                                      onClick={() =>
+                                        handleAddActivityClick(line)
+                                      }
+                                    >
+                                      <AddIcon style={{ color: "white" }} />
+                                    </Fab>
+                                  </Tooltip>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </>
+                      ) : (
+                        <ReactMarkdown
+                          components={{
+                            p: ({ node, ...props }) => <span {...props} />,
+                          }}
+                        >
+                          {`**Chatbot:** ${msg.message}`}
+                        </ReactMarkdown>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p style={{ textAlign: "center", color: "#888" }}>
+              No messages yet
+            </p>
           )}
         </div>
-      </div>
-    ))
-  ) : (
-    <p style={{ textAlign: "center", color: "#888" }}>
-      No messages yet
-    </p>
-  )}
-</div>
-
 
         <div style={{ display: "flex", marginTop: "10px" }}>
           <input
@@ -1320,6 +1410,84 @@ const ItineraryDetails = () => {
             </Alert>
           </Snackbar>
         </Dialog>
+
+
+        {/* The Add Activity Popup */}
+
+        <Dialog
+          open={openAddActivityDialog}
+          onClose={() => setOpenAddActivityDialog(false)}
+        >
+          <DialogTitle>Add Activity to Itinerary</DialogTitle>
+          <DialogContent>
+            <Typography gutterBottom>
+              Which day would you like to add the activity "
+              {selectedActivityTitle}" to?
+            </Typography>
+
+            <TextField
+              fullWidth
+              label={`Enter Day Number (1 to ${
+                trip?.activities?.top_preferences?.length || 1
+              })`}
+              type="number"
+              value={selectedDayForAdd}
+              onChange={(e) => setSelectedDayForAdd(Number(e.target.value))}
+              inputProps={{
+                min: 1,
+                max: trip?.activities?.top_preferences?.length || 1,
+              }}
+              margin="dense"
+            />
+          </DialogContent>
+
+          <DialogActions>
+            <Button onClick={() => setOpenAddActivityDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (
+                  selectedDayForAdd < 1 ||
+                  selectedDayForAdd >
+                    (trip?.activities?.top_preferences?.length || 1)
+                ) {
+                  alert(
+                    `Please enter a valid day number between 1 and ${trip?.activities?.top_preferences?.length}`
+                  );
+                  return;
+                }
+
+                const matchedActivity = chatbotActivities.find((act) => {
+                  const cleanActTitle = act.title.trim().toLowerCase();
+                  return cleanActTitle === selectedActivityTitle.trim().toLowerCase();
+                });
+                
+
+                if (!matchedActivity) {
+                  alert("Could not find the activity to add.");
+                  return;
+                }
+
+                await addActivityToItinerary(
+                  tripId,
+                  selectedDayForAdd - 1,
+                  matchedActivity
+                );
+
+                // Reset everything
+                setOpenAddActivityDialog(false);
+                setSelectedActivityTitle(null);
+                setSelectedDayForAdd("");
+              }}
+              color="primary"
+              variant="contained"
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <div
                 style={{
                   display: "flex",
