@@ -390,23 +390,52 @@ const ItineraryDetails = () => {
       const data = await response.json();
       console.log("Activity added:", data);
       
-      // Stamp tripId onto activity before inserting into frontend state
-      const stampedActivity = {
-        ...activity,
+      // const savedActivity = {
+      //   ...data,
+      //   details: {
+      //     ...data.details,
+      //     tripId: tripDetails._id, // ensure tripId is stamped too
+      //   },
+      // };
+      // const savedActivity = data.added_activity;
+
+      
+      const savedActivity = {
+        ...data.added_activity,
         details: {
-          ...activity.details,
-          tripId: tripDetails._id,  // ensure it has the correct ID
+          ...data.added_activity.details,
+          tripId: tripDetails._id, //keep this if you need it for backend calls
         },
       };
       
+      console.log("Saved activity:", savedActivity);
+      
+      
+  
       setTrip((prevTrip) => {
         const updatedTrip = { ...prevTrip };
         updatedTrip.activities.top_preferences[day] = [
           ...updatedTrip.activities.top_preferences[day],
-          stampedActivity,
+          savedActivity,
         ];
         return updatedTrip;
       });
+      
+
+      setChatbotActivities((prev) =>
+        prev.map((act) =>
+          act.title.trim().toLowerCase() === savedActivity.title.trim().toLowerCase()
+            ? savedActivity
+            : act
+        )
+      );
+
+      console.log("Chatbot Activities after adding:", chatbotActivities);
+      
+
+      console.log("MongoDB activity _id:", data.added_activity._id); // ✅ correct
+
+      
       
     } catch (error) {
       console.error("Error adding activity to itinerary:", error);
@@ -883,7 +912,7 @@ const ItineraryDetails = () => {
         {activities.length > 0 ? (
           activities.map((activity, index) => (
             <SortableItem
-              key={activity.details._id}
+              key={activity.details._id || `${activity.title}-${index}`}  // fallback key
               index={index}
               activity={activity}
               deleteMode={deleteMode}

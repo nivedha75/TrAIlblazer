@@ -817,7 +817,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
         preferences, indent=4, sort_keys=True, default=str
     )
     # print(preferences_str_format)
-    #url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+    # url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
 
     headers = {"Content-Type": "application/json"}
@@ -2346,8 +2346,10 @@ def add_activity_to_itinerary(trip_id, day):
         {
             "message": "Activity added to itinerary successfully",
             "updated_itinerary": convert_objectid(itinerary),
+            "added_activity": convert_objectid(activity),
         }
     )
+
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
