@@ -767,9 +767,9 @@ const ItineraryDetails = () => {
             <p>
               <strong>Rating:</strong> {activity.details.rating}
             </p>
-            <span>
-              <i>{activity.context}</i>
-            </span>
+            <p>
+              <strong>Start:</strong> {activity.range.start} <strong>End:</strong> {activity.range.end}
+            </p>
           </div>
           <div
             style={{
@@ -1198,7 +1198,7 @@ const ItineraryDetails = () => {
             style={{ position: "absolute", top: 10, right: 70 }}
             onClick={() => setDeleteMode(!deleteMode)}
           >
-            {deleteMode ? "Cancel Edit" : "Edit Activities"}
+            {deleteMode ? "Stop Edit" : "Edit Activities"}
           </Button>
         )}
         <h1

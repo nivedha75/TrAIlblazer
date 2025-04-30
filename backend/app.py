@@ -1,9 +1,8 @@
-from datetime import timedelta
 from flask import Flask, request, jsonify, session, make_response, send_from_directory
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from pymongo import MongoClient
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from itertools import count
 from bson import ObjectId  # Import ObjectId for MongoDB ID conversion for user_id
 import os
@@ -325,6 +324,7 @@ def trips():
                     data["days"],
                     trip_id,
                     city_data,
+                    data["timeRanges"]
                 )
             except Exception as e:
                 print(f"Error in generate_itinerary: {e}")
@@ -804,9 +804,25 @@ def generate_activity_number():
     return next(activity_id_counter)
 
 
+
+# Helper function to normalize time strings like "7 PM" -> "7:00 PM"
+def normalize_time_str(time_str):
+    if ':' not in time_str:
+        time_str = time_str.replace(' AM', ':00 AM').replace(' PM', ':00 PM')
+    return time_str
+
+# Convert "7:00 PM" to datetime object
+def parse_time(time_str):
+    return datetime.strptime(normalize_time_str(time_str), "%I:%M %p")
+
+# Convert datetime object back to "h:mm AM/PM" string
+def format_time(dt):
+    return dt.strftime("%-I:%M %p")
+
+
 # @app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
 # add this parameter later: city_data
-def generate_itinerary(user_id, location, days, trip_id, city_data):
+def generate_itinerary(user_id, location, days, trip_id, city_data, time_ranges):
     print("generating itinerary")
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
     preferences_str_format = json.dumps(
@@ -838,6 +854,10 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
     Given a user's travel preferences, destination, and the real-time city data provided, generate an itinerary with, for each day of the trip, 3 activities: 2 as top preferences and 1 as a next best preference.
     Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination.
     
+    Additionally, schedule the activities (even though I don't need the actual times) such that they fall within the active time range for their day, can have a half hour between them, and do not overlap with other activities on the same day. Here is the list of time ranges (containing an object for each day and inside these objects a start time followed by an end time): """
+        + str(time_ranges)
+        + """\n
+        
     ** Important Note: Do not use the ISO format for the date in your response. Instead, use the format "Month Day, Year" (e.g., "April 2, 2025").
 
     Format the itinerary as the following JSON STRICTLY, NO OTHER WORDS:
@@ -847,6 +867,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
                 \"title\": ...title...,
                 \"context\": ...Because you liked (and then list something specific in the preferences JSON. Then state the weather that explains the choice. example format: "since April 2, 2025 will have light rain and heavy wind, this indoor activity is perfect.")...,
                 \"day\": ...the number of the itinerary day this activity takes place (starting at 0)...
+                \"length\": ...the number of half hours that this activity should take. (i.e. if an activity takes 1.5 hours, this value is 3)...,                
                 \"weather\": ...ALL weather for this day on the trip...,
                 \"details\": {
                     \"name\": ...same as title...,
@@ -887,7 +908,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
         + preferences_str_format
     )
 
-    # print(prompt)
+    print(prompt)
     # Here is the real-time data for weather, activities, and/or hotels in that city: {city_data}
 
     data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -909,7 +930,14 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     # Parse the text as JSON
     parsed_json = json.loads(text_content)
+    day_index = 0
     for day in parsed_json["top_preferences"]:
+        day_index = day_index + 1
+        day_key = f"Day {day_index}"
+        day_time_range = time_ranges.get(day_key)
+        day_curr = parse_time(day_time_range["start"])
+        # TODO: Going to trust the end time isn't exceeded too much
+        # day_end = parse_time(day_time_range["end"])
         for activity in day:
             # KEEP THIS
             activity["activityNumber"] = generate_activity_number()
@@ -919,11 +947,21 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
             activity["dislikedBy"] = []
             activity["details"]["images"] = get_image(activity["title"])
             activity["details"]["tripId"] = trip_id
-            # print(activity)
             activity["activityID"] = activity_collection.insert_one(
                 activity["details"]
             ).inserted_id
-            # print(activity["details"])
+            
+            duration_minutes = activity["length"] * 30
+            activity_end = day_curr + timedelta(minutes=duration_minutes)
+            # TODO: Going to trust the end time isn't exceeded too much
+            # if activity_end > day_end:
+            #     print(f"Skipping activity {activity['title']} on {day_key} due to time overflow.")
+            #     continue  # or break if you want to stop the day's schedule
+            activity["range"] = {
+                "start": format_time(day_curr),
+                "end": format_time(activity_end)
+            }
+            day_curr = activity_end + timedelta(minutes=30)
 
     for day in parsed_json["next_best_preferences"]:
         for activity in day:
@@ -938,7 +976,6 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
             activity["activityID"] = activity_collection.insert_one(
                 activity["details"]
             ).inserted_id
-    #     print(activity)
 
     # print(parsed_json)
 
@@ -1360,6 +1397,7 @@ def send_message():
             "title": "...title of the activity...",
             "context": "...explanation linking user preference + weather condition...",
             "day": 0 (should be 0 for all activities since users will decide which day to do them later),
+            "length": "...the number of half hours that this activity should take, starting at 1...",
             "weather": "...weather forecast for that day...",
             "details": {
                 "name": "...same as title...",
@@ -1392,6 +1430,7 @@ def send_message():
             "title": "Shinjuku Gyoen National Garden Visit",
             "context": "Because you enjoy nature photography and outdoor activities, this outdoor activity is perfect.",
             "day": 0,
+            "length": 3,
             "weather": "Clear skies, 22°C, light breeze.",
             "details": {
                 "name": "Shinjuku Gyoen National Garden",
@@ -1777,6 +1816,16 @@ def move_restaurant_activity(trip_id, activityID, day):
     while len(itinerary["activities"]["top_preferences"]) <= day:
         itinerary["activities"]["top_preferences"].append([])
 
+    # Add times
+    last_act = itinerary["activities"]["top_preferences"][day]
+    start = parse_time(last_act[len(last_act) - 1]["range"]["end"]) + timedelta(minutes=30)
+    duration_minutes = activity["length"] * 30
+    end = start + timedelta(minutes=duration_minutes)
+    activity["range"] = {
+        "start": format_time(start),
+        "end": format_time(end)
+    }
+
     itinerary["activities"]["top_preferences"][day].append(activity)
 
     itinerary_collection.update_one(
@@ -1820,8 +1869,39 @@ def update_activity_order(trip_id):
 
     if index >= len(top_preferences):
         return jsonify({"error": "Invalid day index"}), 400
+    
+    # TODO: actually Load time_ranges from trip details
+    trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
+    if not trip:
+        return jsonify({"error": "Trip not found"}), 404
+    time_ranges = trip.get("timeRanges", {})
+    day_key = f"Day {index + 1}"
+    day_time_range = time_ranges.get(day_key)
+    day_curr = parse_time(day_time_range["start"])
+    # TODO: Going to trust the end time isn't exceeded too much
+    # day_end = parse_time(day_time_range["end"])
 
-    top_preferences[index] = new_order
+    updated_order = []
+    for activity in new_order:
+        duration_minutes = activity.get("length", 4) * 30
+        activity_end = day_curr + timedelta(minutes=duration_minutes)
+
+        # TODO: Going to trust the end time isn't exceeded too much
+        # if activity_end > day_end:
+            # print(f"Skipping activity '{activity.get('title')}' due to time overflow.")
+            # continue
+
+        # Update time range
+        activity["range"] = {
+            "start": format_time(day_curr),
+            "end": format_time(activity_end)
+        }
+
+        updated_order.append(activity)
+        day_curr = activity_end + timedelta(minutes=30)
+
+
+    top_preferences[index] = updated_order
 
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
@@ -2328,6 +2408,16 @@ def add_activity_to_itinerary(trip_id, day):
 
     while len(itinerary["activities"]["top_preferences"]) <= day:
         itinerary["activities"]["top_preferences"].append([])
+
+    # Add times
+    last_act = itinerary["activities"]["top_preferences"][day]
+    start = parse_time(last_act[len(last_act) - 1]["range"]["end"]) + timedelta(minutes=30)
+    duration_minutes = activity["length"] * 30
+    end = start + timedelta(minutes=duration_minutes)
+    activity["range"] = {
+        "start": format_time(start),
+        "end": format_time(end)
+    }
 
     itinerary["activities"]["top_preferences"][day].append(activity)
 
