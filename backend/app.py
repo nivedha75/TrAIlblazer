@@ -817,6 +817,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
         preferences, indent=4, sort_keys=True, default=str
     )
     # print(preferences_str_format)
+    #url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
 
     headers = {"Content-Type": "application/json"}
@@ -1212,7 +1213,13 @@ def send_to_gemini(user_id, username, user_message, city_data):
     * **The Museum Of Flight:** [Description here]
 
     Important Note: List all activities/attractions in the city_data in the response (even if they are not related to the user preferences).
-
+    
+    Also, for each activity/attraction, do NOT make the key for each bullet point based on day number, since the user will chose the day they do each activity later.
+    That's why the default day field is "day 0" in the city_data.
+    Instead, make the key value based on the activity/attraction name.
+    Important: If the user is asking about activities/attractions, do NOT mention words day 0, day 1, day 2, etc. in the entire chatbot response.
+    Also, do NOT include any weather information for each activity/attraction in the response if the user is asking about activities/attractions.
+    
     Example — Weather Format:
 
     * **April 1st:** [Your forecast here]
@@ -1352,7 +1359,7 @@ def send_message():
         {
             "title": "...title of the activity...",
             "context": "...explanation linking user preference + weather condition...",
-            "day": "...the day number in the itinerary, starting at 0...",
+            "day": 0 (should be 0 for all activities since users will decide which day to do them later),
             "weather": "...weather forecast for that day...",
             "details": {
                 "name": "...same as title...",
@@ -1384,7 +1391,7 @@ def send_message():
         {
             "title": "Shinjuku Gyoen National Garden Visit",
             "context": "Because you enjoy nature photography and outdoor activities, this outdoor activity is perfect.",
-            "day": 1,
+            "day": 0,
             "weather": "Clear skies, 22°C, light breeze.",
             "details": {
                 "name": "Shinjuku Gyoen National Garden",
@@ -1413,9 +1420,12 @@ def send_message():
     ]
 
     Remember: If the user wants activities/attractions, output ONLY the JSON object exactly as shown. No extra text.
+    Also remember: The day field should be 0 for all activities since users will decide which day to do each activity later.
 
     However, if the user instead asks for hotels, weather, or any other information other than activities/attractions, use following tools below to answer the question as needed
     Provide a standard text response (not a JSON object).
+
+    Important: do NOT include weather data in the context field of the JSON.
 
     - Use the fetch_weather_for_trip_tool if they ask about weather forecasts for every day on that trip.
       Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions for every day from the start date till the end date.
@@ -2294,6 +2304,7 @@ def fetch_restaurants(city):
     methods=["POST", "OPTIONS"],
 )
 def add_activity_to_itinerary(trip_id, day):
+    print("itinerary_id in database: " + trip_id + "\n")
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
 

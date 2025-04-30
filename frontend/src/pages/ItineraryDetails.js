@@ -16,7 +16,7 @@ import {
   Alert,
   IconButton,
   Fab,
-  TextField
+  TextField,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
@@ -371,36 +371,47 @@ const ItineraryDetails = () => {
 
   const addActivityToItinerary = async (tripId, day, activity) => {
     try {
-      const response = await fetch(`http://localhost:55000/add_activity_to_itinerary/${tripId}/${day}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "http://localhost:3000",
-        },
-        body: JSON.stringify(activity),
-      });
-  
+      const response = await fetch(
+        `http://localhost:55000/add_activity_to_itinerary/${tripId}/${day}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "http://localhost:3000",
+          },
+          body: JSON.stringify(activity),
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to add activity to itinerary");
       }
-  
+      
       const data = await response.json();
       console.log("Activity added:", data);
-  
-      // Update frontend immediately
+      
+      // Stamp tripId onto activity before inserting into frontend state
+      const stampedActivity = {
+        ...activity,
+        details: {
+          ...activity.details,
+          tripId: tripDetails._id,  // ensure it has the correct ID
+        },
+      };
+      
       setTrip((prevTrip) => {
         const updatedTrip = { ...prevTrip };
         updatedTrip.activities.top_preferences[day] = [
           ...updatedTrip.activities.top_preferences[day],
-          activity,
+          stampedActivity,
         ];
         return updatedTrip;
       });
+      
     } catch (error) {
       console.error("Error adding activity to itinerary:", error);
     }
   };
-  
 
   //   function confirmDelete(tripId, activityId) {
   //     fetch(`http://localhost:55000/delete_itinerary_activity/${tripId}/${activityId}`, {
@@ -447,13 +458,10 @@ const ItineraryDetails = () => {
     const match = line.match(/\*\*(.*?)\*\*/); // extract bold text
     let extractedTitle = match ? match[1] : line;
     extractedTitle = extractedTitle.trim().replace(/:$/, ""); // remove colon if present
-  
+
     setSelectedActivityTitle(extractedTitle);
     setOpenAddActivityDialog(true);
   };
-  
-  
-  
 
   const handleLike = (activity, isLike) => {
     const userId = Cookies.get("user_id");
@@ -723,62 +731,144 @@ const ItineraryDetails = () => {
           <strong>Notes:</strong> {activity.notes}
         </p>
       )} */}
-    <div style={{ textAlign: "left", flex: 1 }}>
-      <h4 style={{ fontSize: "18px" }}><strong>{activity.title}</strong></h4>
-      <p><strong>Rating:</strong> {activity.details.rating}</p>
-      <span><i>{activity.context}</i></span>
-    </div>
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <Button variant="contained" onClick={() => bookActivity(activity)}
-          sx={{ textTransform: "none", width: "150px", backgroundColor: theme.palette.purple.main, color: "white",
-          "&:hover": { backgroundColor: "#240E8B"}, fontSize: "1rem",
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
-          Book
-      </Button>
-      <Button variant="contained" onClick={() => activityDetails(activity.details._id)}
-          sx={{ textTransform: "none", width: "150px", backgroundColor: theme.palette.apple.main, color: "white",
-          "&:hover": { backgroundColor: "#240E8B"}, fontSize: "1rem",
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
-          More Details
-      </Button>
-      <Button variant="contained" onClick={() => mapDetails(activity.details._id)}
-          sx={{ textTransform: "none", width: "150px", backgroundColor: theme.palette.purple.main, color: "white",
-          "&:hover": { backgroundColor: "#240E8B"}, fontSize: "1rem",
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
-          View in Map
-      </Button>
-    </div>
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-        <ThumbUpIcon
-          style={{ cursor: "pointer", color: theme.palette.apple.main, fontSize: "35px", marginLeft: "20px" }}
-          onClick={() => handleLike(activity, true)}
-        />
-        <span style={{ fontSize: "20px", marginLeft: "5px" }}>{activity.likes}</span>
-      </div>
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-        <ThumbDownIcon
-          style={{ cursor: "pointer", color: theme.palette.purple.main, fontSize: "35px", marginLeft: "20px" }}
-          onClick={() => handleLike(activity, false)}
-        />
-        <span style={{ fontSize: "20px", marginLeft: "5px" }}>{activity.dislikes}</span>
-      </div>
-    </div>
-    {deleteMode && (
-      <DeleteIcon
-        style={{ cursor: "pointer", color: "red", fontSize: "35px", marginLeft: "20px" }}
-        onClick={() => handleDeleteClick(activity)}
-      />
-    )}
-    {deleteMode && (
-      <SwapVertIcon
-        style={{ cursor: "pointer", color: theme.palette.purple.main, fontSize: "35px", marginLeft: "20px" }}
-        onClick={() => handleMoveDaysClick(activity)}
-      />
-    )}
-  </div>
-    );
-    });
+          <div style={{ textAlign: "left", flex: 1 }}>
+            <h4 style={{ fontSize: "18px" }}>
+              <strong>{activity.title}</strong>
+            </h4>
+            <p>
+              <strong>Rating:</strong> {activity.details.rating}
+            </p>
+            <span>
+              <i>{activity.context}</i>
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <Button
+              variant="contained"
+              onClick={() => bookActivity(activity)}
+              sx={{
+                textTransform: "none",
+                width: "150px",
+                backgroundColor: theme.palette.purple.main,
+                color: "white",
+                "&:hover": { backgroundColor: "#240E8B" },
+                fontSize: "1rem",
+                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+              }}
+            >
+              Book
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => activityDetails(activity.details._id)}
+              sx={{
+                textTransform: "none",
+                width: "150px",
+                backgroundColor: theme.palette.apple.main,
+                color: "white",
+                "&:hover": { backgroundColor: "#240E8B" },
+                fontSize: "1rem",
+                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+              }}
+            >
+              More Details
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => mapDetails(activity.details._id)}
+              sx={{
+                textTransform: "none",
+                width: "150px",
+                backgroundColor: theme.palette.purple.main,
+                color: "white",
+                "&:hover": { backgroundColor: "#240E8B" },
+                fontSize: "1rem",
+                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+              }}
+            >
+              View in Map
+            </Button>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <ThumbUpIcon
+                style={{
+                  cursor: "pointer",
+                  color: theme.palette.apple.main,
+                  fontSize: "35px",
+                  marginLeft: "20px",
+                }}
+                onClick={() => handleLike(activity, true)}
+              />
+              <span style={{ fontSize: "20px", marginLeft: "5px" }}>
+                {activity.likes}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <ThumbDownIcon
+                style={{
+                  cursor: "pointer",
+                  color: theme.palette.purple.main,
+                  fontSize: "35px",
+                  marginLeft: "20px",
+                }}
+                onClick={() => handleLike(activity, false)}
+              />
+              <span style={{ fontSize: "20px", marginLeft: "5px" }}>
+                {activity.dislikes}
+              </span>
+            </div>
+          </div>
+          {deleteMode && (
+            <DeleteIcon
+              style={{
+                cursor: "pointer",
+                color: "red",
+                fontSize: "35px",
+                marginLeft: "20px",
+              }}
+              onClick={() => handleDeleteClick(activity)}
+            />
+          )}
+          {deleteMode && (
+            <SwapVertIcon
+              style={{
+                cursor: "pointer",
+                color: theme.palette.purple.main,
+                fontSize: "35px",
+                marginLeft: "20px",
+              }}
+              onClick={() => handleMoveDaysClick(activity)}
+            />
+          )}
+        </div>
+      );
+    }
+  );
 
   const SortableList = SortableContainer(
     ({
@@ -843,8 +933,12 @@ const ItineraryDetails = () => {
             transition: "0.3s",
             boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = theme.palette.apple.main)}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = theme.palette.purple.main)}
+          onMouseEnter={(e) =>
+            (e.target.style.backgroundColor = theme.palette.apple.main)
+          }
+          onMouseLeave={(e) =>
+            (e.target.style.backgroundColor = theme.palette.purple.main)
+          }
         >
           Back to Home
         </button>
@@ -867,10 +961,10 @@ const ItineraryDetails = () => {
           flexDirection: "column",
           justifyContent: "space-between",
           overflowY: "auto",
-          position: "fixed", 
-          top: "0", 
+          position: "fixed",
+          top: "0",
           left: "0",
-          height: "calc(100vh - 40px)", 
+          height: "calc(100vh - 40px)",
           zIndex: 9999,
         }}
       >
@@ -918,7 +1012,9 @@ const ItineraryDetails = () => {
                     borderRadius: "10px",
                     maxWidth: msg.is_about_activities ? "85%" : "70%",
                     backgroundColor:
-                      msg.sender === "chatbot" ? "#e0e0e0" : theme.palette.purple.main,
+                      msg.sender === "chatbot"
+                        ? "#e0e0e0"
+                        : theme.palette.purple.main,
                     color: msg.sender === "chatbot" ? "#000" : "#fff",
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
@@ -1118,11 +1214,27 @@ const ItineraryDetails = () => {
         {trip.activities.top_preferences.length > 0 ? (
           trip.activities.top_preferences.map((day, index) => (
             <React.Fragment key={index}>
-              <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>Day {index+1}</h3>
-              <Button variant="contained" onClick={() => navigateToRouteDetails(index)}
-                sx={{ textTransform: "none", backgroundColor: theme.palette.purple.main, color: "white",
-                "&:hover": { backgroundColor: theme.palette.apple.main}, fontSize: "1rem",
-                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"}}>
+              <h3
+                style={{
+                  color: "#333",
+                  fontSize: "22px",
+                  marginBottom: "10px",
+                }}
+              >
+                Day {index + 1}
+              </h3>
+              <Button
+                variant="contained"
+                onClick={() => navigateToRouteDetails(index)}
+                sx={{
+                  textTransform: "none",
+                  backgroundColor: theme.palette.purple.main,
+                  color: "white",
+                  "&:hover": { backgroundColor: theme.palette.apple.main },
+                  fontSize: "1rem",
+                  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                }}
+              >
                 View Route
               </Button>
               <SortableList
@@ -1144,7 +1256,7 @@ const ItineraryDetails = () => {
                       ),
                     },
                   }));
-                  saveActivityOrder(trip._id, newOrder, index);
+                  saveActivityOrder(tripDetails._id, newOrder, index);
                 }}
                 distance={10}
               />
@@ -1411,7 +1523,6 @@ const ItineraryDetails = () => {
           </Snackbar>
         </Dialog>
 
-
         {/* The Add Activity Popup */}
 
         <Dialog
@@ -1432,7 +1543,13 @@ const ItineraryDetails = () => {
               })`}
               type="number"
               value={selectedDayForAdd}
-              onChange={(e) => setSelectedDayForAdd(Number(e.target.value))}
+              onChange={(e) => {
+                const value = e.target.value;
+                // allow empty string, but block anything that isn't a number or empty string
+                if (value === "" || /^[0-9\b]+$/.test(value)) {
+                  setSelectedDayForAdd(value);
+                }
+              }}
               inputProps={{
                 min: 1,
                 max: trip?.activities?.top_preferences?.length || 1,
@@ -1447,22 +1564,27 @@ const ItineraryDetails = () => {
             </Button>
             <Button
               onClick={async () => {
+                const numericDay = Number(selectedDayForAdd);
+                const maxDay = trip?.activities?.top_preferences?.length || 1;
+
                 if (
-                  selectedDayForAdd < 1 ||
-                  selectedDayForAdd >
-                    (trip?.activities?.top_preferences?.length || 1)
+                  !selectedDayForAdd ||
+                  isNaN(numericDay) ||
+                  numericDay < 1 ||
+                  numericDay > maxDay
                 ) {
                   alert(
-                    `Please enter a valid day number between 1 and ${trip?.activities?.top_preferences?.length}`
+                    `Please enter a valid day number between 1 and ${maxDay}`
                   );
                   return;
                 }
 
                 const matchedActivity = chatbotActivities.find((act) => {
                   const cleanActTitle = act.title.trim().toLowerCase();
-                  return cleanActTitle === selectedActivityTitle.trim().toLowerCase();
+                  return (
+                    cleanActTitle === selectedActivityTitle.trim().toLowerCase()
+                  );
                 });
-                
 
                 if (!matchedActivity) {
                   alert("Could not find the activity to add.");
@@ -1470,12 +1592,12 @@ const ItineraryDetails = () => {
                 }
 
                 await addActivityToItinerary(
-                  tripId,
-                  selectedDayForAdd - 1,
+                  tripDetails._id,
+                  numericDay - 1,
                   matchedActivity
                 );
 
-                // Reset everything
+                // Reset state
                 setOpenAddActivityDialog(false);
                 setSelectedActivityTitle(null);
                 setSelectedDayForAdd("");
@@ -1489,39 +1611,52 @@ const ItineraryDetails = () => {
         </Dialog>
 
         <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "flex-start",
+            gap: "100px",
+            marginTop: "20px",
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            onClick={() => navigate("/")}
+            style={{
+              marginTop: "20px",
+              padding: "10px 20px",
+              fontSize: "18px",
+              backgroundColor: theme.palette.purple.main,
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              transition: "0.3s",
+              boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+              position: "relative",
+              top: "-10px",
+            }}
+            onMouseEnter={(e) =>
+              (e.target.style.backgroundColor = theme.palette.apple.main)
+            }
+            onMouseLeave={(e) =>
+              (e.target.style.backgroundColor = theme.palette.purple.main)
+            }
+          >
+            Back to Home
+          </button>
+          {signedIn && (
+            <>
+              <div
                 style={{
                   display: "flex",
-                  justifyContent: "center",
-                  alignItems: "flex-start",
-                  gap: "100px",
-                  marginTop: "20px",
-                  flexWrap: "wrap",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  flexDirection: "column",
+                  position: "relative",
                 }}
               >
-        <button
-          onClick={() => navigate("/")}
-          style={{
-            marginTop: "20px",
-            padding: "10px 20px",
-            fontSize: "18px",
-            backgroundColor: theme.palette.purple.main,
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            transition: "0.3s",
-            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-            position: "relative",
-            top:"-10px"
-          }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = theme.palette.apple.main)}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = theme.palette.purple.main)}
-        >
-          Back to Home
-        </button>
-        {signedIn && (
-        <><div style={{ display: "flex", alignItems: "center", cursor: "pointer", flexDirection: "column", position: "relative" }}>
-              {/* {showSearch && (
+                {/* {showSearch && (
                 <div //ref={dropdownRef} 
                   style={{
                     position: "absolute",
@@ -1555,59 +1690,124 @@ const ItineraryDetails = () => {
                   </ul>
                 </div>
               )} */}
-              <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
-              <AddCircleIcon
-                style={{ fontSize: "50px", color: "#32CD32", cursor: "pointer" }}
-                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`, {
-                  state: { tripId, numDays: trip.activities.top_preferences.length }
-                })}
-                //onClick={addSearch} 
-                />
-              <span
-                //onClick={addSearch}
-                onClick={() => navigate(`/restaurants/${encodeURIComponent(tripDetails.location)}`, {
-                  state: { tripId, numDays: trip.activities.top_preferences.length }
-                })}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexDirection: "column",
+                    cursor: "pointer",
+                  }}
+                >
+                  <AddCircleIcon
+                    style={{
+                      fontSize: "50px",
+                      color: "#32CD32",
+                      cursor: "pointer",
+                    }}
+                    onClick={() =>
+                      navigate(
+                        `/restaurants/${encodeURIComponent(
+                          tripDetails.location
+                        )}`,
+                        {
+                          state: {
+                            tripId: tripDetails._id,
+                            numDays: trip.activities.top_preferences.length,
+                          },
+                        }
+                      )
+                    }
+                    //onClick={addSearch}
+                  />
+                  <span
+                    //onClick={addSearch}
+                    onClick={() =>
+                      navigate(
+                        `/restaurants/${encodeURIComponent(
+                          tripDetails.location
+                        )}`,
+                        {
+                          state: {
+                            tripId: tripDetails._id,
+                            numDays: trip.activities.top_preferences.length,
+                          },
+                        }
+                      )
+                    }
+                    style={{
+                      fontSize: "18px",
+                      marginLeft: "2px",
+                      color: "#32CD32",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {/* {showSearch ? "Close Search" : "Add Restaurant"} */}
+                    Add Restaurant
+                  </span>
+                </div>
+              </div>
+              <div
                 style={{
-                  fontSize: "18px",
-                  marginLeft: "2px",
-                  color: "#32CD32",
-                  fontWeight: "bold",
+                  display: "flex",
+                  alignItems: "center",
+                  flexDirection: "column",
                   cursor: "pointer",
                 }}
               >
-                {/* {showSearch ? "Close Search" : "Add Restaurant"} */}
-                Add Restaurant
-              </span>
+                <AddCircleIcon
+                  style={{
+                    fontSize: "50px",
+                    color: "#32CD32",
+                    cursor: "pointer",
+                  }}
+                  onClick={() =>
+                    navigate(
+                      `/activities/${encodeURIComponent(tripDetails.location)}`,
+                      {
+                        state: {
+                          tripId: tripDetails._id,
+                          numDays: trip.activities.top_preferences.length,
+                        },
+                      }
+                    )
+                  }
+                />
+                <span
+                  onClick={() =>
+                    navigate(
+                      `/activities/${encodeURIComponent(tripDetails.location)}`,
+                      {
+                        state: {
+                          tripId: tripDetails._id,
+                          numDays: trip.activities.top_preferences.length,
+                        },
+                      }
+                    )
+                  }
+                  style={{
+                    fontSize: "18px",
+                    marginLeft: "2px",
+                    color: "#32CD32",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                  }}
+                >
+                  Add Any Activity
+                </span>
               </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
-            <AddCircleIcon
-              style={{ fontSize: "50px", color: "#32CD32", cursor: "pointer" }}
-              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`, {
-                state: { tripId, numDays: trip.activities.top_preferences.length },
-
-              })}
-            />
-            <span
-              onClick={() => navigate(`/activities/${encodeURIComponent(tripDetails.location)}`, {
-                state: { tripId, numDays: trip.activities.top_preferences.length },
-              })}
-              style={{
-                fontSize: "18px",
-                marginLeft: "2px",
-                color: "#32CD32",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Add Any Activity
-            </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", flexDirection: "column", cursor: "pointer" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flexDirection: "column",
+                  cursor: "pointer",
+                }}
+              >
                 <AddCircleIcon
                   style={{ fontSize: "50px", color: "#32CD32" }}
-                  onClick={handleAddClick} />
+                  onClick={handleAddClick}
+                />
                 <span
                   onClick={handleAddClick}
                   style={{
