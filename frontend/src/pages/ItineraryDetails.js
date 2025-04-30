@@ -110,6 +110,7 @@ const ItineraryDetails = () => {
   const [selectedDayForAdd, setSelectedDayForAdd] = useState("");
   const [chatbotActivities, setChatbotActivities] = useState([]);
   const [addActivitySuccessOpen, setAddActivitySuccessOpen] = useState(false);
+  const [isFlying, setIsFlying] = useState(false);
 
   const navigate = useNavigate();
 
@@ -1045,6 +1046,14 @@ const ItineraryDetails = () => {
     return <p>Loading itinerary details...</p>;
   }
 
+
+  const handleSendClick = () => {
+    handleSendMessage();         // existing message logic
+    setIsFlying(true);           // trigger animation
+    setTimeout(() => setIsFlying(false), 600); // reset after animation
+  };
+
+
   return (
     <>
       <style>
@@ -1091,6 +1100,22 @@ const ItineraryDetails = () => {
 
         .send-button:hover .plane-icon {
           transform: translateX(4px) translateY(-2px) rotate(20deg);
+        }
+
+        @keyframes flyAway {
+          0% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(80px, -60px) rotate(45deg);
+            opacity: 0;
+          }
+        }
+
+        .plane-fly {
+          display: inline-block;
+          animation: flyAway 1.2s ease-out forwards;
         }
 
       `}
@@ -1289,7 +1314,7 @@ const ItineraryDetails = () => {
               placeholder="Type a message..."
             />
             <button
-              onClick={handleSendMessage}
+              onClick={handleSendClick}
               className="send-button"
               style={{
                 marginLeft: "10px",
@@ -1301,7 +1326,10 @@ const ItineraryDetails = () => {
                 cursor: "pointer",
               }}
             >
-              Send    <span className="plane-icon"><FaPaperPlane /></span>
+              Send{" "}
+              <span className={isFlying ? "plane-fly" : "plane-icon"}>
+                <FaPaperPlane />
+              </span>
             </button>
           </div>
         </div>

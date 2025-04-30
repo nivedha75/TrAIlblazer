@@ -818,7 +818,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
     )
     # print(preferences_str_format)
     # url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
 
     headers = {"Content-Type": "application/json"}
     #             \"time_frame\": ...the time the user will start the activity and the time they will end it. example format: {\"start\":\"9:00 AM\",\"end\":\"1:00 PM\"}...,
@@ -965,8 +965,8 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
             preferences, indent=4, sort_keys=True, default=str
         )
 
-        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
-
+        # url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
         headers = {"Content-Type": "application/json"}
 
         prompt = (
@@ -1101,7 +1101,8 @@ def generate_suggestions():
             }}
             """
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+        # url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
         headers = {"Content-Type": "application/json"}
         data = {"contents": [{"parts": [{"text": prompt}]}]}
         response = requests.post(url, headers=headers, json=data)
@@ -1163,7 +1164,8 @@ def send_to_gemini(user_id, username, user_message, city_data):
         preferences, indent=4, sort_keys=True, default=str
     )
     print("Inside send_to_gemini function")
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+    # url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
     prompt = f"""
     You are a helpful AI chatbot assisting users in a chat interface. Respond to the following user message from the user {username} in a friendly and informative manner.
     Also use their preferences to come up with an answer. Here are the user's preferences: {preferences_str_format}
@@ -1253,12 +1255,15 @@ def send_to_gemini(user_id, username, user_message, city_data):
 
     headers = {"Content-Type": "application/json"}
 
-    response = requests.post(url, headers=headers, json=data)
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        print(f"Gemini chatbot response: {response.json()}\n\n")
 
-    print(f"Gemini chatbot response: {response.json()}\n\n")
-
-    # Extract raw response text
-    raw_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+        # Extract raw response text
+        raw_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        print("Gemini is unavailable right now. Please try again later.")
+        return "Gemini is unavailable right now. Please try again later."
 
     # print(f"Gemini chatbot response: {chatbot_response}\n\n")
     print(f"Gemini chatbot response before cleaning: {raw_text}\n\n")
@@ -1450,12 +1455,9 @@ def send_message():
         city_data = "Error: Too much input data or agent failed."
 
     print("\n\nCity data for chatbot:", city_data)
-    print("\n\nuser_message:", user_message)
-    print("\n\nuser_id:", user_id)
-    print("\n\nusername:", username)
 
     chatbot_response = send_to_gemini(user_id, username, user_message, city_data)
-    # print(f"Gemini chatbot response: {chatbot_response}\n\n")
+    print(f"Gemini chatbot response in send_message: {chatbot_response}\n\n")
 
     # Save chatbot response
     chatbot_msg_entry = {
@@ -1467,6 +1469,7 @@ def send_message():
         "timestamp": datetime.now(),
         "is_about_activities": is_about_activities,  # new field
     }
+
     messages_collection.insert_one(chatbot_msg_entry)
     # Previous code:
     # response = jsonify(
@@ -1481,20 +1484,20 @@ def send_message():
     if isinstance(city_data, str):
         try:
             city_data = json.loads(city_data)
-            print("Parsed city_data as dict")
+            # print("Parsed city_data as dict")
         except json.JSONDecodeError:
             print("Failed to parse city_data as JSON")
             city_data = {}
 
     # If city_data contains activities, include them
-    print(f"City data: {city_data}")
-    print(f"Type of city_data: {type(city_data)}")
-    print(f"City data is dict: {isinstance(city_data, dict)}")
-    print(f"City data has activities: {'activities' in city_data}")
+    # print(f"City data: {city_data}")
+    # print(f"Type of city_data: {type(city_data)}")
+    # print(f"City data is dict: {isinstance(city_data, dict)}")
+    # print(f"City data has activities: {'activities' in city_data}")
     if city_data and "activities" in city_data:
         response_payload["activities"] = city_data["activities"]
 
-    print(f"Response payload: {response_payload}")
+    # print(f"Response payload: {response_payload}")
     response = jsonify(response_payload)
 
     response.headers.add("Access-Control-Allow-Origin", "*")
