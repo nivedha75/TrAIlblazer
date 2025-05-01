@@ -1816,6 +1816,16 @@ def move_restaurant_activity(trip_id, activityID, day):
         return jsonify({"error": "Restaurant not found"}), 404
 
     activity["day"] = day
+    activity["activityNumber"] = generate_activity_number()
+    activity["likes"] = 0
+    activity["likedBy"] = []
+    activity["dislikes"] = 0
+    activity["dislikedBy"] = []
+    # activity["details"]["images"] = get_image(activity["title"])
+    # activity["details"]["tripId"] = trip_id
+    activity["activityID"] = activity_collection.insert_one(
+        activity["details"]
+    ).inserted_id
 
     while len(itinerary["activities"]["top_preferences"]) <= day:
         itinerary["activities"]["top_preferences"].append([])
@@ -2401,6 +2411,16 @@ def add_activity_to_itinerary(trip_id, day):
         return jsonify({"error": "No activity provided"}), 400
 
     activity["day"] = day
+    activity["activityNumber"] = generate_activity_number()
+    activity["likes"] = 0
+    activity["likedBy"] = []
+    activity["dislikes"] = 0
+    activity["dislikedBy"] = []
+    # activity["details"]["images"] = get_image(activity["title"])
+    # activity["details"]["tripId"] = trip_id
+    activity["activityID"] = activity_collection.insert_one(
+        activity["details"]
+    ).inserted_id
 
     if "details" in activity:
         activity["details"]["tripId"] = ObjectId(trip_id)
@@ -2465,6 +2485,16 @@ def add_restaurant_to_itinerary(trip_id, day):
         return jsonify({"error": "No activity provided"}), 400
 
     activity["day"] = day
+    activity["activityNumber"] = generate_activity_number()
+    activity["likes"] = 0
+    activity["likedBy"] = []
+    activity["dislikes"] = 0
+    activity["dislikedBy"] = []
+    # activity["details"]["images"] = get_image(activity["title"])
+    # activity["details"]["tripId"] = trip_id
+    activity["activityID"] = activity_collection.insert_one(
+        activity["details"]
+    ).inserted_id
 
     if "details" in activity:
         activity["details"]["tripId"] = ObjectId(trip_id)
@@ -2476,6 +2506,16 @@ def add_restaurant_to_itinerary(trip_id, day):
 
     while len(itinerary["activities"]["top_preferences"]) <= day:
         itinerary["activities"]["top_preferences"].append([])
+
+    # Add times
+    last_act = itinerary["activities"]["top_preferences"][day]
+    start = parse_time(last_act[len(last_act) - 1]["range"]["end"]) + timedelta(minutes=30)
+    duration_minutes = activity["length"] * 30
+    end = start + timedelta(minutes=duration_minutes)
+    activity["range"] = {
+        "start": format_time(start),
+        "end": format_time(end)
+    }
 
     itinerary["activities"]["top_preferences"][day].append(activity)
 
