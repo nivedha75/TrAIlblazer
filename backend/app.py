@@ -1025,6 +1025,7 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
             {
                 \"title\": ...restaurant name...,
                 \"context\": ...Because you liked (and then list something specific in the preferences JSON and the weather that explains the choice)...,
+                \"length\": ...the number of half hours that this activity should take. (i.e. if an activity takes 1.5 hours, this value is 3)...,
                 \"weather\": ...weather conditions for every day on the trip...,
                 \"details\": {
                     \"name\": ...same as title...,
@@ -1689,6 +1690,16 @@ def move_itinerary_activity(trip_id, activityID):
     while len(top_preferences) <= day_index:
         top_preferences.append([])
 
+    # Add times
+    last_act = top_preferences[day_index]
+    start = parse_time(last_act[len(last_act) - 1]["range"]["end"]) + timedelta(minutes=30)
+    duration_minutes = found_activity["length"] * 30
+    end = start + timedelta(minutes=duration_minutes)
+    found_activity["range"] = {
+        "start": format_time(start),
+        "end": format_time(end)
+    }
+
     top_preferences[day_index].append(found_activity)
 
     itinerary_collection.update_one(
@@ -1884,7 +1895,6 @@ def update_activity_order(trip_id):
     if index >= len(top_preferences):
         return jsonify({"error": "Invalid day index"}), 400
     
-    # TODO: actually Load time_ranges from trip details
     trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
     if not trip:
         return jsonify({"error": "Trip not found"}), 404
@@ -1922,7 +1932,7 @@ def update_activity_order(trip_id):
         {"$set": {"activities.top_preferences": top_preferences}},
     )
 
-    response = jsonify({"message": "Activity order updated successfully"})
+    response = jsonify({"message": "Activity order updated successfully", "updatedOrder": updated_order})
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
@@ -1937,13 +1947,53 @@ def update_top_order(trip_id):
 
     if not isinstance(new_order, list):
         return jsonify({"error": "Invalid data format"}), 400
+    
+    itinerary = itinerary_collection.find_one({"_id": ObjectId(trip_id)})
+    if not itinerary:
+        return jsonify({"error": "Itinerary not found"}), 404
+    
+    top_preferences = itinerary.get("activities", {}).get("top_preferences", [])
+
+    trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
+    if not trip:
+        return jsonify({"error": "Trip not found"}), 404
+    time_ranges = trip.get("timeRanges", {})
+
+    # TODO: Going to trust the end time isn't exceeded too much
+    # day_end = parse_time(day_time_range["end"])
+    index = 0
+    for day in new_order:
+        day_key = f"Day {index + 1}"
+        day_time_range = time_ranges.get(day_key)
+        day_curr = parse_time(day_time_range["start"])
+        updated_order = []
+        for activity in day:
+            duration_minutes = activity.get("length", 4) * 30
+            activity_end = day_curr + timedelta(minutes=duration_minutes)
+
+            # TODO: Going to trust the end time isn't exceeded too much
+            # if activity_end > day_end:
+                # print(f"Skipping activity '{activity.get('title')}' due to time overflow.")
+                # continue
+
+            # Update time range
+            activity["range"] = {
+                "start": format_time(day_curr),
+                "end": format_time(activity_end)
+            }
+
+            updated_order.append(activity)
+            day_curr = activity_end + timedelta(minutes=30)
+
+        top_preferences[index] = updated_order
+        index = index + 1
 
     itinerary_collection.update_one(
         {"_id": ObjectId(trip_id)},
-        {"$set": {"activities.top_preferences": new_order}},
+        {"$set": {"activities.top_preferences": top_preferences}},
     )
 
-    response = jsonify({"message": "Top preferences order updated successfully"})
+    response = jsonify({"message": "Top preferences order updated successfully", "new_top": top_preferences})
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
@@ -2172,6 +2222,7 @@ def fetch_activities(city):
             "wind_speed": "17.56 mph",
             "condition": "scattered clouds",
         }
+        time_length = 2
         hours_stub = {
             "sunday": {"open": "9:00 AM", "close": "11:00 PM"},
             "monday": {"open": "9:00 AM", "close": "11:00 PM"},
@@ -2251,6 +2302,7 @@ def fetch_activities(city):
             result = {
                 "title": title,
                 "context": f"This activity was manually added.",
+                "length": time_length,
                 # "weather": weather_stub,
                 "details": {**details, "_id": str(inserted_id)},
                 "activityID": str(inserted_id),
@@ -2286,6 +2338,7 @@ def fetch_restaurants(city):
 
     trip_id = request.args.get("tripId")
     try:
+        time_length = 2
         hours_stub = {
             "sunday": {"open": "9:00 AM", "close": "11:00 PM"},
             "monday": {"open": "9:00 AM", "close": "11:00 PM"},
@@ -2365,6 +2418,7 @@ def fetch_restaurants(city):
             result = {
                 "title": title,
                 "context": f"This restaurant was manually added.",
+                "length": time_length,
                 # "weather": weather_stub,
                 "details": {**details, "_id": str(inserted_id)},
                 "activityID": str(inserted_id),

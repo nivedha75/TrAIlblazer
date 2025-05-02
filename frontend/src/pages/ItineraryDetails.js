@@ -555,21 +555,8 @@ const ItineraryDetails = () => {
 
             return {
               ...prevTrip,
-              activities: {
-                ...prevTrip.activities,
-                next_best_preferences:
-                  prevTrip.activities.next_best_preferences.map((day, index) =>
-                    index === dayIndex
-                      ? day.filter(
-                          (a) => a.activityNumber !== activity.activityNumber
-                        )
-                      : day
-                  ),
-                top_preferences: prevTrip.activities.top_preferences.map(
-                  (day, index) =>
-                    index === dayIndex ? [...day, { ...activity }] : [...day]
-                ),
-              },
+              activities: 
+                data.updated_itinerary,
             };
           });
         }
@@ -675,7 +662,7 @@ const ItineraryDetails = () => {
             ...prevTrip,
             activities: {
               ...prevTrip.activities,
-              top_preferences: newTop,
+              top_preferences: data.new_top,
             },
           }));
         }
@@ -704,7 +691,7 @@ const ItineraryDetails = () => {
             activities: {
               ...prevTrip.activities,
               top_preferences: prevTrip.activities.top_preferences.map((d, i) =>
-                i === index ? newOrder : d
+                i === index ? data.updatedOrder : d
               ),
             },
           }));
