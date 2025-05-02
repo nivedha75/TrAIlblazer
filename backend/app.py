@@ -239,6 +239,27 @@ def submit_preferences():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+def build_city_itinerary(starting_city, starting_days, additional_destinations):
+    itinerary = []
+    day_counter = 1
+    itinerary.append({
+        "city": starting_city,
+        "startDay": day_counter,
+        "endDay": day_counter + starting_days - 1
+    })
+    day_counter += starting_days
+
+    for dest in additional_destinations:
+        city = dest.get("city")
+        days = dest.get("days")
+        if city and days:
+            itinerary.append({
+                "city": city,
+                "startDay": day_counter,
+                "endDay": day_counter + days - 1
+            })
+            day_counter += days
+    return itinerary
 
 @app.route("/trips", methods=["GET", "POST", "OPTIONS"])
 def trips():
@@ -258,14 +279,25 @@ def trips():
                 return jsonify({"error": "No data provided"}), 400
             print("Received timeRanges:", data.get("timeRanges"))
             print(data)
+            itinerary = build_city_itinerary(
+                data["startingCity"],
+                data["startingCityDays"],
+                data.get("additionalDestinations", [])
+            )
+
+            cities_string = "; ".join([
+                f"Day {entry['startDay']}–{entry['endDay']}: {entry['city']}"
+                for entry in itinerary
+            ])
+
             trip_result = trip_collection.insert_one(
                 {
                     "userId": data["userId"],
                     "collaborators": data["collaborators"],
                     "collaboratorsNames": data["collaboratorsNames"],
                     "name": data["name"],
-                    "location": data["location"],
-                    "secondaryLocation": data["secondaryLocation"],
+                    "location": data["startingCity"],
+                    "additionalDestinations": data["additionalDestinations"],
                     "transportation": data["transportation"],
                     "days": data["days"],
                     "startDate": data["startDate"],
@@ -273,8 +305,10 @@ def trips():
                     "timeRanges": data["timeRanges"],
                     "people": data["people"],
                     "images": data["images"],
+                    "itinerary": itinerary
                 }
             )
+            data["location"] = data["startingCity"]
             trip_id = trip_result.inserted_id
             # print('generating itinerary?')
             # print("Data received:", data)
@@ -316,15 +350,11 @@ def trips():
             try:
                 generate_itinerary(
                     data["userId"],
-                    data["location"]
-                    + (
-                        ", AND " + data["secondaryLocation"]
-                        if "secondaryLocation" in data
-                        else ""
-                    ),
+                    cities_string,
                     data["days"],
                     trip_id,
                     city_data,
+                    itinerary
                 )
             except Exception as e:
                 print(f"Error in generate_itinerary: {e}")
@@ -332,14 +362,10 @@ def trips():
             print("Calling generate_restaurant_recommendations...")  # Debugging
             generate_restaurant_recommendations(
                 data["userId"],
-                data["location"]
-                + (
-                    ", " + data["secondaryLocation"]
-                    if "secondaryLocation" in data
-                    else ""
-                ),
+                cities_string,
                 trip_id,
                 city_data,
+                itinerary
             )
             return jsonify({"message": "Trip data saved successfully"}), 201
 
@@ -803,10 +829,15 @@ activity_id_counter = count(1)
 def generate_activity_number():
     return next(activity_id_counter)
 
+def build_city_day_mapping(itinerary):
+    return "\n".join([
+        f"Day {entry['startDay']} to {entry['endDay']}: {entry['city']}"
+        for entry in itinerary
+    ])
 
 # @app.route("/generate_itinerary/<user_id>/<location>", methods=["GET"])
 # add this parameter later: city_data
-def generate_itinerary(user_id, location, days, trip_id, city_data):
+def generate_itinerary(user_id, location, days, trip_id, city_data, itinerary):
     print("generating itinerary")
     preferences = collection.find_one({"user_id": user_id}, {"_id": 0, "user_id": 0})
     preferences_str_format = json.dumps(
@@ -817,12 +848,16 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
         preferences, indent=4, sort_keys=True, default=str
     )
     # print(preferences_str_format)
+
     # url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
 
     headers = {"Content-Type": "application/json"}
     #             \"time_frame\": ...the time the user will start the activity and the time they will end it. example format: {\"start\":\"9:00 AM\",\"end\":\"1:00 PM\"}...,
     #     The time frames for the activities may not overlap, unless it is ONLY the next best preference overlapping with ONLY one top preference.
+    city_mapping_str = build_city_day_mapping(itinerary)
+    days = itinerary[-1]["endDay"]
+
     prompt = (
         """I am building a travel itinerary recommendation app.
     Here is the real-time city data for weather and hotels in that city: """
@@ -837,8 +872,15 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
     Given a user's travel preferences, destination, and the real-time city data provided, generate an itinerary with, for each day of the trip, 3 activities: 2 as top preferences and 1 as a next best preference.
     Activites must include meal recommendations. The itinerary should be personalized based on the user's interests and the best available options in the destination.
-    
+
     ** Important Note: Do not use the ISO format for the date in your response. Instead, use the format "Month Day, Year" (e.g., "April 2, 2025").
+
+    The itinerary spans multiple cities. Please refer to the following city-day mapping:
+    """
+        + city_mapping_str
+        + """
+
+    Distribute activities across the cities as shown above. Prefer not to split a single day across cities. If a city spans 3 days, all 3 days should ideally be in that city unless absolutely necessary.
 
     Format the itinerary as the following JSON STRICTLY, NO OTHER WORDS:
         \"top_preferences\": [
@@ -879,15 +921,13 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
             ],
         \"next_best_preferences\": exact same format as top_preferences\n
         
-        The location is: """
-        + location
-        + """. If there is more than one location, distribute activities across each one equally, trying to avoid splitting days. The trip is """
-        + str(days)
-        + """ days long. Here are the user preferences:"""
-        + preferences_str_format
+        The trip is """
+            + str(days)
+            + """ days long. Here are the user preferences:"""
+            + preferences_str_format
     )
 
-    # print(prompt)
+    print(prompt)
     # Here is the real-time data for weather, activities, and/or hotels in that city: {city_data}
 
     data = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -955,7 +995,7 @@ def generate_itinerary(user_id, location, days, trip_id, city_data):
 
 
 # WORKS: DO NOT MODIFY
-def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
+def generate_restaurant_recommendations(user_id, location, trip_id, city_data, itinerary):
     try:
         print("Generating restaurant recommendations")
         preferences = collection.find_one(
@@ -969,6 +1009,9 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
         url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
         headers = {"Content-Type": "application/json"}
 
+        city_mapping_str = build_city_day_mapping(itinerary)
+        days = itinerary[-1]["endDay"]
+
         prompt = (
             """I am building a travel itinerary recommendation app.
         Here is the real-time city data for weather and hotels in that city: """
@@ -981,6 +1024,12 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
 
         Given a user's travel preferences, destination, and the real-time city data provided, generate a list of 10 restaurant recommendations.
         The recommendations should be personalized based on the user's food preferences and the best available options in the destination.
+
+            The itinerary spans multiple cities. Please refer to the following city-day mapping:
+        """
+            + city_mapping_str
+            + """
+
         Format it as the following JSON STRICTLY, NO OTHER WORDS:
     
         \"restaurants\": [
@@ -1014,9 +1063,9 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
             ...
         ]
     
-        The location is: """
-            + location
-            + """. If there is more than one location, distribute activities across each one equally, trying to avoid splitting days. Here are the user preferences:"""
+        The trip is """
+            + str(days)
+            + """ days long. Here are the user preferences:"""
             + preferences_str_format
         )
 
@@ -1025,6 +1074,7 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data):
         data = {"contents": [{"parts": [{"text": prompt}]}]}
 
         response = requests.post(url, headers=headers, json=data)
+        print(response)
         response_json = response.json()
         # print("Raw AI response:", response_json)
         # print(response_json)
@@ -2413,6 +2463,39 @@ def add_restaurant_to_itinerary(trip_id, day):
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
+
+@app.route("/api/flights", methods=["GET"])
+def get_flights():
+    SERPAPI_KEY = "06dd461b05ebdf6841b9638375820275e29ea4e41c041b71a0939bfd7a00bc33"
+    from_code = request.args.get("from")
+    to_code = request.args.get("to")
+    date = request.args.get("date")
+
+    if not all([from_code, to_code, date]):
+        return jsonify({"error": "Missing required parameters"}), 400
+
+    try:
+        serpapi_url = "https://serpapi.com/search"
+        params = {
+            "engine": "google_flights",
+            "departure_id": from_code,
+            "arrival_id": to_code,
+            "outbound_date": date,
+            "currency": "USD",
+            "hl": "en",
+            "type": 2,
+            "api_key": SERPAPI_KEY
+        }
+
+        response = requests.get(serpapi_url, params=params)
+        print(response)
+        data = response.json()
+        data["booking_link"] = data.get("search_metadata", {}).get("google_flights_url", "")
+        print(data)
+        return jsonify(data)
+    except Exception as e:
+        print("Error fetching from SerpAPI:", e)
+        return jsonify({"error": "Failed to fetch flights."}), 500
 
 if __name__ == "__main__":
     app.run(port=PORT, debug=True)

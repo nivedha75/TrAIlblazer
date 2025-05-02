@@ -104,6 +104,7 @@ const ItineraryDetails = () => {
   const [username, setUsername] = useState("");
   const dropdownRef = useRef(null);
   const [selectedDay, setSelectedDay] = useState(null);
+  const [dayToCityMap, setDayToCityMap] = useState(null);
   //Hooks for adding activity
   const [openAddActivityDialog, setOpenAddActivityDialog] = useState(false);
   const [selectedActivityTitle, setSelectedActivityTitle] = useState(null);
@@ -131,6 +132,10 @@ const ItineraryDetails = () => {
   const mapDetails = (activityId) => {
     navigate(`/map-details/${encodeURIComponent(activityId)}`);
   };
+
+  const flightFinder = () => {
+    navigate(`/flight-finder/${tripId}`)
+  }
 
   // const navigateToMapDetails = () => {
   //   navigate(`/map-details/${tripId}`);
@@ -190,6 +195,22 @@ const ItineraryDetails = () => {
     fetchItinerary();
   }, [tripId]);
 
+  function expandDayToCityMap(itinerary) {
+    const map = {};
+    for (const entry of itinerary) {
+      const start = entry.startDay.$numberInt
+        ? parseInt(entry.startDay.$numberInt)
+        : entry.startDay;
+      const end = entry.endDay.$numberInt
+        ? parseInt(entry.endDay.$numberInt)
+        : entry.endDay;
+      for (let day = start; day <= end; day++) {
+        map[day] = entry.city;
+      }
+    }
+    return map;
+  }
+
   useEffect(() => {
     fetch(`http://localhost:55000/restaurants/${tripId}`, {
       headers: {
@@ -225,7 +246,10 @@ const ItineraryDetails = () => {
       },
     })
       .then((response) => response.json())
-      .then((data) => setTripDetails(data))
+      .then((data) => {
+        setTripDetails(data);
+        setDayToCityMap(expandDayToCityMap(data.itinerary));
+      })
       .catch((error) => console.error("Error fetching trip details:", error));
   }, [tripId]);
 
@@ -1333,16 +1357,37 @@ const ItineraryDetails = () => {
             </button>
           </div>
         </div>
-        <div
-          style={{
-            //   width: "70%",
-            width: "65%",
-            padding: "20px",
-            textAlign: "center",
-            backgroundColor: "#f9f9f9",
-            position: "relative",
-            left: "500px",
-          }}
+      </div>
+      <div
+        style={{
+          //   width: "70%",
+          width: "65%",
+          padding: "20px",
+          textAlign: "center",
+          backgroundColor: "#f9f9f9",
+          position: "relative",
+          left: "500px",
+        }}
+      >
+        {signedIn && (
+          <Button
+            variant="contained"
+            color="error"
+            style={{ position: "absolute", top: 10, right: 70 }}
+            onClick={() => setDeleteMode(!deleteMode)}
+          >
+            {deleteMode ? "Cancel Edit" : "Edit Activities"}
+          </Button>
+        )}
+        <Button
+          variant="contained"
+          style={{ position: "absolute", top: 50, right: 70 }}
+          onClick={() => flightFinder()}
+        >
+          Find Flights
+        </Button>
+        <h1
+          style={{ textAlign: "center", color: "#333", marginBottom: "10px" }}
         >
           {signedIn && (
             <Button
@@ -1405,7 +1450,7 @@ const ItineraryDetails = () => {
                     marginBottom: "10px",
                   }}
                 >
-                  Day {index + 1}
+                  Day {index + 1} -- {dayToCityMap[index + 1]}
                 </h3>
                 <Button
                   className="route-button"
