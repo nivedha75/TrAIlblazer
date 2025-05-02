@@ -647,7 +647,7 @@ const ItineraryDetails = () => {
             return {
               ...prevTrip,
               activities: 
-                data.updated_itinerary,
+                data.updated_top,
             };
           });
         }
@@ -1422,8 +1422,8 @@ const ItineraryDetails = () => {
             e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";
           }}>Check out the Map Details</button> */}
           <h3 style={{ color: "#333", fontSize: "22px", marginBottom: "10px" }}>
-            {trip.activities.top_preferences.length > 0 &&
-            trip.activities.top_preferences[0].length > 0
+            {trip.activities.top_preferences?.length > 0 &&
+            trip.activities.top_preferences[0]?.length > 0
               ? "Activities for the Trip"
               : "No Activities Found"}
           </h3>
