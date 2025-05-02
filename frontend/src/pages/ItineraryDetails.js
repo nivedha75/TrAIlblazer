@@ -1353,7 +1353,7 @@ const ItineraryDetails = () => {
           textAlign: "center",
           backgroundColor: "#f9f9f9",
           position: "relative",
-          left: "500px",
+          left: "548px",
         }}
       >
         {signedIn && (
