@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { TextField, Card, CardContent, CardMedia, Typography, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { TextField, Card, CardContent, CardMedia, Typography, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, CircularProgress } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import theme from "../theme";
 
@@ -14,11 +14,15 @@ const RestaurantsPage = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const itineraryId = locate.state?.tripId;
   const daysInTrip = locate.state?.numDays;
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     console.log("Id: ", itineraryId);
     console.log("Days: ", daysInTrip)
-    fetchRestaurants(location).then(data => {console.log("Data: ", data); setRestaurants(data)});
+    setLoading(true);
+    fetchRestaurants(location).then(data => {console.log("Data: ", data); setRestaurants(data)}).finally(() => {
+        setLoading(false);
+      });
   }, [location, itineraryId, daysInTrip]);
 
   const fetchRestaurants = async (loc) => {
@@ -102,6 +106,13 @@ const RestaurantsPage = () => {
 
   return (
     <div style={{ padding: '20px' }}>
+      <Dialog open={loading}>
+        <DialogContent style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '30px' }}>
+          <CircularProgress color="primary" />
+          <Typography variant="h6">Fetching restaurants...</Typography>
+        </DialogContent>
+      </Dialog>
+      {!loading && (
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -128,7 +139,7 @@ const RestaurantsPage = () => {
         </button>
   
         <TextField
-          label="Search Activities"
+          label="Search Restaurants"
           variant="outlined"
           fullWidth
           value={searchTerm}
@@ -154,7 +165,7 @@ const RestaurantsPage = () => {
           Back to Itinerary
         </button>
       </div>
-  
+      )}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
@@ -207,7 +218,7 @@ const RestaurantsPage = () => {
           </Card>
         ))}
       </div>
-  
+
       {/* Dialog for Day Selection */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Select Day</DialogTitle>

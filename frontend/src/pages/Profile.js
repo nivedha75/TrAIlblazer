@@ -150,13 +150,7 @@ const Profile = () => {
       return (
         <div style={styles.pageBackground}>
         <div style={styles.containerWrapper}>
-        <Button variant="contained" style={styles.backButton} onClick={() => navigate("/")} onMouseEnter={(e) => {
-          e.target.style.transform = "scale(1.01)";
-          e.target.style.boxShadow = "0px 6px 12px rgba(0, 0, 0, 0.4)";
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = "scale(1)";
-          e.target.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.3)";}}>
+        <Button variant="contained" style={styles.backButton} onClick={() => navigate("/")}>
           ← Back to Home
         </Button>
           <div style={styles.container}>
@@ -167,7 +161,7 @@ const Profile = () => {
             onClick={handleAvatarClick}
             src={profilePic || undefined}
             >
-            {!profilePic && (user.name?.charAt(0).toUpperCase() || "U")}
+            {!profilePic && (user.username?.charAt(0).toUpperCase() || "U")}
             </Avatar>
             <input
             type="file"

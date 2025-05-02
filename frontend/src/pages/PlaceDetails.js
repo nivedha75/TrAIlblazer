@@ -187,8 +187,23 @@ const PlaceDetails = () => {
           <div className="flex justify-center mt-6 mb-16">
           <button
             onClick={generateSuggestions}
-            className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800"
+            style={{backgroundColor: "#32CD32",
+            color: "#fff",
+            padding: "12px 24px",
+            fontSize: "18px",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            transition: "background-color 0.3s ease, transform 0.2s ease",}}
             disabled={loading}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = "#2eb82e";
+              e.currentTarget.style.transform = "translateY(-2px)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = "#32CD32";
+              e.currentTarget.style.transform = "translateY(0)";
+            }}
           >
             {loading ? "Generating..." : "Generate Activity Suggestions"}
           </button>

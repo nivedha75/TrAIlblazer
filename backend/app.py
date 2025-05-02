@@ -848,6 +848,8 @@ def generate_itinerary(user_id, location, days, trip_id, city_data, itinerary):
         preferences, indent=4, sort_keys=True, default=str
     )
     # print(preferences_str_format)
+
+    # url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
 
     headers = {"Content-Type": "application/json"}
@@ -1003,8 +1005,8 @@ def generate_restaurant_recommendations(user_id, location, trip_id, city_data, i
             preferences, indent=4, sort_keys=True, default=str
         )
 
+        # url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
         url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
-
         headers = {"Content-Type": "application/json"}
 
         city_mapping_str = build_city_day_mapping(itinerary)
@@ -1149,7 +1151,8 @@ def generate_suggestions():
             }}
             """
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+        # url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
         headers = {"Content-Type": "application/json"}
         data = {"contents": [{"parts": [{"text": prompt}]}]}
         response = requests.post(url, headers=headers, json=data)
@@ -1210,7 +1213,9 @@ def send_to_gemini(user_id, username, user_message, city_data):
     preferences_str_format = json.dumps(
         preferences, indent=4, sort_keys=True, default=str
     )
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+    print("Inside send_to_gemini function")
+    # url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=AIzaSyAwoY2T2mB3Q7hEay8j_SwEaZktjxQOT7w"
     prompt = f"""
     You are a helpful AI chatbot assisting users in a chat interface. Respond to the following user message from the user {username} in a friendly and informative manner.
     Also use their preferences to come up with an answer. Here are the user's preferences: {preferences_str_format}
@@ -1260,6 +1265,17 @@ def send_to_gemini(user_id, username, user_message, city_data):
     * **The Museum Of Flight:** [Description here]
 
     Important Note: List all activities/attractions in the city_data in the response (even if they are not related to the user preferences).
+    
+    Also, for each activity/attraction, do NOT make the key for each bullet point based on day number, since the user will chose the day they do each activity later.
+    That's why the default day field is "day 0" in the city_data.
+    Instead, make the key value based on the activity/attraction name.
+    Important: If the user is asking about activities/attractions, do NOT mention words day 0, day 1, day 2, etc. in the entire chatbot response.
+    Also, do NOT include any weather information for each activity/attraction in the response if the user is asking about activities/attractions.
+
+    Important: Use the exact title field given in city_data for each activity/attraction's bullet point.
+    Ie. if the title field in city_data is "Visit the Space Needle", use that exact title in the bullet point.
+    (Example: Visit the Space Needle: An observation tower in Seattle, Washington, a landmark of the Pacific Northwest, and an icon of Seattle. Guests can enjoy 360-degree views of the city, mountains, and waters from the observation deck...)
+    Do NOT paraphrase to ie. "Space Needle: ..." or "The Space Needle: ..." or "The Seattle Space Needle: ...".
 
     Example — Weather Format:
 
@@ -1294,10 +1310,15 @@ def send_to_gemini(user_id, username, user_message, city_data):
 
     headers = {"Content-Type": "application/json"}
 
-    response = requests.post(url, headers=headers, json=data)
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        print(f"Gemini chatbot response: {response.json()}\n\n")
 
-    # Extract raw response text
-    raw_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+        # Extract raw response text
+        raw_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        print("Gemini is unavailable right now. Please try again later.")
+        return "Gemini is unavailable right now. Please try again later."
 
     # print(f"Gemini chatbot response: {chatbot_response}\n\n")
     print(f"Gemini chatbot response before cleaning: {raw_text}\n\n")
@@ -1389,7 +1410,7 @@ def send_message():
     
     If the user wants attractions and/or activities to do in a city,
     your response must ONLY return a JSON object (nothing else, no explanations, NO EXTRA TEXT).
-    Recommend 7 attractions or activities to do in the city, personalized for the user based on the following preferences: {data.get("preferences")}
+    Recommend 3 attractions or activities to do in the city, personalized for the user based on the following preferences: {data.get("preferences")}
     """
         + """
     The JSON object should have the following structure:
@@ -1398,7 +1419,7 @@ def send_message():
         {
             "title": "...title of the activity...",
             "context": "...explanation linking user preference + weather condition...",
-            "day": "...the day number in the itinerary, starting at 0...",
+            "day": 0 (should be 0 for all activities since users will decide which day to do them later),
             "weather": "...weather forecast for that day...",
             "details": {
                 "name": "...same as title...",
@@ -1421,7 +1442,7 @@ def send_message():
                 "website": "...link to the official website..."
             }
         },
-        ... for each other activity (6 more activities) ...
+        ... for each other activity (2 more activities) ...
     ]
 
     Here is an example of the JSON object you should return:
@@ -1430,7 +1451,7 @@ def send_message():
         {
             "title": "Shinjuku Gyoen National Garden Visit",
             "context": "Because you enjoy nature photography and outdoor activities, this outdoor activity is perfect.",
-            "day": 1,
+            "day": 0,
             "weather": "Clear skies, 22°C, light breeze.",
             "details": {
                 "name": "Shinjuku Gyoen National Garden",
@@ -1454,14 +1475,17 @@ def send_message():
             }
         },
         ...
-        same format other activities (6 more activities)
+        same format other activities (2 more activities)
         ...
     ]
 
     Remember: If the user wants activities/attractions, output ONLY the JSON object exactly as shown. No extra text.
+    Also remember: The day field should be 0 for all activities since users will decide which day to do each activity later.
 
     However, if the user instead asks for hotels, weather, or any other information other than activities/attractions, use following tools below to answer the question as needed
     Provide a standard text response (not a JSON object).
+
+    Important: do NOT include weather data in the context field of the JSON.
 
     - Use the fetch_weather_for_trip_tool if they ask about weather forecasts for every day on that trip.
       Specifically, describe the temperature, feels like temperature, humidity, wind speed, and any other important weather conditions for every day from the start date till the end date.
@@ -1488,7 +1512,7 @@ def send_message():
     print("\n\nCity data for chatbot:", city_data)
 
     chatbot_response = send_to_gemini(user_id, username, user_message, city_data)
-    # print(f"Gemini chatbot response: {chatbot_response}\n\n")
+    print(f"Gemini chatbot response in send_message: {chatbot_response}\n\n")
 
     # Save chatbot response
     chatbot_msg_entry = {
@@ -1500,10 +1524,36 @@ def send_message():
         "timestamp": datetime.now(),
         "is_about_activities": is_about_activities,  # new field
     }
+
     messages_collection.insert_one(chatbot_msg_entry)
-    response = jsonify(
-        {"response": chatbot_response, "is_about_activities": is_about_activities}
-    )
+    # Previous code:
+    # response = jsonify(
+    #     {"response": chatbot_response, "is_about_activities": is_about_activities}
+    # )
+    response_payload = {
+        "response": chatbot_response,
+        "is_about_activities": is_about_activities,
+    }
+
+    # Before using city_data, parse it if needed
+    if isinstance(city_data, str):
+        try:
+            city_data = json.loads(city_data)
+            # print("Parsed city_data as dict")
+        except json.JSONDecodeError:
+            print("Failed to parse city_data as JSON")
+            city_data = {}
+
+    # If city_data contains activities, include them
+    # print(f"City data: {city_data}")
+    # print(f"Type of city_data: {type(city_data)}")
+    # print(f"City data is dict: {isinstance(city_data, dict)}")
+    # print(f"City data has activities: {'activities' in city_data}")
+    if city_data and "activities" in city_data:
+        response_payload["activities"] = city_data["activities"]
+
+    # print(f"Response payload: {response_payload}")
+    response = jsonify(response_payload)
 
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response, 200
@@ -2312,6 +2362,7 @@ def fetch_restaurants(city):
     methods=["POST", "OPTIONS"],
 )
 def add_activity_to_itinerary(trip_id, day):
+    print("itinerary_id in database: " + trip_id + "\n")
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight passed"}), 200
 
@@ -2353,8 +2404,10 @@ def add_activity_to_itinerary(trip_id, day):
         {
             "message": "Activity added to itinerary successfully",
             "updated_itinerary": convert_objectid(itinerary),
+            "added_activity": convert_objectid(activity),
         }
     )
+
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 

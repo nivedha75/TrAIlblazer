@@ -24,6 +24,8 @@ import AddIcon from "@mui/icons-material/Add";
 import Bot from "../assets/Bot.avif";
 import Seattle from "../assets/Seattle.jpeg";
 import DeleteIcon from "@mui/icons-material/Delete";
+import theme from "../theme";
+import {Avatar} from "@mui/material";
 
 const NextArrow = ({ onClick }) => (
   <IconButton
@@ -515,9 +517,11 @@ const HomePage = () => {
           noValidate
           autoComplete="off"
         >
-          <DialogTitle>Add Trip Collaborators</DialogTitle>
+          <DialogTitle sx={{ color: "#800080" }}>Add Trip Collaborators</DialogTitle>
           <DialogContent>
+          <div style={{ color: "#800080", marginBottom: "8px" }}>
             Enter the Name and Email of the user you would like to share your trip with:
+          </div>
             <TextField
               margin="dense"
               label="Name"
@@ -537,7 +541,7 @@ const HomePage = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setCollab(false)} color="error">Close</Button>
-            <Button type="submit" color="primary">Add Collaborator</Button>
+            <Button type="submit" color="secondary">Add Collaborator</Button>
           </DialogActions>
         </form>
         {/* For collaboration confirmation message */}
@@ -576,8 +580,12 @@ const HomePage = () => {
       <Dialog open={shr} onClose={() => setShare(false)}  BackdropProps={{
     style: { backgroundColor: "rgba(0, 0, 0, 0.5)" }
   }}>
-        <DialogTitle>Share Trip</DialogTitle>
-        <DialogContent>Would you like to copy a link to the Trip Details or Itinerary Details page?</DialogContent>
+        <DialogTitle sx={{color: "#800080"}}>Share Trip</DialogTitle>
+        <DialogContent>
+          <div style={{color: "#800080", marginBottom: "8px"}}>
+          Would you like to copy a link to the Trip Details or Itinerary Details page?
+          </div>
+          </DialogContent>
         <DialogActions>
           <Button onClick={() => setShare(false)} color="error">Cancel</Button>
           <Tooltip title={tooltipText_T} arrow>
@@ -649,7 +657,7 @@ const HomePage = () => {
             style={{
               padding: "10px 15px",
               border: "none",
-              backgroundColor: "#228B22",
+              backgroundColor: "#240E8B",
               color: "white",
               borderRadius: "5px",
               cursor: "pointer",
@@ -783,13 +791,17 @@ const HomePage = () => {
               onClick={toggleDropdown}
             />
           ) : (
-            <PersonIcon
-              style={{
-                fontSize: "50px",
-                cursor: "pointer"
-              }}
-              onClick={toggleDropdown}
-            />
+            <Avatar
+            style={{width: 50,
+              height: 50,fontSize: 30,
+              background: "linear-gradient(to right, #7f53ac, #647dee)",
+              cursor: "pointer",
+              transition: "none"}}
+            onClick={toggleDropdown}
+            src={profilePic || undefined}
+            >
+            {(Cookies.get("username")?.charAt(0).toUpperCase() || "U")}
+            </Avatar>
           )}
             <p>{Cookies.get("username")}</p>
             {isOpen && (
