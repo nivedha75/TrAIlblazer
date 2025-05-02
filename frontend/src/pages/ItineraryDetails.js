@@ -1368,7 +1368,7 @@ const ItineraryDetails = () => {
         )}
         <Button
           variant="contained"
-          style={{ position: "absolute", top: 50, right: 70 }}
+          style={{ position: "absolute", top: 50, right: 70, backgroundColor: theme.palette.purple.main }}
           onClick={() => flightFinder()}
         >
           Find Flights
