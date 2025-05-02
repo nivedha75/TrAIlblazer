@@ -641,15 +641,14 @@ const ItineraryDetails = () => {
       .then((response) => response.json())
       .then((data) => {
         if (data.message === "Activity moved successfully") {
-          setTrip((prevTrip) => {
-            const dayIndex = activity.day;
-
-            return {
-              ...prevTrip,
-              activities: 
-                data.updated_top,
-            };
-          });
+          setTrip((prevTrip) => ({
+            ...prevTrip,
+            activities: {
+              ...prevTrip.activities,
+              top_preferences: data.updated_top,
+              next_best_preferences: data.updated_next
+            },
+          }));
         }
       })
       .catch((error) => console.error("Error:", error));
@@ -1428,7 +1427,7 @@ const ItineraryDetails = () => {
               : "No Activities Found"}
           </h3>
           {/* make length work */}
-          {trip.activities.top_preferences.length > 0 ? (
+          {trip.activities.top_preferences?.length > 0 ? (
             trip.activities.top_preferences.map((day, index) => (
               <React.Fragment key={index}>
                 <h3

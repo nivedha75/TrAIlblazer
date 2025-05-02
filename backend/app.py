@@ -1766,11 +1766,11 @@ def move_itinerary_activity(trip_id, activityID):
             }
         },
     )
-
     response = jsonify(
         {
             "message": "Activity moved successfully",
-            "updated_top": top_preferences,
+            "updated_top": convert_objectid(top_preferences),
+            "updated_next": convert_objectid(updated_next_best)
         }
     )
     response.headers.add("Access-Control-Allow-Origin", "*")
