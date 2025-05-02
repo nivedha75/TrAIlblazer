@@ -240,7 +240,7 @@ const ActivityDetails = () => {
                   </Typography>
                   {Object.entries(activity.hours).map(([day, times]) => (
                     <Typography key={day} variant="body2">
-                      <strong>{day.charAt(0).toUpperCase() + day.slice(1)}:</strong> {times.open} - {times.close}
+                      <strong>{day.charAt(0).toUpperCase() + day.slice(1)}:</strong> {times?.open} - {times?.close}
                     </Typography>
                   ))}
                 </CardContent>

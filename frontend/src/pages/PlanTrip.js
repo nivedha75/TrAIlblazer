@@ -16,7 +16,11 @@ const timeLabels = [
 
 const PlanTrip = () => {
   const location = useLocation();
-  const days = location.state?.days || 1;
+  // const days = location.state?.days || 1;
+  const startingCityDays = location.state?.startingCityDays || 1;
+  const additionalDestinations = location.state?.additionalDestinations || [];
+  const days = startingCityDays + additionalDestinations.reduce((sum, dest) => sum + dest.days, 0);
+  
   const [startDate, setStartDate] = useState(null);
   const [people, setPeople] = useState("");
 
@@ -52,21 +56,23 @@ const PlanTrip = () => {
       alert("Please select a valid start date and valid number of friends.");
       return;
     }
+
     const tripData = {
       userId: Cookies.get("user_id"),
-      collaborators: [],
-      collaboratorsNames: [],
+      collaborators: location.state?.collaborators || [],
+      collaboratorsNames: location.state?.collaboratorsNames || [],
       name: Cookies.get("username"),
-      location: location.state?.locate || "Unknown Destination",
-      secondaryLocation: location.state?.secondaryLocate || "",
+      startingCity: location.state?.startingCity || "Unknown Destination",
+      startingCityDays: startingCityDays,
+      additionalDestinations: additionalDestinations,
       transportation: location.state?.transportation || "driving",
-      days,
+      days: days,
       startDate: startDate.toISOString().split("T")[0],
       endDate: getEndDate(),
       timeRanges: formatTimeRanges(timeRanges),
       people: parseInt(people, 10),
-      images: location.state?.image || "" 
-    };
+      images: location.state?.image || ""
+    };    
 
     fetch("http://localhost:55000/trips", {
     method: "POST",
@@ -90,9 +96,8 @@ const PlanTrip = () => {
     });
   };
   
-  const [timeRanges, setTimeRanges] = useState(
-    Array.from({ length: days }, () => [9, 17])
-  );
+  const [timeRanges, setTimeRanges] = useState(Array.from({ length: days }, () => [9, 17]));
+
 
   const getEndDate = () => {
     if (!startDate) return null;
@@ -203,6 +208,15 @@ const PlanTrip = () => {
             boxShadow: "inset 0 0 5px rgba(0, 0, 0, 0.1)"
           }}
         />
+      </div>
+      <div>
+        <h2 style={{ color: "#32CD32" }}>Trip Itinerary:</h2>
+        <p style={{ color: "#800080" }}>
+          {location.state?.startingCity} ({startingCityDays} days)
+          {additionalDestinations.map((dest, idx) => (
+            <span key={idx}> ➡️ {dest.city} ({dest.days} days)</span>
+          ))}
+        </p>
       </div>
       <button
         style={{

@@ -19,6 +19,7 @@ import RouteDetails from './pages/RouteDetails';
 import Profile from "./pages/Profile";
 import ActivitiesPage from "./pages/ActivitiesPage";
 import RestaurantsPage from "./pages/RestaurantsPage";
+import FlightFinder from './pages/FlightFinder';
 
 
 
@@ -69,6 +70,7 @@ import RestaurantsPage from "./pages/RestaurantsPage";
             <Route path="/profile/:user" element={<Profile />} />
             <Route path="/activities/:location" element={<ActivitiesPage />} />
             <Route path="/restaurants/:location" element={<RestaurantsPage />} />
+            <Route path="/flight-finder/:tripId" element={<FlightFinder />} />
           </Routes>
         </Router>
       );
