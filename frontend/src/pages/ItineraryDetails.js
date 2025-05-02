@@ -1785,7 +1785,7 @@ const ItineraryDetails = () => {
             </DialogContent>
 
             <DialogActions>
-              <Button onClick={() => setOpenAddActivityDialog(false)}>
+              <Button color="error" onClick={() => setOpenAddActivityDialog(false)}>
                 Cancel
               </Button>
               <Button
@@ -1839,7 +1839,7 @@ const ItineraryDetails = () => {
                   setSelectedActivityTitle(null);
                   setSelectedDayForAdd("");
                 }}
-                color="primary"
+                color="secondary"
                 variant="contained"
               >
                 Confirm
