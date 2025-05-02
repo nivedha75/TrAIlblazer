@@ -1221,7 +1221,12 @@ def send_to_gemini(user_id, username, user_message, city_data):
     Instead, make the key value based on the activity/attraction name.
     Important: If the user is asking about activities/attractions, do NOT mention words day 0, day 1, day 2, etc. in the entire chatbot response.
     Also, do NOT include any weather information for each activity/attraction in the response if the user is asking about activities/attractions.
-    
+
+    Important: Use the exact title field given in city_data for each activity/attraction's bullet point.
+    Ie. if the title field in city_data is "Visit the Space Needle", use that exact title in the bullet point.
+    (Example: Visit the Space Needle: An observation tower in Seattle, Washington, a landmark of the Pacific Northwest, and an icon of Seattle. Guests can enjoy 360-degree views of the city, mountains, and waters from the observation deck...)
+    Do NOT paraphrase to ie. "Space Needle: ..." or "The Space Needle: ..." or "The Seattle Space Needle: ...".
+
     Example — Weather Format:
 
     * **April 1st:** [Your forecast here]

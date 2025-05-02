@@ -800,7 +800,7 @@ const HomePage = () => {
             onClick={toggleDropdown}
             src={profilePic || undefined}
             >
-            {(user.username?.charAt(0).toUpperCase() || "U")}
+            {(Cookies.get("username")?.charAt(0).toUpperCase() || "U")}
             </Avatar>
           )}
             <p>{Cookies.get("username")}</p>

@@ -1115,7 +1115,7 @@ const ItineraryDetails = () => {
 
         .plane-fly {
           display: inline-block;
-          animation: flyAway 1.2s ease-out forwards;
+          animation: flyAway 2.0s ease-out forwards;
         }
 
       `}
@@ -1773,16 +1773,26 @@ const ItineraryDetails = () => {
                   }
 
                   const matchedActivity = chatbotActivities.find((act) => {
-                    const cleanActTitle = act.title.trim().toLowerCase();
+                    const chatTitle = act.title.trim().toLowerCase();
+                    const selectedTitle = selectedActivityTitle.trim().toLowerCase();
+                  
+                    // Check exact match or if one contains the other
                     return (
-                      cleanActTitle ===
-                      selectedActivityTitle.trim().toLowerCase()
+                      chatTitle === selectedTitle ||
+                      chatTitle.includes(selectedTitle) ||
+                      selectedTitle.includes(chatTitle)
                     );
                   });
+                  
+
+                  // if (!matchedActivity) {
+                  //   alert("Could not find the activity to add.");
+                  //   return;
+                  // }
 
                   if (!matchedActivity) {
-                    alert("Could not find the activity to add.");
-                    return;
+                      alert("Please try adding activity again.");
+                      return;
                   }
 
                   await addActivityToItinerary(
