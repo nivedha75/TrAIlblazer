@@ -1438,7 +1438,7 @@ const ItineraryDetails = () => {
                     marginBottom: "10px",
                   }}
                 >
-                  Day {index + 1} -- {dayToCityMap[index + 1]}
+                  Day {index + 1} -- {dayToCityMap?.[index + 1] ?? "Loading..."}
                 </h3>
                 <Button
                   className="route-button"
