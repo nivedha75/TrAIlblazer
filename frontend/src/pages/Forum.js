@@ -3,6 +3,7 @@ import { Autocomplete, TextField, Button, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { Snackbar, Alert } from "@mui/material";
+import theme from "../theme";
 
 // const dummyPosts = [
 //   { username: "Alice", name: "Central Park", location: "New York", description: "Beautiful in fall!", bestTime: "October", created_at: new Date() },
@@ -213,14 +214,14 @@ const ForumDemo = () => {
           variant="contained"
           onClick={() => { home() }}
           style={{
-            backgroundColor: "#5865f2",
+            backgroundColor: theme.palette.purple.main,
             marginBottom: "20px",
             textTransform: "none",
             fontWeight: "bold",
             fontSize: "16px",
           }}
         >
-          🏠 Home
+          Back to Home
         </Button>
 
         {/* Search Channel */}
@@ -244,7 +245,7 @@ const ForumDemo = () => {
         <Button
           variant="contained"
           onClick={() => setIsModalOpen(true)}
-          style={{ backgroundColor: "#43b581", marginBottom: "20px", textTransform: "none" }}
+          style={{ backgroundColor: theme.palette.apple.main, marginBottom: "20px", textTransform: "none" }}
         >
           + Recommend
         </Button>

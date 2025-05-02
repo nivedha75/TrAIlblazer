@@ -846,7 +846,7 @@ const ItineraryDetails = () => {
               <strong>Rating:</strong> {activity.details.rating}
             </p>
             <p>
-              <strong>Start:</strong> {activity.range.start} <strong>End:</strong> {activity.range.end}
+              <strong>Start:</strong> {activity.range?.start} <strong>End:</strong> {activity.range?.end}
             </p>
           </div>
           <div
@@ -1131,10 +1131,10 @@ const ItineraryDetails = () => {
 
       `}
       </style>
-      <div style={{ display: "flex", height: "100vh" }}>
+      <div style={{ display: "flex", height: "0vh" }}>
         <div
           style={{
-            width: "30%",
+            width: "25%",
             padding: "20px",
             backgroundColor: "#f4f4f4",
             display: "flex",
@@ -1386,6 +1386,7 @@ const ItineraryDetails = () => {
               {deleteMode ? "Cancel Edit" : "Edit Activities"}
             </Button>
           )}
+          </h1>
           <h1
             style={{ textAlign: "center", color: "#333", marginBottom: "10px" }}
           >
@@ -2105,7 +2106,6 @@ const ItineraryDetails = () => {
             )}
           </div>
         </div>
-      </div>
     </>
   );
 };
