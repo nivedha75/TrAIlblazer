@@ -89,7 +89,7 @@ const FlightFinder = () => {
             textTransform: "none",
             width: "150px",
             color: "white",
-            "&:hover": { backgroundColor: "#0000FF" },
+            "&:hover": { backgroundColor: "#800080" },
             fontSize: "1rem",
             boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
             }}
